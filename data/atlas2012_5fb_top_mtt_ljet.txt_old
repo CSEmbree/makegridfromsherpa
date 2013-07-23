@@ -1,0 +1,27 @@
+%http://inspirehep.net/record/1123657/ 
+REACTION  P P --> top top
+SQRTS  7000.0
+YEAR 2013
+JETALGO ANTIKT
+JETALGR 4
+EXP ATLAS
+ERRORINPERCENT
+% default units are GeV and fb
+unitxTeV
+unitypb
+normtot
+%
+framelogy
+framelogx
+titlex m_{t, #bar{t}} [GeV]
+titley 1/#sigma d#sigma/dm_{t,#bar{t}} [1/TeV]
+%
+%
+% ssigma-mtt
+%from https://cds.cern.ch/record/1470588/files/ATL-COM-PHYS-2012-1137.pdf
+% xm xlow xhigh sigma statsigma+ statsigma- systsigma+ systsigma-
+ 350. 250.  450. 2.49825 0.92 3.11 3.02
+ 500. 450.  550. 2.75094 0.89 2.96 2.97 
+ 625. 550.  700. 1.01966 1.47 3.09 3.37
+ 825. 700.  950. 0.23078 2.67 5.13 5.42
+1825. 950. 2700. 0.00751 4.37 7.29 7.23 

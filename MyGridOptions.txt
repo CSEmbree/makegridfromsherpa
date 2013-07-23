@@ -1,0 +1,19 @@
+%GridOptions.txt
+%list all supported MyGrid options listed here seperated by newlines
+%All areas that arn't valid options should have a "%" in front of them
+%
+nprocessnumber
+subprocesssteername
+ntupdiroutput
+ntupdirinput
+ntupname
+nXbins
+xLow
+xUp
+xorder
+nQ2bins
+q2Low
+q2Up
+qorder
+griddir
+gridname
