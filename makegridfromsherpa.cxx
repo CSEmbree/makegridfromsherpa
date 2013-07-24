@@ -385,24 +385,33 @@ int main(int argc, char** argv) {
             myevent->push_back(pxin,pyin,-t.x2*pzin,t.x2*Ein,pid);
 
 
+/*
+            std::cout<<" TEST: Checking name: "<<steeringFile<<std::endl;
+            TString subProcType = steeringFile.c_str();
+            if(subProcType.Contains("-gg")) {
+                std::cout<<" TEST: Found gg"<<std::endl;
+            }
+*/
 
-            //if (debug) jetclus->PrintJets();
-            for (int ip=0; ip<np; ip++) {
-                // Momentum components of the partons  kf  Parton PDG code
-                pid=t.kf[ip];
-                if(pid==21) pid=0; //conversion from sherpa gluon to appl_grid convention
+            for (int ip=0; ip<np; ip++)
+            {
+                
+                    // Momentum components of the partons  kf  Parton PDG code
+                    pid=t.kf[ip];
+                    if(pid==21) pid=0; //conversion from sherpa gluon to appl_grid convention
 
-                if (abs(pid)==6) {
-                    myevent->push_back(t.px[ip],t.py[ip],t.pz[ip],t.E[ip],pid);
-                }
+                    if (abs(pid)==6) {
+                        myevent->push_back(t.px[ip],t.py[ip],t.pz[ip],t.E[ip],pid);
+                    }
 
-                if (abs(pid)==11||abs(pid)==12) {
-                    myevent->push_back(t.px[ip],t.py[ip],t.pz[ip],t.E[ip],pid);
-                    continue;
-                } else
-                    // need to put in Gavins code here
-                    // for top that will only work in LO
-                    jetclus->push_back(t.px[ip],t.py[ip],t.pz[ip],t.E[ip],pid);
+                    if (abs(pid)==11||abs(pid)==12) {
+                        myevent->push_back(t.px[ip],t.py[ip],t.pz[ip],t.E[ip],pid);
+                        continue;
+                    } else
+                        // need to put in Gavins code here
+                        // for top that will only work in LO
+                        jetclus->push_back(t.px[ip],t.py[ip],t.pz[ip],t.E[ip],pid);
+                
             }
 
             //
@@ -499,21 +508,7 @@ int main(int argc, char** argv) {
 
 
 
-    //
-    // Add the R-like and B-like mygrids together. Print the grids before and after for comparisons
-    //
-    //exit(0);
-    /*
-      cout<<" makegridfromsherpa::main: printing R-Type's myGrid"<<endl;
-      mygrid[i_R]->Print();
-      cout<<" makegridfromsherpa::main: printing B-Type's myGrid"<<endl;
-      mygrid[i_B]->Print();
-      cout<<" makegridfromsherpa::main: Adding B-Type mygrid to R-Type mygrid"<<endl;
-      mygrid[i_R]->AddGrid(mygrid[i_B]);
-
-      exit(0);
-      */
-
+    //write grid to scale the internal reference histos and save them to *.root files
     cout<<" makegridfromsherpa::main: Printing and writing grid "<<endl;
     for(int histoIndex=startIndex; histoIndex<endIndex; histoIndex++)
     {
@@ -613,15 +608,15 @@ int main(int argc, char** argv) {
             if (!mydata) cout<<" makegridfromsherpa::main: mydata["<<igrid<<"] not found "<<endl;
             double yfac=mydata->GetUnitfbFactor();
             double xfac=mydata->GetUnitGeVFactor();
-            cout<<" makegridfromsherpa::main: Normalise xfac= "<<xfac<<" yfac= "<<yfac<<endl;
+            cout<<" makegridfromsherpa::main: MyGrid::Normalise xfac= "<<xfac<<" yfac= "<<yfac<<endl;
 
 
 
-            Normalise(htest1[histoIndex][igrid],evtot*yfac,xfac,true);   //normalise 0-R, 1-B, and 2-RB Type
-            Normalise(href[histoIndex][igrid],evtot*yfac,xfac,true);     //normalise hrefR, hrefB, and hrefRB
+            mygrid[histoIndex]->Normalise(htest1[histoIndex][igrid],evtot*yfac,xfac,true);   //normalise 0-R, 1-B, and 2-RB Type
+            mygrid[histoIndex]->Normalise(href[histoIndex][igrid],evtot*yfac,xfac,true);     //normalise hrefR, hrefB, and hrefRB
 
             if(histoIndex==i_RB)
-                Normalise(htestRB[igrid],evtot*yfac,xfac,true);     //normalise histo of scaled R + scaled B together if it exists
+                mygrid[histoIndex]->Normalise(htestRB[igrid],evtot*yfac,xfac,true);     //normalise histo of scaled R + scaled B together if it exists
         }
 
     } //end of loop over all htest1 histograms
@@ -694,7 +689,7 @@ int main(int argc, char** argv) {
 
             convGridHistos[histoIndex][igrid]->Print("all");
             convGridHistos[histoIndex][igrid]->Scale(1.0/htestEventCount[histoIndex]);
-            Normalise(convGridHistos[histoIndex][igrid],yfac,xfac,true);
+            mygrid[histoIndex]->Normalise(convGridHistos[histoIndex][igrid],yfac,xfac,true);
 
             convGridHistos[histoIndex][igrid]->Print("all");
             convGridHistos[histoIndex][igrid]->Write();
@@ -738,11 +733,31 @@ int main(int argc, char** argv) {
 
 
 
+
+
+
+
+
+
+
     //after performing convolutes for R, B, RthenB types, add grids and histo for R and B to get RplusB and check it's convolute
     cout<<" makegridfromsherpa::main: Adding B-Type mygrid to R-Type mygrid"<<endl;
     mygrid[i_R]->AddGrid(mygrid[i_B]);
     mygrid[i_R]->SetGridVersionName(string("_RplusB"));
     mygrid[i_R]->write_grid();
+
+
+
+    cout<<" makegridfromsherpa::main: Normalising Internal Reference hIstograms "<<endl;
+    for(int histoIndex=startIndex; histoIndex<endIndex; histoIndex++)
+    {
+        for (int igrid=0; igrid<mygrid[histoIndex]->GetNGrid(); igrid++) {
+            mygrid[histoIndex]->NormaliseInternalRefHistos(igrid);
+        }
+    }
+    cout<<" makegridfromsherpa::main: Internal Reference hIstograms normalised!"<<endl;
+
+
 
     TH1D* ConvHistoRplusB[mygrid[i_R]->GetNGrid()];
     TH1D* hrefRplusB[mygrid[i_R]->GetNGrid()];
@@ -756,6 +771,7 @@ int main(int argc, char** argv) {
         filename+="_RplusB_histos.root";
         fout= new TFile(filename.c_str(),"recreate");
 
+        //problem: only performing convolute to R...
         ConvHistoRplusB[igrid] = (TH1D*)mygrid[i_R]->GetGrid(igrid)->convolute( evolvepdf_, alphaspdf_, nLoops );
         ConvHistoRplusB[igrid]->SetName((TString) ("convolute_for_RplusB"));
         ConvHistoRplusB[igrid]->SetTitle((TString) ("convolute_for_RplusB"));
@@ -771,7 +787,7 @@ int main(int argc, char** argv) {
 
         ConvHistoRplusB[igrid]->Print("all");
         ConvHistoRplusB[igrid]->Scale(1.0/(htestEventCount[i_R]+htestEventCount[i_B]));
-        Normalise(ConvHistoRplusB[igrid],yfac,xfac,true);
+        mygrid[i_R]->Normalise(ConvHistoRplusB[igrid],yfac,xfac,true);
 
         ConvHistoRplusB[igrid]->Print("all");
         ConvHistoRplusB[igrid]->Write();
@@ -784,6 +800,7 @@ int main(int argc, char** argv) {
 
 
         hrefRplusB[igrid] = (TH1D*)mygrid[i_R]->GetReference(igrid);
+        hrefRplusB[igrid]->Add( (TH1D*)mygrid[i_B]->GetReference(igrid) );
         if (!hrefRplusB[igrid]) cout<<" makegridfromsherpa::main: Reference from grid not found ! "<<endl;
         else {
             cout<<" makegridfromsherpa::main: Reference from grid found ! "<<endl;
@@ -796,7 +813,7 @@ int main(int argc, char** argv) {
 
 
         hrefRplusB[igrid]->Scale(1.0/(htestEventCount[i_R]+htestEventCount[i_B])); //hrefR/nR, hrefB/nB,hrefRB/nRB, etc
-        Normalise(hrefRplusB[igrid],yfac,xfac,true);     //normalise hrefR, hrefB, and hrefRB
+        mygrid[i_R]->Normalise(hrefRplusB[igrid],yfac,xfac,true);     //normalise hrefR, hrefB, and hrefRB
 
         hrefRplusB[igrid]->Print("all");
         hrefRplusB[igrid]->Write();
@@ -833,70 +850,72 @@ int main(int argc, char** argv) {
 
 
 
-/*
-    //
-    // Write out histograms
-    // NOTE: Could(should?) be made nicer by looping over all htest1 histograms instead of hardcoding indexes in htest1
-    //
-    cout<<"\n makegridfromsherpa::main: Writing test histos: "<<endl;
-    for (int igrid=0; igrid<mygrid[0]->GetNGrid(); igrid++) {
-        string filename=mygrid[0]->GetGridFullFileName(igrid);
-        
-        filename.replace( filename.find(".root"), 5, "-histos.root");
-        cout<<" makegridfromsherpa::main: Write histos to filename= "<<filename<<endl;
 
 
-        TFile *f1= new TFile(filename.c_str(),"recreate");
+    /*
+        //
+        // Write out histograms
+        // NOTE: Could(should?) be made nicer by looping over all htest1 histograms instead of hardcoding indexes in htest1
+        //
+        cout<<"\n makegridfromsherpa::main: Writing test histos: "<<endl;
+        for (int igrid=0; igrid<mygrid[0]->GetNGrid(); igrid++) {
+            string filename=mygrid[0]->GetGridFullFileName(igrid);
 
-        //TApplication myapp("myapp",0,0);
-        //TApplication *theApp = new TApplication("My ROOT Application",0,0);
-        //theApp->SetReturnFromRun(true);
-
-        MyData *mydata=mygrid[0]->GetMyData(igrid);
-        if (!mydata) cout<<" makegridfromsherpa::main: mydata["<<igrid<<"] not found "<<endl;
-        else cout<<" makegridfromsherpa::main: mydata["<<igrid<<"] read "<<endl;
-
-        MyFrameData *myframe= new MyFrameData(600,600,mydata);
-        if (!myframe) cout<<" makegridfromsherpa::main: myframe not found "<<endl;
-        else cout<<" makegridfromsherpa::main: frame created "<<endl;
-
-        mydata->DrawData();
-        cout<<" makegridfromsherpa::main: DrawData finished "<<endl;
+            filename.replace( filename.find(".root"), 5, "-histos.root");
+            cout<<" makegridfromsherpa::main: Write histos to filename= "<<filename<<endl;
 
 
+            TFile *f1= new TFile(filename.c_str(),"recreate");
 
-        //display and print to terminal desired histogram information
+            //TApplication myapp("myapp",0,0);
+            //TApplication *theApp = new TApplication("My ROOT Application",0,0);
+            //theApp->SetReturnFromRun(true);
 
-        ////terminal data output
-        //htest1[i_R][igrid]->Draw("same"); //R-Type
-        //htest1[i_B][igrid]->Draw("same"); //B-type
-        //htest1[i_RB][igrid]->Draw("same"); //RB-type
+            MyData *mydata=mygrid[0]->GetMyData(igrid);
+            if (!mydata) cout<<" makegridfromsherpa::main: mydata["<<igrid<<"] not found "<<endl;
+            else cout<<" makegridfromsherpa::main: mydata["<<igrid<<"] read "<<endl;
 
-        //href[i_R][igrid]->Draw("same"); //ref for R-type
-        //href[i_B][igrid]->Draw("same"); //ref for B-type
-        //href[i_RB][igrid]->Draw("same"); //ref for RB-Type
-        //htestRB[igrid]->Draw("same"); //RplusB
+            MyFrameData *myframe= new MyFrameData(600,600,mydata);
+            if (!myframe) cout<<" makegridfromsherpa::main: myframe not found "<<endl;
+            else cout<<" makegridfromsherpa::main: frame created "<<endl;
 
-
-        ////graphical data output
-        //htest1[i_R][igrid]->Print("all"); //R-Type
-        //htest1[i_B][igrid]->Print("all"); //B-Type
-        //htest1[i_RB][igrid]->Print("all"); //RB-Type
-
-        //href[i_R][igrid]->Print("all"); //ref for R-Type
-        //href[i_B][igrid]->Print("all"); //ref for B-Type
-        //href[i_RB][igrid]->Print("all"); //ref for RB-Type
-        //htestRB[igrid]->Print("all"); //RplusB
+            mydata->DrawData();
+            cout<<" makegridfromsherpa::main: DrawData finished "<<endl;
 
 
-        gPad->Update();
-        //theApp->Run(kTRUE);
-    }
+
+            //display and print to terminal desired histogram information
+
+            ////terminal data output
+            //htest1[i_R][igrid]->Draw("same"); //R-Type
+            //htest1[i_B][igrid]->Draw("same"); //B-type
+            //htest1[i_RB][igrid]->Draw("same"); //RB-type
+
+            //href[i_R][igrid]->Draw("same"); //ref for R-type
+            //href[i_B][igrid]->Draw("same"); //ref for B-type
+            //href[i_RB][igrid]->Draw("same"); //ref for RB-Type
+            //htestRB[igrid]->Draw("same"); //RplusB
 
 
-    gPad->Print("xsec.pdf");
-    system("open xsec.pdf &");
+            ////graphical data output
+            //htest1[i_R][igrid]->Print("all"); //R-Type
+            //htest1[i_B][igrid]->Print("all"); //B-Type
+            //htest1[i_RB][igrid]->Print("all"); //RB-Type
 
-*/
+            //href[i_R][igrid]->Print("all"); //ref for R-Type
+            //href[i_B][igrid]->Print("all"); //ref for B-Type
+            //href[i_RB][igrid]->Print("all"); //ref for RB-Type
+            //htestRB[igrid]->Print("all"); //RplusB
+
+
+            gPad->Update();
+            //theApp->Run(kTRUE);
+        }
+
+
+        gPad->Print("xsec.pdf");
+        system("open xsec.pdf &");
+
+    */
     return 0;
 }
