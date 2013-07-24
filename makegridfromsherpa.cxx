@@ -27,6 +27,8 @@
 //#include <LHAPDF/LHAPDF.h>
 #include "VariableDefinitions.h"    //added for convolute
 
+#define PI 3.14156
+
 /*
  * EXAMPLE Execution:
  *                   ./makegridfromsherpa
@@ -338,7 +340,18 @@ int main(int argc, char** argv) {
             jetclus->ClearJets();
             myevent->ClearEvent();;
             myevent->SetCMS(7000.);
-            myevent->SetWeight(t.me_wgt2); //dealing entirely with weight2
+            
+            double weight = (t.me_wgt2/ (double)(2*PI));
+            if(iorder==2)
+                weight = pow(weight,2.0);
+            else //3
+                weight = pow(weight,3.0);
+            
+           
+            weight = t.me_wgt2;
+            myevent->SetWeight(weight); //dealing entirely with weight2
+            
+            //myevent->SetWeight(t.me_wgt2); //dealing entirely with weight2
             myevent->SetXSection(t.weight2);
             //myevent->SetWeight(t.me_wgt);
             //myevent->SetXSection(t.weight);
@@ -385,33 +398,29 @@ int main(int argc, char** argv) {
             myevent->push_back(pxin,pyin,-t.x2*pzin,t.x2*Ein,pid);
 
 
-/*
-            std::cout<<" TEST: Checking name: "<<steeringFile<<std::endl;
+
+            //std::cout<<" TEST: Checking name: "<<steeringFile<<std::endl;
             TString subProcType = steeringFile.c_str();
-            if(subProcType.Contains("-gg")) {
-                std::cout<<" TEST: Found gg"<<std::endl;
-            }
-*/
+            //if(subProcType.Contains("-gg"))
+
 
             for (int ip=0; ip<np; ip++)
             {
-                
-                    // Momentum components of the partons  kf  Parton PDG code
-                    pid=t.kf[ip];
-                    if(pid==21) pid=0; //conversion from sherpa gluon to appl_grid convention
+                // Momentum components of the partons  kf  Parton PDG code
+                pid=t.kf[ip];
+                if(pid==21) pid=0; //conversion from sherpa gluon to appl_grid convention
 
-                    if (abs(pid)==6) {
-                        myevent->push_back(t.px[ip],t.py[ip],t.pz[ip],t.E[ip],pid);
-                    }
+                if (abs(pid)==6) {
+                    myevent->push_back(t.px[ip],t.py[ip],t.pz[ip],t.E[ip],pid);
+                }
 
-                    if (abs(pid)==11||abs(pid)==12) {
-                        myevent->push_back(t.px[ip],t.py[ip],t.pz[ip],t.E[ip],pid);
-                        continue;
-                    } else
-                        // need to put in Gavins code here
-                        // for top that will only work in LO
-                        jetclus->push_back(t.px[ip],t.py[ip],t.pz[ip],t.E[ip],pid);
-                
+                if (abs(pid)==11||abs(pid)==12) {
+                    myevent->push_back(t.px[ip],t.py[ip],t.pz[ip],t.E[ip],pid);
+                    continue;
+                } else
+                    // need to put in Gavins code here
+                    // for top that will only work in LO
+                    jetclus->push_back(t.px[ip],t.py[ip],t.pz[ip],t.E[ip],pid);
             }
 
             //
@@ -753,6 +762,9 @@ int main(int argc, char** argv) {
     {
         for (int igrid=0; igrid<mygrid[histoIndex]->GetNGrid(); igrid++) {
             mygrid[histoIndex]->NormaliseInternalRefHistos(igrid);
+            
+            mygrid[histoIndex]->SetGridVersionName(ntup_names[histoIndex]+"_norm");
+            mygrid[histoIndex]->write_grid();
         }
     }
     cout<<" makegridfromsherpa::main: Internal Reference hIstograms normalised!"<<endl;
