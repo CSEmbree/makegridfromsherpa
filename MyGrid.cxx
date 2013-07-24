@@ -200,7 +200,10 @@ void MyGrid::Initialize() {
             vhref vtmphrefsum2tmp;
 
             for ( int isub=0; isub<nsub; isub++) {
-                //cout<<"TEST nsub:"<<nsub<<endl;
+                //cout<<" MyGrid::Initialize: TEST nsub:"<<nsub<<endl; //should be 121
+                //exit(0);
+                
+                
                 TString hname="hrefLOsub";
                 hname+=isub;
                 //cout<<" hname= "<<hname<<endl;
@@ -269,14 +272,15 @@ void MyGrid::Initialize() {
         }
     }
 
-    //mypdf->erase();
-    //mypdf->rename(string("blah"));
 
     //delete mypdf;
     //basic_pdf *mypdfTEST = new basic_pdf(); // TEST
 
     //mypdf = dynamic_cast<basic_pdf*>( appl::appl_pdf::getpdf(subprocesssteername) ); //TEST
+    //mypdf = dynamic_cast<basic_pdf*>( appl::appl_pdf("basic") ); //TEST
     //mypdf->BasicInit(); //TEST
+
+
 
     mypdf = dynamic_cast<generic_pdf*>( appl::appl_pdf::getpdf(subprocesssteername) ); //<--**
     if(!mypdf)
@@ -710,7 +714,7 @@ void MyGrid::book_grid(int igrid)  // inital grid booking
     }
 
 
-    appl_pdf::printmap();
+    //appl_pdf::printmap();
     //appl_pdf* mypdf = appl_pdf::getpdf("topsubprocesses.dat"); //<--**
 
 
@@ -810,6 +814,7 @@ void  MyGrid::fill(MyEvent *myevent )
     //cout<<" MyGrid::fill: Dynamically making generic_pdf for function 'decideSubProcess'"<<endl; //<--** test output
     //generic_pdf* mypdf  = dynamic_cast<generic_pdf*>( appl::appl_pdf::getpdf(pdf_function) ); //<--**
 
+    std::cout<<"MyGrid::fill: decideSubProcess using: id1: "<<id1<<", id2: "<<id2<<std::endl;
     int iproc=mypdf->decideSubProcess(id1,id2); //<--**
 
 
@@ -1397,22 +1402,22 @@ void MyGrid::AddGrid(MyGrid *myOtherGrid) {
     std::vector<TH1D*> *otherReferenceFineHistos;
     otherReferenceFineHistos = myOtherGrid->GetReferenceFineHistos();
 
-
+/*
     //TESTING TO MAKE SURE REFERENCES WERE ADDED CORRECTLY
     //cout<<"TEST: REFERENCE HISTOGRAMS BEFORE..."<<endl;
     int Ngrids=this->GetNGrid();
     for(int igrid = 0; igrid < Ngrids; igrid++)
     {
-        //cout<<"TEST: MyGrid::AddGrid: hreference print for igrid: "<<igrid<<endl;
+        cout<<"TEST: MyGrid::AddGrid: hreference print for igrid: "<<igrid<<endl;
         hreference.at(igrid)->Print("all");
-        //cout<<"TEST: MyGrid::AddGrid: hreferencefine print for igrid: "<<igrid<<endl;
+        cout<<"TEST: MyGrid::AddGrid: hreferencefine print for igrid: "<<igrid<<endl;
         hreferencefine.at(igrid)->Print("all");
-        //cout<<"TEST: MyGrid::AddGrid: OTHERhreference print for igrid: "<<igrid<<endl;
+        cout<<"TEST: MyGrid::AddGrid: OTHERhreference print for igrid: "<<igrid<<endl;
         otherReferenceHistos->at(igrid)->Print("all");
-        //cout<<"TEST: MyGrid::AddGrid: OTHERhreferencefine print for igrid: "<<igrid<<endl;
+        cout<<"TEST: MyGrid::AddGrid: OTHERhreferencefine print for igrid: "<<igrid<<endl;
         otherReferenceFineHistos->at(igrid)->Print("all");
     }
-
+*/
 
     //make sure all histos can be added together
     if(hreference.size()!=otherReferenceHistos->size())
@@ -1449,18 +1454,18 @@ void MyGrid::AddGrid(MyGrid *myOtherGrid) {
         }
     }
 
-
+/*
     //TESTING TO MAKE SURE REFERENCES WERE ADDED CORRECTLY
     //cout<<"TEST: REFERENCE HISTOGRAMS AFTER..."<<endl;
     Ngrids=this->GetNGrid();
     for(int igrid = 0; igrid < Ngrids; igrid++)
     {
-        //cout<<"TEST: MyGrid::AddGrid: hreference print for igrid: "<<igrid<<endl;
+        cout<<"TEST: MyGrid::AddGrid: hreference print for igrid: "<<igrid<<endl;
         hreference[igrid]->Print("all");
-        //cout<<"TEST: MyGrid::AddGrid: hreferencefine print for igrid: "<<igrid<<endl;
+        cout<<"TEST: MyGrid::AddGrid: hreferencefine print for igrid: "<<igrid<<endl;
         hreferencefine[igrid]->Print("all");
     }
-
+*/
 
 
     //add event counters
