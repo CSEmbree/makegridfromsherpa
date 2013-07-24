@@ -208,7 +208,7 @@ void MyGrid::Initialize() {
                 TString htit=TString(hname)+TString(" LO ")+TString(GetGridVersionName().c_str());//TString(this->GetSubProcessName(isub)); //<--**
                 htestlo->SetTitle(htit);
                 vtmphreflo.push_back(htestlo);
-                
+
                 TString hnametmp="hreftmpLOsub";
                 hnametmp+=isub;
                 //cout<<" hname= "<<hname<<endl;
@@ -221,12 +221,12 @@ void MyGrid::Initialize() {
                 hname+="sum2";
                 TH1D* hsum2=(TH1D*)htestlo->Clone(hname);
                 vtmphreflosum2.push_back(hsum2);
-                
+
                 hnametmp+="sum2";
                 TH1D* hsum2tmp=(TH1D*)htestlotmp->Clone(hnametmp);
                 vtmphreflosum2tmp.push_back(hsum2tmp);
-                
-                
+
+
 
                 TString hname2="hrefsub";
                 hname2+=isub;
@@ -235,7 +235,7 @@ void MyGrid::Initialize() {
                 TString htit2=TString(hname2)+TString(" ")+TString(GetGridVersionName().c_str());//TString(this->GetSubProcessName(isub)); //<--**
                 hnlo->SetTitle(htit2);
                 vtmphref.push_back(hnlo);
-                
+
                 TString hname2tmp="hreftmpsub";
                 hname2tmp+=isub;
                 //cout<<" hname2= "<<hname2<<endl;
@@ -248,7 +248,7 @@ void MyGrid::Initialize() {
                 hname2+="sum2";
                 TH1D* hnlosum2=(TH1D*)hnlo->Clone(hname2);
                 vtmphrefsum2.push_back(hnlosum2);
-                
+
                 hname2tmp+="sum2tmp";
                 TH1D* hnlosum2tmp=(TH1D*)hnlotmp->Clone(hname2tmp);
                 vtmphrefsum2tmp.push_back(hnlosum2tmp);
@@ -351,6 +351,46 @@ TH1D *MyGrid::TH1NormStatError(TH1D *hsum, TH1D *hsum2, double norm) {
         //if (debug) cout <<"bincenter= "<<hsum->GetBinCenter(i)<<" Binw = " << x << " y= " << y << endl;
     }
     return h1new;
+}
+
+void MyGrid::NormaliseInternalRefHistos(int igrid) {
+
+    double yfac=mydata[igrid]->GetUnitfbFactor();
+    double xfac=mydata[igrid]->GetUnitGeVFactor();
+    cout<<" MyGrid::NormaliseInternalRefHistos: normalise xfac= "<<xfac<<" yfac= "<<yfac<<endl;
+
+
+    if(!hreference[igrid]) {
+        cout<<" MyGrid::NormaliseInternalRefHistos: WARNING: Reference histogram 'hreference' for igird: "
+            <<igrid<<" not found!"<<endl;
+        exit(0); //TEST
+    }
+    else this->Normalise(hreference[igrid],yfac,xfac,true);
+
+    if(!hreferencefine[igrid]) {
+        cout<<" MyGrid::NormaliseInternalRefHistos: WARNING: Reference histogram 'hreferencefine' for igird: "
+            <<igrid<<" not found!"<<endl;
+        exit(0); //TEST
+    }
+    else this->Normalise(hreferencefine[igrid],yfac,xfac,true);
+
+
+    for (int iproc=0; iproc<nsub; iproc++) {
+        if (!hrefsubprocesseshistos[igrid][iproc]) {
+            cout<<" MyGrid::NormaliseInternalRefHistos: WARNING: Reference histogram 'hrefsubprocesseshistos' for igrid: "
+                <<igrid<<", iproc: "<<iproc<<" not found!"<<endl;
+            exit(0); //TEST
+        }
+        else this->Normalise(hrefsubprocesseshistos[igrid][iproc],yfac,xfac,true);
+
+        //cout<<" MyGrid::write_grid LO igrid= "<<igrid<<" iproc= "<<iproc<<endl;
+        if (!hrefLOsubprocesseshistos[igrid][iproc]) {
+            cout<<" MyGrid::NormaliseInternalRefHistos: WARNING: Reference histogram 'hrefLOsubprocesseshistos' for igrid: "
+                <<igrid<<", iproc: "<<iproc<<" not found!"<<endl;
+            exit(0); //TEST
+        }
+        else this->Normalise(hrefLOsubprocesseshistos[igrid][iproc],yfac,xfac,true);
+    }
 }
 
 
@@ -894,7 +934,7 @@ void  MyGrid::fill(MyEvent *myevent )
         if (this->NewEvent()) {
             //std::cout<<" MyGrid::fill: TEST: NEW EVENT ADD igrid: "<<igrid<<", iproc: "<<iproc<<std::endl;
             //std::cout<<" MyGrid::fill: TEST: Adding hrefLOsubprocesseshistostmp[igrid:"<<igrid<<"][iproc:"<<iproc<<"]: "<<hrefLOsubprocesseshistostmp[igrid][iproc]<<" TO hrefsubprocesseshistos[igrid:"<<igrid<<"][iproc:"<<iproc<<"]: "<<hrefsubprocesseshistos[igrid][iproc]<<std::endl;
-        
+
             hreference[igrid]->Add(hreferencetmp[igrid]);
             hreferencetmp[igrid]->Reset();
             //hreference[igrid]->Print("all");
@@ -1014,69 +1054,37 @@ void MyGrid::write_grid()   // writes out grid after some events
         cout<<" MyGrid::write_grid normalise xfac= "<<xfac<<" yfac= "<<yfac<<endl;
 
 
-        /*    //OLD normalization
-                if (mydata[igrid]->DivideByBinWidth()) {
-                    this->DivideByBinWidth(hreference[igrid]);
-                    this->DivideByBinWidth(hreferencefine[igrid]);
-
-                    for (int iproc=0; iproc<nsub; iproc++) {
-                        this->DivideByBinWidth(hrefLOsubprocesseshistos[igrid][iproc]);
-                        this->DivideByBinWidth(hrefsubprocesseshistos[igrid][iproc]);
-                    }
-                }
-
-                this->Normalise(hreference[igrid],yfac,xfac,true);
-                this->Normalise(hreferencefine[igrid],yfac,xfac,true);
-
-                for (int iproc=0; iproc<nsub; iproc++) {
-                    this->Normalise(hrefLOsubprocesseshistos[igrid][iproc],yfac,xfac,true);
-                    this->Normalise(hrefsubprocesseshistos[igrid][iproc]  ,yfac,xfac,true);
-                }
-        */
-
         //NEW normalization
         if(!hreference[igrid])
             cout<<" MyGrid::write_grid: WARNING: Reference histogram 'hreference' for igird: "<<igrid<<" not found!"<<endl;
         hreference[igrid]->Scale(1.0/events[igrid]); //href/nhref
-        this->Normalise(hreference[igrid],yfac,xfac,true);
-        //this->NormRefHistos(igrid,)
-        cout<<" MyGrid::write_grid: hreference Print..."<<endl;
-        //hreference[igrid]->Print("all");
+        //this->Normalise(hreference[igrid],yfac,xfac,true);
 
         if(!hreferencefine[igrid])
             cout<<" MyGrid::write_grid: WARNING: Reference histogram 'hreferencefine' for igird: "<<igrid<<" not found!"<<endl;
         hreferencefine[igrid]->Scale(1.0/events[igrid]); //hrefFine/nhrefFine
-        this->Normalise(hreferencefine[igrid],yfac,xfac,true);
-        cout<<" MyGrid::write_grid: hreferencefine Print..."<<endl;
-        //hreferencefine[igrid]->Print("all");
+        //this->Normalise(hreferencefine[igrid],yfac,xfac,true);
 
 
         for (int iproc=0; iproc<nsub; iproc++) {
             if (!hrefsubprocesseshistos[igrid][iproc])
                 cout<<" MyGrid::write_grid: WARNING: Reference histogram 'hrefsubprocesseshistos' for igrid: "<<igrid<<", iproc: "<<iproc<<" not found!"<<endl;
             else {
-                cout<<" MyGrid::write_grid: Printing hrefsubprocesseshistos"<<endl;
-                //hrefsubprocesseshistos[igrid][iproc]->Print("all");
                 hrefsubprocesseshistos[igrid][iproc]->Scale(1.0/events[igrid]); //hrefsubprocesseshistos/nhrefsubprocesseshistos
-                this->Normalise(hrefsubprocesseshistos[igrid][iproc],yfac,xfac,true);
+                //this->Normalise(hrefsubprocesseshistos[igrid][iproc],yfac,xfac,true);
             }
 
-            //cout<<" MyGrid::write_grid LO igrid= "<<igrid<<" iproc= "<<iproc<<endl;
             if (!hrefLOsubprocesseshistos[igrid][iproc])
                 cout<<" MyGrid::write_grid: WARNING: Reference histogram 'hrefLOsubprocesseshistos' for igrid: "<<igrid<<", iproc: "<<iproc<<" not found!"<<endl;
             else {
-                cout<<" MyGrid::write_grid: Printing hrefLOsubprocesseshistos"<<endl;
-                //hrefLOsubprocesseshistos[igrid][iproc]->Print("all");
                 hrefLOsubprocesseshistos[igrid][iproc]->Scale(1.0/events[igrid]); //hrefLOsubprocesseshistos/nhrefLOsubprocesseshistos
-                this->Normalise(hrefLOsubprocesseshistos[igrid][iproc],yfac,xfac,true);
+                //this->Normalise(hrefLOsubprocesseshistos[igrid][iproc],yfac,xfac,true);
             }
         }
         //NEW normalization
 
 
-        //double scale=uncorrevents[igrid]*yfac;
-        //(mygrid[igrid]->getReference())->Scale(1./scale);
-        //cout<<" normalised "<<endl;
+
 
         string filename=this->GetGridFullFileName(igrid);//+this->GetGridVersionName();
 
@@ -1115,7 +1123,7 @@ void MyGrid::write_grid()   // writes out grid after some events
             cout<<" TEST mygrid[igrid] is finished writing!"<<endl; //TEST
             */
 
-            if (!hreference[igrid]){
+            if (!hreference[igrid]) {
                 cout<<" MyGrid::write_grid() hreference["<<igrid<<"] not found ! "<<endl;
                 exit(0); //TEST
             }
@@ -1123,14 +1131,14 @@ void MyGrid::write_grid()   // writes out grid after some events
 
             if (!hreferencefine[igrid]) {
                 cout<<" MyGrid::write_grid() hreferencefine["<<igrid<<"] not found ! "<<endl;
-                exit(0); //TEST    
+                exit(0); //TEST
             }
             else hreferencefine[igrid]->Write();
 
             for (int iproc=0; iproc<nsub; iproc++) {
                 if (!(hrefLOsubprocesseshistos[igrid][iproc])) {
                     cout<<" MyGrid::write_grid() hrefLOsubprocesseshistos["<<igrid<<"]["<<iproc<<"] not found ! "<<endl;
-                    exit(0); //TEST    
+                    exit(0); //TEST
                 }
                 else hrefLOsubprocesseshistos[igrid][iproc]->Write();
 
