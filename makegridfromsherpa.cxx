@@ -27,7 +27,7 @@
 //#include <LHAPDF/LHAPDF.h>
 #include "VariableDefinitions.h"    //added for convolute
 
-#define PI 3.14156
+#define PI 3.14159
 
 /*
  * EXAMPLE Execution:
@@ -341,18 +341,24 @@ int main(int argc, char** argv) {
             myevent->ClearEvent();;
             myevent->SetCMS(7000.);
             
-            double weight = (t.me_wgt2/ (double)(2*PI));
-            if(iorder==2)
-                weight = pow(weight,2.0);
-            else //3
-                weight = pow(weight,3.0);
+            double wgt2 = ((double)t.me_wgt2/ (double)(2*PI));
+            double weight2 = ((double)t.weight2/(double)(2*PI));
+            if(iorder==2) {
+                wgt2 = pow(wgt2,2.0);
+                weight2 = pow(weight2,2.0);
+            } else { //3
+                wgt2 = pow(wgt2,3.0);
+                weight2 = pow(weight2,3.0);
+            }
             
            
-            weight = t.me_wgt2;
-            myevent->SetWeight(weight); //dealing entirely with weight2
+            wgt2 = t.me_wgt2;
+            weight2 = t.weight2;
+            myevent->SetWeight(wgt2); //dealing entirely with weight2
+            myevent->SetXSection(weight2);
             
             //myevent->SetWeight(t.me_wgt2); //dealing entirely with weight2
-            myevent->SetXSection(t.weight2);
+            //myevent->SetXSection(t.weight2);
             //myevent->SetWeight(t.me_wgt);
             //myevent->SetXSection(t.weight);
 
@@ -400,7 +406,7 @@ int main(int argc, char** argv) {
 
 
             //std::cout<<" TEST: Checking name: "<<steeringFile<<std::endl;
-            TString subProcType = steeringFile.c_str();
+            //TString subProcType = steeringFile.c_str();
             //if(subProcType.Contains("-gg"))
 
 
@@ -522,6 +528,10 @@ int main(int argc, char** argv) {
     for(int histoIndex=startIndex; histoIndex<endIndex; histoIndex++)
     {
         mygrid[histoIndex]->Print();
+        
+        for (int igrid=0; igrid<mygrid[histoIndex]->GetNGrid(); igrid++)
+            mygrid[histoIndex]->ScaleInternalRefHistos(igrid);
+
         mygrid[histoIndex]->write_grid();
     }
     cout<<" makegridfromsherpa::main: Grid written "<<endl;
@@ -824,7 +834,7 @@ int main(int argc, char** argv) {
         }
 
 
-        hrefRplusB[igrid]->Scale(1.0/(htestEventCount[i_R]+htestEventCount[i_B])); //hrefR/nR, hrefB/nB,hrefRB/nRB, etc
+        hrefRplusB[igrid]->Scale(1.0/(htestEventCount[i_R]+htestEventCount[i_B])); //Are these inidividual internal refs scaled??
         mygrid[i_R]->Normalise(hrefRplusB[igrid],yfac,xfac,true);     //normalise hrefR, hrefB, and hrefRB
 
         hrefRplusB[igrid]->Print("all");
