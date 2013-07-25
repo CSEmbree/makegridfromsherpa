@@ -397,6 +397,30 @@ void MyGrid::NormaliseInternalRefHistos(int igrid) {
     }
 }
 
+void MyGrid::ScaleInternalRefHistos(int igrid) {
+
+        if(!hreference[igrid])
+            cout<<" MyGrid::ScaleInternalRefHistos: WARNING: Reference histogram 'hreference' for igird: "<<igrid<<" not found!"<<endl;
+        else hreference[igrid]->Scale(1.0/events[igrid]); //href/nhref
+
+        if(!hreferencefine[igrid])
+            cout<<" MyGrid::ScaleInternalRefHistos: WARNING: Reference histogram 'hreferencefine' for igird: "<<igrid<<" not found!"<<endl;
+        else hreferencefine[igrid]->Scale(1.0/events[igrid]); //hrefFine/nhrefFine
+
+
+        for (int iproc=0; iproc<nsub; iproc++) {
+            if (!hrefsubprocesseshistos[igrid][iproc])
+                cout<<" MyGrid::ScaleInternalRefHistos: WARNING: Reference histogram 'hrefsubprocesseshistos' for igrid: "<<igrid<<", iproc: "<<iproc<<" not found!"<<endl;
+            else
+                hrefsubprocesseshistos[igrid][iproc]->Scale(1.0/events[igrid]); //hrefsubprocesseshistos/nhrefsubprocesseshistos
+
+            if (!hrefLOsubprocesseshistos[igrid][iproc])
+                cout<<" MyGrid::ScaleInternalRefHistos: WARNING: Reference histogram 'hrefLOsubprocesseshistos' for igrid: "<<igrid<<", iproc: "<<iproc<<" not found!"<<endl;
+            else
+                hrefLOsubprocesseshistos[igrid][iproc]->Scale(1.0/events[igrid]); //hrefLOsubprocesseshistos/nhrefLOsubprocesseshistos
+        }
+}
+
 
 void MyGrid::NormRefHistos(int igrid, double norm) {
 
@@ -1053,6 +1077,7 @@ void MyGrid::write_grid()   // writes out grid after some events
 
         //        cout<<"Saved Space ratio: "<<(trim_size/untrim_size*1.)<<endl;
 
+/*
         //cout<<" untrimmed "<<endl;
         double yfac=mydata[igrid]->GetUnitfbFactor();
         double xfac=mydata[igrid]->GetUnitGeVFactor();
@@ -1087,7 +1112,7 @@ void MyGrid::write_grid()   // writes out grid after some events
             }
         }
         //NEW normalization
-
+*/
 
 
 

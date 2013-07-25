@@ -134,6 +134,7 @@ class MyGrid {
   void DivideByBinWidth(TH1D* h);
   void Normalise(TH1D* h1, double yscale, double xscale, bool normtot); 
   void NormaliseInternalRefHistos(int igrid);
+  void ScaleInternalRefHistos(int igrid);
   void getObservable(MyEvent *myevent);
   int GetNGrid(){return gridname.size();};
   string *GetSubProcessSteername() { std::cout<<" MyGrid::GetSubProcessSteername: TEST: subprocesssteername: '"<<subprocesssteername<<"'"<<std::endl; &subprocesssteername; };
