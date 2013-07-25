@@ -352,7 +352,7 @@ int main(int argc, char** argv) {
             }
             
            
-            wgt2 = t.me_wgt2;
+            //wgt2 = t.me_wgt2;
             weight2 = t.weight2;
             myevent->SetWeight(wgt2); //dealing entirely with weight2
             myevent->SetXSection(weight2);
@@ -406,8 +406,14 @@ int main(int argc, char** argv) {
 
 
             //std::cout<<" TEST: Checking name: "<<steeringFile<<std::endl;
-            //TString subProcType = steeringFile.c_str();
-            //if(subProcType.Contains("-gg"))
+            /*
+            TString subProcType = steeringFile.c_str();
+            if(subProcType.Contains("-gg")) {
+              if(pid!=0) {
+                  continue;
+              }
+            }
+            */
 
 
             for (int ip=0; ip<np; ip++)
