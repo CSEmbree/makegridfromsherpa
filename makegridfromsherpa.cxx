@@ -605,6 +605,9 @@ int main(int argc, char** argv) {
     cout<< "\n makegridfromsherpa::main: Performing convolute"<<endl;
     //NGrid = mygrid[0]->GetNGrid(); //NGrid will be the same for all grids, so grid[0] is arbirary
     TH1D* convGridHistos[endIndex+1][NGrid];
+    TH1D* LOconvGridHistos[endIndex+1][NGrid];
+    TH1D* subProcConvGridHistos[endIndex+1][NGrid][121];
+    
     int nLoops = 1;
 
     //string pdf_set_name = "PDFsets/CT10.LHgrid"; //hardcoded
@@ -631,8 +634,20 @@ int main(int argc, char** argv) {
         {
             mygrid[histoIndex]->GetGrid(igrid)->setckm(ckm2);
 
+            LOconvGridHistos[histoIndex][igrid] = (TH1D*)mygrid[histoIndex]->GetGrid(igrid)->convolute( evolvepdf_, alphaspdf_, 0 );
+            LOconvGridHistos[histoIndex][igrid]->SetName((TString) ("LOconvolute_for" + ntup_names[histoIndex]));
+            LOconvGridHistos[histoIndex][igrid]->SetTitle((TString) ("LOconvolute_for" + ntup_names[histoIndex]));
+            LOconvGridHistos[histoIndex][igrid]->SetLineColor(kBlue);
+            
+            for(int isubproc; isubproc<mygrid[histoIndex]->GetNSubProcess(igrid);  isubproc++){
+                subProcConvGridHistos[histoIndex][igrid][isubproc] = (TH1D*)mygrid[histoIndex]->GetGrid(igrid)->convolute_subproc(isubproc, evolvepdf_, alphaspdf_, nLoops );
+                string sub_proc_hist_name="subProcConvolute_for"+ntup_names[histoIndex]+"_subProc-"+to_string(isubproc);
+                subProcConvGridHistos[histoIndex][igrid][isubproc]->SetName((TString) (sub_proc_hist_name));
+                subProcConvGridHistos[histoIndex][igrid][isubproc]->SetTitle((TString) (sub_proc_hist_name));
+                subProcConvGridHistos[histoIndex][igrid][isubproc]->SetLineColor(kBlue);
+            }
+            
             convGridHistos[histoIndex][igrid] = (TH1D*)mygrid[histoIndex]->GetGrid(igrid)->convolute( evolvepdf_, alphaspdf_, nLoops );
-            //convGridHistos[histoIndex][igrid] = (TH1D*)mygrid[i_B]->GetGrid(igrid)->convolute( evolvepdf_, alphaspdf_, nLoops );
             convGridHistos[histoIndex][igrid]->SetName((TString) ("convolute_for" + ntup_names[histoIndex]));
             convGridHistos[histoIndex][igrid]->SetTitle((TString) ("convolute_for" + ntup_names[histoIndex]));
             convGridHistos[histoIndex][igrid]->SetLineColor(kBlue);
@@ -651,13 +666,23 @@ int main(int argc, char** argv) {
             cout<<" makegridfromsherpa::main: Normalise xfac= "<<xfac<<" yfac= "<<yfac<<endl;
 
 
-            convGridHistos[histoIndex][igrid]->Print("all");
+            LOconvGridHistos[histoIndex][igrid]->Scale(1.0/htestEventCount[histoIndex]);
+            mygrid[histoIndex]->Normalise(LOconvGridHistos[histoIndex][igrid],yfac,xfac,true);
+            LOconvGridHistos[histoIndex][igrid]->Write();
+            LOconvGridHistos[histoIndex][igrid]->Draw();
+
+            for(int isubproc; isubproc<mygrid[histoIndex]->GetNSubProcess(igrid);  isubproc++){
+                subProcConvGridHistos[histoIndex][igrid][isubproc]->Scale(1.0/htestEventCount[histoIndex]);
+                mygrid[histoIndex]->Normalise(subProcConvGridHistos[histoIndex][igrid][isubproc],yfac,xfac,true);
+                subProcConvGridHistos[histoIndex][igrid][isubproc]->Write();
+                subProcConvGridHistos[histoIndex][igrid][isubproc]->Draw();
+            }
+            
             convGridHistos[histoIndex][igrid]->Scale(1.0/htestEventCount[histoIndex]);
             mygrid[histoIndex]->Normalise(convGridHistos[histoIndex][igrid],yfac,xfac,true);
-
-            convGridHistos[histoIndex][igrid]->Print("all");
             convGridHistos[histoIndex][igrid]->Write();
             convGridHistos[histoIndex][igrid]->Draw();
+
 
             htest1[histoIndex][igrid]->Print("all");
             htest1[histoIndex][igrid]->Write();

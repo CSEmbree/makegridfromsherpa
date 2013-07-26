@@ -122,6 +122,8 @@ class MyGrid {
   //string GetSubProcessName(int isub) { return mypdf->GetSubProcessName(isub);}; //not implimented by basic_pdf
   void SetSubProcess(generic_pdf *subpro) { mypdf=subpro; return;};
   //void SetSubProcess(basic_pdf *subpro) { mypdf=subpro; return;}; //TEST
+  int GetNSubProcess(int igrid){ return mygrid[igrid]->subProcesses(); };
+  
 
   void Initialize();
   //void ReadSteering(char fname[100]);
