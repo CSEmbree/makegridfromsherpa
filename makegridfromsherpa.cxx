@@ -27,7 +27,7 @@
 //#include <LHAPDF/LHAPDF.h>
 #include "VariableDefinitions.h"    //added for convolute
 
-#define PI 3.14159
+#define PI 3.141592653589793238462
 
 /*
  * EXAMPLE Execution:
@@ -261,7 +261,7 @@ int main(int argc, char** argv) {
 
             htest1[histoIndex][igrid]->SetTitle(string("htest1"+ntup_names[histoIndex]).c_str());
             htest1[histoIndex][igrid]->SetName(string("htest1"+ntup_names[histoIndex]).c_str());
-            htest1[histoIndex][igrid]->SetLineColor(histoIndex+1); //1-black(RB), 2-red(R), 3-green(B)
+            htest1[histoIndex][igrid]->SetLineColor(histoIndex+1); //1-black(B), 2-red(R), 3-green(RthenB)
 
             if(debug) cout<<" makegridfromsherpa::main: Got histogram: "<<string("htest1_"+histoIndex)<<", with line color: "<<histoIndex+1<<endl;
         }
@@ -271,16 +271,14 @@ int main(int argc, char** argv) {
         // Event loop
         //
         cout<<" makegridfromsherpa::main: Loop over events for: "<<ntup_names[histoIndex]<<endl;
-
-
         Long64_t nbytes = 0, nb = 0;
+        
         for (Long64_t jentry=0; jentry<nentries && jentry<nevmax; jentry++)
         {
             t.GetEntry(jentry);
 
             nbytes += nb;
             //t.Show();
-
 
             Int_t np=(Int_t)t.nparticle;
 
@@ -341,31 +339,16 @@ int main(int argc, char** argv) {
             myevent->ClearEvent();;
             myevent->SetCMS(7000.);
             
-            double wgt2 = ((double)t.me_wgt2/ (double)(2*PI));
-            double weight2 = ((double)t.weight2/(double)(2*PI));
+            double wgt2_fac = (1.0/ (double)(2.*PI));
             if(iorder==2) {
-                wgt2 = pow(wgt2,2.0);
-                weight2 = pow(weight2,2.0);
+                wgt2_fac = pow(wgt2_fac,2.0);
             } else { //3
-                wgt2 = pow(wgt2,3.0);
-                weight2 = pow(weight2,3.0);
+                wgt2_fac = pow(wgt2_fac,3.0);
             }
-            
-           
-            //wgt2 = t.me_wgt2;
-            weight2 = t.weight2;
-            myevent->SetWeight(wgt2); //dealing entirely with weight2
-            myevent->SetXSection(weight2);
-            
-            //myevent->SetWeight(t.me_wgt2); //dealing entirely with weight2
-            //myevent->SetXSection(t.weight2);
-            //myevent->SetWeight(t.me_wgt);
-            //myevent->SetXSection(t.weight);
 
-            if(histoIndex==i_R && iorder==0) {
-                std::cout<<"makegridfromsherpa::main: TEST: iorder==0"<<std::endl;
-                exit(0);
-            }
+            
+            myevent->SetWeight(t.me_wgt2*wgt2_fac); //dealing entirely with weight2
+            myevent->SetXSection(t.weight2);
 
             myevent->SetOrder(iorder);
             myevent->SetType (itype);
@@ -374,7 +357,6 @@ int main(int argc, char** argv) {
             myevent->SetX2(t.x2);
             myevent->SetQ2(t.fac_scale*t.fac_scale);
 
-            //cout<<"TEST: t.fac_scale: "<<t.fac_scale<<endl;
 
             //
             // fill incoming partons
@@ -470,36 +452,16 @@ int main(int argc, char** argv) {
                 if (mygrid[histoIndex]->eventcuts(myevent,igrid)==false) continue;
 
                 htest1[histoIndex][igrid]->Fill(obs,t.weight2);
-
             } //end loop over grid
 
-            htestEventCount[histoIndex]++; //keep count of event for each type, 0-Orig, 1-Rtype, 2-BType
+            htestEventCount[histoIndex]++; //keep count of event for each type, 0-B, 1-R, 2-RthenB
         } //end loop over events
 
 
 
 
-        /*
-        //OLD write_grid was called for each R, B, RB Type. This would overwrite the saved grid for each type.
-        //  call for write_grid as been moved outside of the histogram loop.
-        cout<<" makegridfromsherpa::main: printing and writing grid "<<endl;
-        mygrid[histoIndex]->Print();
-        mygrid[histoIndex]->write_grid();
-        cout<<" makegridfromsherpa::main: Grid written "<<endl;
-        */
-
         //
-        // Normalise internal grid reference histograms for comparison to later
-        //
-        /*
-        for (int igrid=0; igrid<mygrid[histoIndex]->GetNGrid(); igrid++) {
-            mygrid[histoIndex]->NormRefHistos(igrid, 1);
-        }
-        */
-
-
-        //
-        // get and set up test histograms
+        // get and set up test external histograms
         //
         for (int igrid=0; igrid<mygrid[histoIndex]->GetNGrid(); igrid++)
         {
@@ -549,10 +511,9 @@ int main(int argc, char** argv) {
 
     //
     // Scale htest1
-    // Add histograms from R-Type(i_R) to histograms from B-Type(i_B). Should be equal to both combined(i_RB)
+    // Add histograms of MyGrid for R-Like(i_R) to B-Like(i_B). Should be equal to both combined(i_RB)
     //
     cout<<" makegridfromsherpa::main: Adding R-Type and B-Type"<<endl;
-    //if R-type(htest1 index=1) and B-Type(htest1 index=2) exist, then add them
 
     for(int histoIndex=startIndex; histoIndex<endIndex; histoIndex++)
     {
@@ -597,20 +558,7 @@ int main(int argc, char** argv) {
             cout<<" makegridfromsherpa::main:**NORM CHECK: evtot: "<<evtot<<", evalltot: "<<evalltot<<", evuncorr: "<<evuncorr<<", evalluncorr: "<<evalluncorr<<endl;
             cout<<" makegridfromsherpa::main:**NORM CHECK: nR: "<<htestEventCount[0]<<", nB: "<<htestEventCount[1]<<", nRB: "<<htestEventCount[2]<<endl;
 
-
-            /*
-              double evtot      =htestEventCount[i_R]+htestEventCount[i_B];
-              double evalltot   =htestEventCount[i_R]+htestEventCount[i_B];
-              double evuncorr   =htestEventCount[i_R]+htestEventCount[i_B];
-              double evalluncorr=htestEventCount[i_R]+htestEventCount[i_B];
-            */
-            /*
-              double evtot      =1;
-              double evalltot   =1;
-              double evuncorr   =1;
-              double evalluncorr=1;
-            */
-
+            //temporarily changed to a default!!
             evtot      =1;
             evalltot   =1;
             evuncorr   =1;
@@ -637,8 +585,8 @@ int main(int argc, char** argv) {
 
 
 
-            mygrid[histoIndex]->Normalise(htest1[histoIndex][igrid],evtot*yfac,xfac,true);   //normalise 0-R, 1-B, and 2-RB Type
-            mygrid[histoIndex]->Normalise(href[histoIndex][igrid],evtot*yfac,xfac,true);     //normalise hrefR, hrefB, and hrefRB
+            mygrid[histoIndex]->Normalise(htest1[histoIndex][igrid],evtot*yfac,xfac,true);   //normalise 0-B, 1-R, and 2-RthenB Type
+            mygrid[histoIndex]->Normalise(href[histoIndex][igrid],evtot*yfac,xfac,true);     //normalise hrefB, hrefR, and hrefRthenB
 
             if(histoIndex==i_RB)
                 mygrid[histoIndex]->Normalise(htestRB[igrid],evtot*yfac,xfac,true);     //normalise histo of scaled R + scaled B together if it exists
@@ -651,24 +599,18 @@ int main(int argc, char** argv) {
 
 
 
-
-
-
     //
-    // Convolute
+    // Convolute and print all external histograms
     //
     cout<< "\n makegridfromsherpa::main: Performing convolute"<<endl;
     //NGrid = mygrid[0]->GetNGrid(); //NGrid will be the same for all grids, so grid[0] is arbirary
     TH1D* convGridHistos[endIndex+1][NGrid];
     int nLoops = 1;
 
-
     //string pdf_set_name = "PDFsets/CT10.LHgrid"; //hardcoded
     //LHAPDF::initPDFSet(pdf_set_name.c_str(), 0);
     LHAPDF::initPDFSet(pdfSetFile.c_str(), 0);
 
-
-    //LHAPDF::initPDFByName("CT10.LHgrid", 0);
 
 
     std::vector<std::vector<double> > ckm2 = std::vector<std::vector<double> >(13, std::vector<double>(13,0));
@@ -680,9 +622,6 @@ int main(int argc, char** argv) {
     }
 
 
-    string filename;
-    //TFile *fout;
-    //fout= new TFile(filename.c_str(),"recreate");
 
     for(int histoIndex=startIndex; histoIndex<endIndex; histoIndex++)
     {
@@ -700,10 +639,9 @@ int main(int argc, char** argv) {
             cout<< " makegridfromsherpa::main: Printing after convol for type: "<<ntup_names[histoIndex]<<"(histoIndex:"<<histoIndex<<")"<<endl;
 
 
-            filename=mygrid[histoIndex]->GetGridName(igrid);
+            string filename=mygrid[histoIndex]->GetGridName(igrid);
             filename+=ntup_names[histoIndex]+"_histos.root";
             fout= new TFile(filename.c_str(),"recreate");
-
 
 
             MyData *mydata=mygrid[histoIndex]->GetMyData(igrid);
@@ -712,6 +650,7 @@ int main(int argc, char** argv) {
             double xfac=mydata->GetUnitGeVFactor();
             cout<<" makegridfromsherpa::main: Normalise xfac= "<<xfac<<" yfac= "<<yfac<<endl;
 
+
             convGridHistos[histoIndex][igrid]->Print("all");
             convGridHistos[histoIndex][igrid]->Scale(1.0/htestEventCount[histoIndex]);
             mygrid[histoIndex]->Normalise(convGridHistos[histoIndex][igrid],yfac,xfac,true);
@@ -719,8 +658,6 @@ int main(int argc, char** argv) {
             convGridHistos[histoIndex][igrid]->Print("all");
             convGridHistos[histoIndex][igrid]->Write();
             convGridHistos[histoIndex][igrid]->Draw();
-
-
 
             htest1[histoIndex][igrid]->Print("all");
             htest1[histoIndex][igrid]->Write();
@@ -732,7 +669,6 @@ int main(int argc, char** argv) {
 
             TH1D* ratio1 = divide( convGridHistos[histoIndex][igrid],htest1[histoIndex][igrid] );
             if ( ratio1 ) {
-                //ratio->Scale(1/htestEventCount[i_B]);
                 ratio1->SetTitle(string("ratio1_convolute/htest1"+ntup_names[histoIndex]).c_str());
                 ratio1->SetName(string("ratio1_convolute/htest1"+ntup_names[histoIndex]).c_str());
                 ratio1->Print("all");
@@ -741,14 +677,12 @@ int main(int argc, char** argv) {
             }
             TH1D* ratio2 = divide( htest1[histoIndex][igrid], convGridHistos[histoIndex][igrid] );
             if ( ratio2 ) {
-                //ratio->Scale(1/htestEventCount[i_B]);
                 ratio2->SetTitle(string("ratio2_htest1/convolute"+ntup_names[histoIndex]).c_str());
                 ratio2->SetName(string("ratio2_htest1/convolute"+ntup_names[histoIndex]).c_str());
                 ratio2->Print("all");
                 ratio2->Write();
                 ratio2->Draw();
             }
-
         }
 
         fout->Write();
@@ -765,9 +699,9 @@ int main(int argc, char** argv) {
 
 
 
-    //after performing convolutes for R, B, RthenB types, add grids and histo for R and B to get RplusB and check it's convolute
+    //after performing convolutes for B, R, RthenB types, add grids and histo for R and B to get RplusB and check it's convolute
     cout<<" makegridfromsherpa::main: Adding B-Type mygrid to R-Type mygrid"<<endl;
-    mygrid[i_R]->AddGrid(mygrid[i_B]);
+    mygrid[i_R]->AddGrid(mygrid[i_B]); //STILL NEEDS APPLgrid add implimentation so the internals update as well as MyGrid!!
     mygrid[i_R]->SetGridVersionName(string("_RplusB"));
     mygrid[i_R]->write_grid();
 
@@ -790,12 +724,11 @@ int main(int argc, char** argv) {
     TH1D* ConvHistoRplusB[mygrid[i_R]->GetNGrid()];
     TH1D* hrefRplusB[mygrid[i_R]->GetNGrid()];
 
-
     for(int igrid=0; igrid<mygrid[i_R]->GetNGrid(); igrid++)
     {
         TFile *fout;
 
-        filename=mygrid[i_R]->GetGridName(igrid);
+        string filename=mygrid[i_R]->GetGridName(igrid);
         filename+="_RplusB_histos.root";
         fout= new TFile(filename.c_str(),"recreate");
 
@@ -805,7 +738,7 @@ int main(int argc, char** argv) {
         ConvHistoRplusB[igrid]->SetTitle((TString) ("convolute_for_RplusB"));
         ConvHistoRplusB[igrid]->SetLineColor(kBlue);
 
-        //NOTE: NEED TO ACCOUNT FOR xfac and yfac being different when adding grid's MyData???
+        //NOTE: NEED TO ACCOUNT FOR xfac and yfac being different when adding grid's MyData??
         MyData *mydata=mygrid[i_R]->GetMyData(igrid);
         if (!mydata) cout<<" makegridfromsherpa::main: mydata["<<igrid<<"] not found "<<endl;
         double yfac=mydata->GetUnitfbFactor();
@@ -826,8 +759,9 @@ int main(int argc, char** argv) {
         htestRB[igrid]->Draw();
 
 
-
-        hrefRplusB[igrid] = (TH1D*)mygrid[i_R]->GetReference(igrid);
+        //NOTE: currently the applgrids are not added, only the MyGrid histos, so to get the reference histo for RplusB 
+        // we have to get each individually and add them
+        hrefRplusB[igrid] = (TH1D*)mygrid[i_R]->GetReference(igrid); 
         hrefRplusB[igrid]->Add( (TH1D*)mygrid[i_B]->GetReference(igrid) );
         if (!hrefRplusB[igrid]) cout<<" makegridfromsherpa::main: Reference from grid not found ! "<<endl;
         else {
@@ -839,9 +773,9 @@ int main(int argc, char** argv) {
             hrefRplusB[igrid]->SetLineColor(7); //SKY BLUE
         }
 
-
+        //note the scaling to total events for R and B
         hrefRplusB[igrid]->Scale(1.0/(htestEventCount[i_R]+htestEventCount[i_B])); //Are these inidividual internal refs scaled??
-        mygrid[i_R]->Normalise(hrefRplusB[igrid],yfac,xfac,true);     //normalise hrefR, hrefB, and hrefRB
+        mygrid[i_R]->Normalise(hrefRplusB[igrid],yfac,xfac,true);     //normalise hrefB, hrefR, and hrefRB
 
         hrefRplusB[igrid]->Print("all");
         hrefRplusB[igrid]->Write();
@@ -882,7 +816,7 @@ int main(int argc, char** argv) {
 
     /*
         //
-        // Write out histograms
+        // Write out external histograms
         // NOTE: Could(should?) be made nicer by looping over all htest1 histograms instead of hardcoding indexes in htest1
         //
         cout<<"\n makegridfromsherpa::main: Writing test histos: "<<endl;

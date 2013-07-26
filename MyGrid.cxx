@@ -803,6 +803,7 @@ void  MyGrid::fill(MyEvent *myevent )
 
     int nproc=this->GetProcessNumber();
     if (debug) cout<<" MyGrid::fill nproc= "<<nproc<<endl;
+    
 
     if (nproc==1 || nproc==2) { // process 1 and 2 is W
         int icharge=myevent->GetLeptonCharge();
@@ -828,6 +829,7 @@ void  MyGrid::fill(MyEvent *myevent )
         if (myorder==3) myorder=1;
         if (debug) cout<<" MyGrid::fill myorder= "<<myorder<<endl;
     }
+        
 
     if (myorder==-1) {
         cout<<" MyGrid::fill do not know what to do myorder= -1"<<endl;
@@ -838,14 +840,14 @@ void  MyGrid::fill(MyEvent *myevent )
     //cout<<" MyGrid::fill: Dynamically making generic_pdf for function 'decideSubProcess'"<<endl; //<--** test output
     //generic_pdf* mypdf  = dynamic_cast<generic_pdf*>( appl::appl_pdf::getpdf(pdf_function) ); //<--**
 
-    std::cout<<"MyGrid::fill: decideSubProcess using: id1: "<<id1<<", id2: "<<id2<<std::endl;
+    //std::cout<<"MyGrid::fill: decideSubProcess using: id1: "<<id1<<", id2: "<<id2<<std::endl;
     int iproc=mypdf->decideSubProcess(id1,id2); //<--**
 
 
 
     if (iproc==-1)  {
         cout<<" MyGrid::fill do not know what to do "<<endl;
-        myevent->Print();
+        //myevent->Print();
         return;
     }
 
@@ -944,20 +946,28 @@ void  MyGrid::fill(MyEvent *myevent )
             if (bookrefsubprocess) {
 
                 if (myorder==0) {
-                    hrefLOsubprocesseshistostmp[igrid][iproc]->Fill(obs,weight[iproc]);
-                    hrefLOsubprocesseshistossum2tmp[igrid][iproc]->Fill(obs,weight[iproc]*weight[iproc]);
+                    //hrefLOsubprocesseshistostmp[igrid][iproc]->Fill(obs,weight[iproc]);
+                    //hrefLOsubprocesseshistossum2tmp[igrid][iproc]->Fill(obs,weight[iproc]*weight[iproc]);
+                    hrefLOsubprocesseshistostmp[igrid][iproc]->Fill(obs,xsec*xsec);
+                    hrefLOsubprocesseshistossum2tmp[igrid][iproc]->Fill(obs,xsec*xsec);
                 }
 
                 //cout<<" MyGrid::fill subProcs for igrid: "<<igrid<<", obs: "<<obs<<", weight[iproc:"<<iproc<<"]: "<<weight[iproc]<<endl;
 
-                hrefsubprocesseshistostmp[igrid][iproc]->Fill(obs,weight[iproc]);
-                hrefsubprocesseshistossum2tmp[igrid][iproc]->Fill(obs,weight[iproc]*weight[iproc]);
+                //hrefsubprocesseshistostmp[igrid][iproc]->Fill(obs,weight[iproc]);
+                //hrefsubprocesseshistossum2tmp[igrid][iproc]->Fill(obs,weight[iproc]*weight[iproc]);
+                hrefsubprocesseshistostmp[igrid][iproc]->Fill(obs,xsec*xsec);
+                hrefsubprocesseshistossum2tmp[igrid][iproc]->Fill(obs,xsec*xsec);
 
-                hreferencetmp[igrid]->Fill(obs,weight[iproc]);
-                hreferencesum2tmp[igrid]->Fill(obs,weight[iproc]*weight[iproc]);
+                //hreferencetmp[igrid]->Fill(obs,weight[iproc]);
+                //hreferencesum2tmp[igrid]->Fill(obs,weight[iproc]*weight[iproc]);
+                hreferencetmp[igrid]->Fill(obs,xsec*xsec);
+                hreferencesum2tmp[igrid]->Fill(obs,xsec*xsec);
 
-                hreferencefinetmp[igrid]->Fill(obs,weight[iproc]);
-                hreferencefinesum2tmp[igrid]->Fill(obs,weight[iproc]*weight[iproc]);
+                //hreferencefinetmp[igrid]->Fill(obs,weight[iproc]);
+                //hreferencefinesum2tmp[igrid]->Fill(obs,weight[iproc]*weight[iproc]);
+                hreferencefinetmp[igrid]->Fill(obs,xsec*xsec);
+                hreferencefinesum2tmp[igrid]->Fill(obs,xsec*xsec);
             }
         }
         if (this->NewEvent()) {
