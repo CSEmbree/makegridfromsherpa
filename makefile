@@ -1,5 +1,7 @@
+STD = -std=c++0x
 
-CXX = g++
+CXX = g++ $(STD)
+#CXX = g++
 F77 = gfortran
 
 FFLAGS   += -O3 -fPIC 
