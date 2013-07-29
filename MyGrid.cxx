@@ -273,24 +273,28 @@ void MyGrid::Initialize() {
     }
 
 
-    //delete mypdf;
-    //basic_pdf *mypdfTEST = new basic_pdf(); // TEST
+    std::cout<<" MyGrid::Initialize: TEST: dynamic_cast using subprocesssteername: "<<subprocesssteername<<std::endl;
+    
+    /*
+    if(!mypdf)
+        mypdf = new basic_pdf();
+    else
+        mypdf=dynamic_cast<basic_pdf*>( appl::appl_pdf::getpdf("basic") );
+    */
 
-    //mypdf = dynamic_cast<basic_pdf*>( appl::appl_pdf::getpdf(subprocesssteername) ); //TEST
-    //mypdf = dynamic_cast<basic_pdf*>( appl::appl_pdf("basic") ); //TEST
-
-
-    //mypdf = dynamic_cast<basic_pdf*>( appl::appl_pdf::getpdf("basic") ); //TEST
-    mypdf = dynamic_cast<generic_pdf*>( appl::appl_pdf::getpdf(subprocesssteername) ); //<--**
+    //mypdf = dynamic_cast<basic_pdf*>( appl::appl_pdf::getpdf("basic") ); //TEST-basic
+    mypdf = dynamic_cast<generic_pdf*>( appl::appl_pdf::getpdf(subprocesssteername) ); //TEST-generic
+    //mypdf = dynamic_cast<lumi_pdf*>( appl::appl_pdf::getpdf(subprocesssteername) ); //TEST-lumi
+    
     if(!mypdf)
         cout<<" MyGrid::Initialize: Warning: mypdf not found"<<endl;
 
     //mypdf->PrintSubprocess(); //<--** was used to check that subprocesses had been received
+    
 
-
-    nsub=mypdf->GetSubProcessNumber(); //<--**
-    //std::cout<<"TEST: nsub: "<<nsub<<std::endl;
-    //exit(0); //TEST
+    nsub=mypdf->GetSubProcessNumber(); //TEST-basic,generic
+    //nsub=mypdf->size(); //TEST-lumi
+    
     
     //nsub=mygrid.back()->subProcesses(0);//<--**appl_grid method. What was does parameter mean? The 0, 1, ...
     if(nsub<1)
@@ -713,14 +717,22 @@ void MyGrid::book_grid(int igrid)  // inital grid booking
         appl::grid *tmpgrid = new appl::grid( nObsBins, obsBins,      // obs bins
                                               nQ2bins, q2Low, q2Up, qorder,         // Q2 bins and interpolation order
                                               nXbins,   xLow,  xUp, xorder,         // x bins and interpolation order
-                                              pdf_function, lowest_order, nloops );
+                                              pdf_function, lowest_order, nloops ); //TEST-generic
         
                                               
         /*
         appl::grid *tmpgrid = new appl::grid( nObsBins, obsBins,      // obs bins
                                               nQ2bins, q2Low, q2Up, qorder,         // Q2 bins and interpolation order
                                               nXbins,   xLow,  xUp, xorder,         // x bins and interpolation order
-                                              "basic", lowest_order, nloops );  //TEST
+                                              "basic", lowest_order, nloops );  //TEST-basic
+        */
+        
+        /*
+        //******RUN WITH STEERING FILE: atlas2012_top-config.txt that will make pdf_function=top.dat
+        appl::grid *tmpgrid = new appl::grid( nObsBins, obsBins,      // obs bins
+                                              nQ2bins, q2Low, q2Up, qorder,         // Q2 bins and interpolation order
+                                              nXbins,   xLow,  xUp, xorder,         // x bins and interpolation order
+                                              pdf_function, lowest_order, nloops );  //TEST-lumi
         */
 
         mygrid.push_back(tmpgrid);
@@ -857,7 +869,8 @@ void  MyGrid::fill(MyEvent *myevent )
 
     if (iproc==-1)  {
         cout<<" MyGrid::fill do not know what to do "<<endl;
-        //myevent->Print();
+        cout<<" MyGrid::fill incoming partons where id1= "<<id1<<" id2= "<<id2<<endl;
+        myevent->Print();
         return;
     }
 
@@ -1385,22 +1398,6 @@ void MyGrid::AddGrid(MyGrid *myOtherGrid) {
     std::vector<TH1D*> *otherReferenceFineHistos;
     otherReferenceFineHistos = myOtherGrid->GetReferenceFineHistos();
 
-/*
-    //TESTING TO MAKE SURE REFERENCES WERE ADDED CORRECTLY
-    //cout<<"TEST: REFERENCE HISTOGRAMS BEFORE..."<<endl;
-    int Ngrids=this->GetNGrid();
-    for(int igrid = 0; igrid < Ngrids; igrid++)
-    {
-        cout<<"TEST: MyGrid::AddGrid: hreference print for igrid: "<<igrid<<endl;
-        hreference.at(igrid)->Print("all");
-        cout<<"TEST: MyGrid::AddGrid: hreferencefine print for igrid: "<<igrid<<endl;
-        hreferencefine.at(igrid)->Print("all");
-        cout<<"TEST: MyGrid::AddGrid: OTHERhreference print for igrid: "<<igrid<<endl;
-        otherReferenceHistos->at(igrid)->Print("all");
-        cout<<"TEST: MyGrid::AddGrid: OTHERhreferencefine print for igrid: "<<igrid<<endl;
-        otherReferenceFineHistos->at(igrid)->Print("all");
-    }
-*/
 
     //make sure all histos can be added together
     if(hreference.size()!=otherReferenceHistos->size())
@@ -1437,18 +1434,6 @@ void MyGrid::AddGrid(MyGrid *myOtherGrid) {
         }
     }
 
-/*
-    //TESTING TO MAKE SURE REFERENCES WERE ADDED CORRECTLY
-    //cout<<"TEST: REFERENCE HISTOGRAMS AFTER..."<<endl;
-    Ngrids=this->GetNGrid();
-    for(int igrid = 0; igrid < Ngrids; igrid++)
-    {
-        cout<<"TEST: MyGrid::AddGrid: hreference print for igrid: "<<igrid<<endl;
-        hreference[igrid]->Print("all");
-        cout<<"TEST: MyGrid::AddGrid: hreferencefine print for igrid: "<<igrid<<endl;
-        hreferencefine[igrid]->Print("all");
-    }
-*/
 
 
     //add event counters
