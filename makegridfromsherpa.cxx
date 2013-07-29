@@ -715,7 +715,7 @@ int main(int argc, char** argv) {
     }
 
 
-
+    /*
     //write overlays of histograms you are interested in
     string operation = "./overlay";
     string hfile1 = ""; //"atlas2012_5fb_top_mtt_ljet_B_norm-ghistos.root";
@@ -739,7 +739,7 @@ int main(int argc, char** argv) {
             system(performThis.c_str());
         }
     }
-
+*/
 
 
 
