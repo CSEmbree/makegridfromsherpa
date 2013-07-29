@@ -64,6 +64,9 @@ all : makegridfromsherpa
 
 makegridfromsherpa: makegridfromsherpa.o  $(OFILE)
 	$(CXX) $(LDFLAGS) -o $@ $(OFILE) $<  $(CLIBS)
+	
+overlay: overlay.o  $(OFILE)
+	$(CXX) $(LDFLAGS) -o $@ $(OFILE) $<  $(CLIBS)
 
 
 .SUFFIXES : .cxx .o .f .c

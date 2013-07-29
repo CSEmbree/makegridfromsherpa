@@ -471,7 +471,7 @@ int main(int argc, char** argv) {
                 cout<<" makegridfromsherpa::main: Reference from grid found ! "<<endl;
 
                 //Normalise(href[igrid],evuncorr*yfac,xfac,true);
-                TString nameTitle="interal_href"+ntup_names[histoIndex];
+                TString nameTitle="internal_href"+ntup_names[histoIndex];
                 href[histoIndex][igrid]->SetTitle(nameTitle);
                 href[histoIndex][igrid]->SetName(nameTitle);
                 href[histoIndex][igrid]->SetLineColor(7); //SKY BLUE
@@ -641,7 +641,7 @@ int main(int argc, char** argv) {
             
             for(int isubproc=0; isubproc<mygrid[histoIndex]->GetNSubProcess(igrid);  isubproc++){
                 subProcConvGridHistos[histoIndex][igrid][isubproc] = (TH1D*)mygrid[histoIndex]->GetGrid(igrid)->convolute_subproc(isubproc, evolvepdf_, alphaspdf_, nLoops );
-                string sub_proc_hist_name="subProcConvolute_for"+ntup_names[histoIndex]+"_subProc-"+to_string(isubproc);
+                string sub_proc_hist_name="subProc-"+to_string(isubproc)+"-convolute_for"+ntup_names[histoIndex];
                 subProcConvGridHistos[histoIndex][igrid][isubproc]->SetName((TString) (sub_proc_hist_name));
                 subProcConvGridHistos[histoIndex][igrid][isubproc]->SetTitle((TString) (sub_proc_hist_name));
                 subProcConvGridHistos[histoIndex][igrid][isubproc]->SetLineColor(kBlue);
@@ -716,8 +716,29 @@ int main(int argc, char** argv) {
 
 
 
-
-
+    //write overlays of histograms you are interested in
+    string operation = "./overlay";
+    string hfile1 = ""; //"atlas2012_5fb_top_mtt_ljet_B_norm-ghistos.root";
+    string hfile2 = ""; //"atlas2012_5fb_top_mtt_ljet_R_histos.root";
+    string hname1 = ""; //"convolute_for_R";
+    string hname2 = ""; //"internal_href_R";
+    
+    for(int histoIndex=startIndex; histoIndex<endIndex; histoIndex++)
+    {
+        cout<< " makegridfromsherpa::main: Writing overlays for: "<<ntup_names[histoIndex]<<"(histoIndex:"<<histoIndex<<")"<<endl;
+        for(int igrid=0; igrid<NGrid; igrid++)
+        {
+            hfile1="atlas2012_5fb_top_mtt_ljet"+ntup_names[histoIndex]+"_histos.root";
+            hfile2="atlas2012_5fb_top_mtt_ljet"+ntup_names[histoIndex]+"_histos.root";
+            hname1="convolute_for"+ntup_names[histoIndex];
+            hname2="internal_href"+ntup_names[histoIndex];
+            
+            string performThis = operation+" "+hfile1+" "+hfile2+" "+hname1+" "+hname2;
+            cout<< " makegridfromsherpa::main: performing: "<<performThis<<endl;
+            
+            system(performThis.c_str());
+        }
+    }
 
 
 
@@ -792,7 +813,7 @@ int main(int argc, char** argv) {
         else {
             cout<<" makegridfromsherpa::main: Reference from grid found ! "<<endl;
 
-            TString nameTitle="interal_href_RplusB";
+            TString nameTitle="internal_href_RplusB";
             hrefRplusB[igrid]->SetTitle(nameTitle);
             hrefRplusB[igrid]->SetName(nameTitle);
             hrefRplusB[igrid]->SetLineColor(7); //SKY BLUE
@@ -904,5 +925,7 @@ int main(int argc, char** argv) {
         system("open xsec.pdf &");
 
     */
+   
+    
     return 0;
 }

@@ -712,6 +712,13 @@ void MyGrid::book_grid(int igrid)  // inital grid booking
                                               nQ2bins, q2Low, q2Up, qorder,         // Q2 bins and interpolation order
                                               nXbins,   xLow,  xUp, xorder,         // x bins and interpolation order
                                               pdf_function, lowest_order, nloops );
+                                              
+        /*
+        appl::grid *tmpgrid = new appl::grid( nObsBins, obsBins,      // obs bins
+                                              nQ2bins, q2Low, q2Up, qorder,         // Q2 bins and interpolation order
+                                              nXbins,   xLow,  xUp, xorder,         // x bins and interpolation order
+                                              "basic", lowest_order, nloops ); 
+        */                                     
 
         mygrid.push_back(tmpgrid);
 
@@ -1061,7 +1068,6 @@ void MyGrid::DivideByBinWidth(TH1D* h)
 void MyGrid::write_grid()   // writes out grid after some events
 {
 
-
     int Ngrids=this->GetNGrid();
 
     std::cout<<" MyGrid::write_grid Write out the grid ... Ngrids " << Ngrids << std::endl;
@@ -1078,51 +1084,15 @@ void MyGrid::write_grid()   // writes out grid after some events
 
         mygrid[igrid]->trim();
 
-        int trim_size = mygrid[igrid]->size();
-
-
-        //        cout<<" trimmned "<<endl;
-        //        mygrid[igrid]->untrim();
-        //        int untrim_size = mygrid[igrid]->size();
-
-        //        cout<<"Saved Space ratio: "<<(trim_size/untrim_size*1.)<<endl;
-
-/*
-        //cout<<" untrimmed "<<endl;
-        double yfac=mydata[igrid]->GetUnitfbFactor();
-        double xfac=mydata[igrid]->GetUnitGeVFactor();
-        cout<<" MyGrid::write_grid normalise xfac= "<<xfac<<" yfac= "<<yfac<<endl;
-
-
-        //NEW normalization
-        if(!hreference[igrid])
-            cout<<" MyGrid::write_grid: WARNING: Reference histogram 'hreference' for igird: "<<igrid<<" not found!"<<endl;
-        hreference[igrid]->Scale(1.0/events[igrid]); //href/nhref
-        //this->Normalise(hreference[igrid],yfac,xfac,true);
-
-        if(!hreferencefine[igrid])
-            cout<<" MyGrid::write_grid: WARNING: Reference histogram 'hreferencefine' for igird: "<<igrid<<" not found!"<<endl;
-        hreferencefine[igrid]->Scale(1.0/events[igrid]); //hrefFine/nhrefFine
-        //this->Normalise(hreferencefine[igrid],yfac,xfac,true);
-
-
-        for (int iproc=0; iproc<nsub; iproc++) {
-            if (!hrefsubprocesseshistos[igrid][iproc])
-                cout<<" MyGrid::write_grid: WARNING: Reference histogram 'hrefsubprocesseshistos' for igrid: "<<igrid<<", iproc: "<<iproc<<" not found!"<<endl;
-            else {
-                hrefsubprocesseshistos[igrid][iproc]->Scale(1.0/events[igrid]); //hrefsubprocesseshistos/nhrefsubprocesseshistos
-                //this->Normalise(hrefsubprocesseshistos[igrid][iproc],yfac,xfac,true);
-            }
-
-            if (!hrefLOsubprocesseshistos[igrid][iproc])
-                cout<<" MyGrid::write_grid: WARNING: Reference histogram 'hrefLOsubprocesseshistos' for igrid: "<<igrid<<", iproc: "<<iproc<<" not found!"<<endl;
-            else {
-                hrefLOsubprocesseshistos[igrid][iproc]->Scale(1.0/events[igrid]); //hrefLOsubprocesseshistos/nhrefLOsubprocesseshistos
-                //this->Normalise(hrefLOsubprocesseshistos[igrid][iproc],yfac,xfac,true);
-            }
+        if (debug) {
+            int trim_size = mygrid[igrid]->size();
+            cout<<" trimmned "<<endl;
+            mygrid[igrid]->untrim();
+            int untrim_size = mygrid[igrid]->size();
+            cout<<"Saved Space ratio: "<<(trim_size/untrim_size*1.)<<endl;
         }
-        //NEW normalization
-*/
+
+
 
 
 
@@ -1139,13 +1109,6 @@ void MyGrid::write_grid()   // writes out grid after some events
 
 
 
-
-
-
-        //        TFile *f = new TFile(filename.c_str(),"update");
-
-        //std::cout<<"TEST: GetGridFullFileName: "<<GetGridFullFileName(igrid)<<", filename: "<<filename<<std::endl;
-
         if(bookrefsubprocess) {
             _filename = filename;
             newFileName = "-ghistos.root";
@@ -1155,13 +1118,6 @@ void MyGrid::write_grid()   // writes out grid after some events
             TFile *f = new TFile( _filename.c_str(),"recreate");
             f->Print();
 
-            //gDirectory->cd();
-            /*
-            cout<<" MyGrid::write_grid to filename= "<<filename<<endl;
-            if (!mygrid[igrid]) cout<<" MyGrid::write_grid() mygrid not found ! "<<endl;
-            else mygrid[igrid]->Write(filename);
-            cout<<" TEST mygrid[igrid] is finished writing!"<<endl; //TEST
-            */
 
             if (!hreference[igrid]) {
                 cout<<" MyGrid::write_grid() hreference["<<igrid<<"] not found ! "<<endl;
@@ -1189,19 +1145,8 @@ void MyGrid::write_grid()   // writes out grid after some events
                 else hrefsubprocesseshistos[igrid][iproc]->Write();
             }
 
-            cout << " MyGrid::Write() size(trimmed)=" << trim_size << endl;
-
-
             f->Close();
         }
-
-        //int nsub = mygrid[igrid]->subProcesses();
-
-        //delete mygrid[igrid]; //<--** delete break the GetReference(...) function?
-
-
-
-
     }
 
     time_t _t;
