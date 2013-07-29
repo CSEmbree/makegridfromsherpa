@@ -121,7 +121,7 @@ int main(int argc, char** argv) {
     //string inputname="atlas2012_top.txt";
 
     //attempt to use EnvVar to find steeringfile, otherwise use default folder path steering/ in current dir
-    string steeringName = "atlas2012_top.txt";
+    string steeringName = "atlas2012_top-config.txt"; //*-config for lumi, without for generic
     string steeringPath = "steering";
     string steeringFile = steeringPath+"/"+steeringName;
 
