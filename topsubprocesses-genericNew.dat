@@ -1,0 +1,36 @@
+%
+% config files for pp ->t tbar processe
+% need to think -> just copy from W+jets
+%
+% first proton second proton 
+% 
+g     g
+% 
+g     u  
+u     g
+g     ubar
+ubar  g
+g     d 
+d     g
+g     dbar 
+dbar  g
+%
+ubar  d
+d     ubar 
+u     u
+ubar  dbar 
+dbar  ubar 
+%
+u     ubar 
+ubar  u 
+d     dbar 
+dbar  d
+%
+dbar  dbar
+ubar  ubar
+%
+d     d
+u     d
+d     u 
+dbar  u 
+u       dbar 
