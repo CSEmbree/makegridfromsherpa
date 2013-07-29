@@ -283,8 +283,8 @@ void MyGrid::Initialize() {
     */
 
     //mypdf = dynamic_cast<basic_pdf*>( appl::appl_pdf::getpdf("basic") ); //TEST-basic
-    mypdf = dynamic_cast<generic_pdf*>( appl::appl_pdf::getpdf(subprocesssteername) ); //TEST-generic
-    //mypdf = dynamic_cast<lumi_pdf*>( appl::appl_pdf::getpdf(subprocesssteername) ); //TEST-lumi
+    //mypdf = dynamic_cast<generic_pdf*>( appl::appl_pdf::getpdf(subprocesssteername) ); //TEST-generic
+    mypdf = dynamic_cast<lumi_pdf*>( appl::appl_pdf::getpdf(subprocesssteername) ); //TEST-lumi
     
     if(!mypdf)
         cout<<" MyGrid::Initialize: Warning: mypdf not found"<<endl;
@@ -292,8 +292,8 @@ void MyGrid::Initialize() {
     //mypdf->PrintSubprocess(); //<--** was used to check that subprocesses had been received
     
 
-    nsub=mypdf->GetSubProcessNumber(); //TEST-basic,generic
-    //nsub=mypdf->size(); //TEST-lumi
+    //nsub=mypdf->GetSubProcessNumber(); //TEST-basic,generic
+    nsub=mypdf->size(); //TEST-lumi
     
     
     //nsub=mygrid.back()->subProcesses(0);//<--**appl_grid method. What was does parameter mean? The 0, 1, ...
@@ -713,12 +713,12 @@ void MyGrid::book_grid(int igrid)  // inital grid booking
         cout<<" pdf_function= "<<pdf_function<<endl;
         cout<<" lowest_order= "<<lowest_order<<" nloops= "<< nloops<<endl;
 
-        
+        /*
         appl::grid *tmpgrid = new appl::grid( nObsBins, obsBins,      // obs bins
                                               nQ2bins, q2Low, q2Up, qorder,         // Q2 bins and interpolation order
                                               nXbins,   xLow,  xUp, xorder,         // x bins and interpolation order
                                               pdf_function, lowest_order, nloops ); //TEST-generic
-        
+        */
                                               
         /*
         appl::grid *tmpgrid = new appl::grid( nObsBins, obsBins,      // obs bins
@@ -727,13 +727,13 @@ void MyGrid::book_grid(int igrid)  // inital grid booking
                                               "basic", lowest_order, nloops );  //TEST-basic
         */
         
-        /*
-        //******RUN WITH STEERING FILE: atlas2012_top-config.txt that will make pdf_function=top.dat
+        
+        //******RUN WITH STEERING FILE: atlas2012_top-config.txt that will make pdf_function=top.config
         appl::grid *tmpgrid = new appl::grid( nObsBins, obsBins,      // obs bins
                                               nQ2bins, q2Low, q2Up, qorder,         // Q2 bins and interpolation order
                                               nXbins,   xLow,  xUp, xorder,         // x bins and interpolation order
                                               pdf_function, lowest_order, nloops );  //TEST-lumi
-        */
+        
 
         mygrid.push_back(tmpgrid);
 
@@ -871,6 +871,7 @@ void  MyGrid::fill(MyEvent *myevent )
         cout<<" MyGrid::fill do not know what to do "<<endl;
         cout<<" MyGrid::fill incoming partons where id1= "<<id1<<" id2= "<<id2<<endl;
         myevent->Print();
+        exit(0); //TEST
         return;
     }
 

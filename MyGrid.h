@@ -16,9 +16,9 @@ using std::string;
 #include "MyData.h"
 #include "appl_grid/appl_grid.h"
 #include "appl_grid/appl_igrid.h"
-#include "appl_grid/generic_pdf.h" //TEST-generic
+//#include "appl_grid/generic_pdf.h" //TEST-generic
 //#include "appl_grid/basic_pdf.h" //TEST-basic
-//#include "appl_grid/lumi_pdf.h" //TEST-lumi
+#include "appl_grid/lumi_pdf.h" //TEST-lumi
 
 //#include "appl_grid/appl_pdf.h"
 
@@ -108,9 +108,9 @@ class MyGrid {
  
   std::vector<MyData*> mydata;        // information about data from steering file
 
- //lumi_pdf *mypdf; //TEST-lumi
+ lumi_pdf *mypdf; //TEST-lumi
  //basic_pdf *mypdf; //TEST-basic
- generic_pdf *mypdf; //TEST-generic
+ //generic_pdf *mypdf; //TEST-generic
   
   int decideSubProcess(int iflav1,int iflav2);
 
@@ -122,9 +122,9 @@ class MyGrid {
 
   //int GetSubProcess() { return mypdf->GetCurrentSubProcess();};
   //string GetSubProcessName(int isub) { return mypdf->GetSubProcessName(isub);}; //not implimented by basic_pdf
-  void SetSubProcess(generic_pdf *subpro) { mypdf=subpro; return;}; //TEST-generic
+  //void SetSubProcess(generic_pdf *subpro) { mypdf=subpro; return;}; //TEST-generic
   //void SetSubProcess(basic_pdf *subpro) { mypdf=subpro; return;}; //TEST-basic
-  //void SetSubProcess(lumi_pdf *subpro) { mypdf=subpro; return;}; //TEST-lumi
+  void SetSubProcess(lumi_pdf *subpro) { mypdf=subpro; return;}; //TEST-lumi
   int GetNSubProcess(int igrid){ return mygrid[igrid]->subProcesses(); };
   
 
