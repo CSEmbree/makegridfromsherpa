@@ -278,10 +278,9 @@ void MyGrid::Initialize() {
 
     //mypdf = dynamic_cast<basic_pdf*>( appl::appl_pdf::getpdf(subprocesssteername) ); //TEST
     //mypdf = dynamic_cast<basic_pdf*>( appl::appl_pdf("basic") ); //TEST
-    //mypdf->BasicInit(); //TEST
 
 
-
+    //mypdf = dynamic_cast<basic_pdf*>( appl::appl_pdf::getpdf("basic") ); //TEST
     mypdf = dynamic_cast<generic_pdf*>( appl::appl_pdf::getpdf(subprocesssteername) ); //<--**
     if(!mypdf)
         cout<<" MyGrid::Initialize: Warning: mypdf not found"<<endl;
@@ -290,6 +289,9 @@ void MyGrid::Initialize() {
 
 
     nsub=mypdf->GetSubProcessNumber(); //<--**
+    //std::cout<<"TEST: nsub: "<<nsub<<std::endl;
+    //exit(0); //TEST
+    
     //nsub=mygrid.back()->subProcesses(0);//<--**appl_grid method. What was does parameter mean? The 0, 1, ...
     if(nsub<1)
         cout<<" MyGrid::Initialize: WARNING: nsub: "<<nsub<<endl;
@@ -367,14 +369,14 @@ void MyGrid::NormaliseInternalRefHistos(int igrid) {
     if(!hreference[igrid]) {
         cout<<" MyGrid::NormaliseInternalRefHistos: WARNING: Reference histogram 'hreference' for igird: "
             <<igrid<<" not found!"<<endl;
-        exit(0); //TEST
+        exit(0);
     }
     else this->Normalise(hreference[igrid],yfac,xfac,true);
 
     if(!hreferencefine[igrid]) {
         cout<<" MyGrid::NormaliseInternalRefHistos: WARNING: Reference histogram 'hreferencefine' for igird: "
             <<igrid<<" not found!"<<endl;
-        exit(0); //TEST
+        exit(0);
     }
     else this->Normalise(hreferencefine[igrid],yfac,xfac,true);
 
@@ -383,7 +385,7 @@ void MyGrid::NormaliseInternalRefHistos(int igrid) {
         if (!hrefsubprocesseshistos[igrid][iproc]) {
             cout<<" MyGrid::NormaliseInternalRefHistos: WARNING: Reference histogram 'hrefsubprocesseshistos' for igrid: "
                 <<igrid<<", iproc: "<<iproc<<" not found!"<<endl;
-            exit(0); //TEST
+            exit(0);
         }
         else this->Normalise(hrefsubprocesseshistos[igrid][iproc],yfac,xfac,true);
 
@@ -391,7 +393,7 @@ void MyGrid::NormaliseInternalRefHistos(int igrid) {
         if (!hrefLOsubprocesseshistos[igrid][iproc]) {
             cout<<" MyGrid::NormaliseInternalRefHistos: WARNING: Reference histogram 'hrefLOsubprocesseshistos' for igrid: "
                 <<igrid<<", iproc: "<<iproc<<" not found!"<<endl;
-            exit(0); //TEST
+            exit(0);
         }
         else this->Normalise(hrefLOsubprocesseshistos[igrid][iproc],yfac,xfac,true);
     }
@@ -707,18 +709,19 @@ void MyGrid::book_grid(int igrid)  // inital grid booking
         cout<<" pdf_function= "<<pdf_function<<endl;
         cout<<" lowest_order= "<<lowest_order<<" nloops= "<< nloops<<endl;
 
-
+        
         appl::grid *tmpgrid = new appl::grid( nObsBins, obsBins,      // obs bins
                                               nQ2bins, q2Low, q2Up, qorder,         // Q2 bins and interpolation order
                                               nXbins,   xLow,  xUp, xorder,         // x bins and interpolation order
                                               pdf_function, lowest_order, nloops );
+        
                                               
         /*
         appl::grid *tmpgrid = new appl::grid( nObsBins, obsBins,      // obs bins
                                               nQ2bins, q2Low, q2Up, qorder,         // Q2 bins and interpolation order
                                               nXbins,   xLow,  xUp, xorder,         // x bins and interpolation order
-                                              "basic", lowest_order, nloops ); 
-        */                                     
+                                              "basic", lowest_order, nloops );  //TEST
+        */
 
         mygrid.push_back(tmpgrid);
 
@@ -1121,26 +1124,26 @@ void MyGrid::write_grid()   // writes out grid after some events
 
             if (!hreference[igrid]) {
                 cout<<" MyGrid::write_grid() hreference["<<igrid<<"] not found ! "<<endl;
-                exit(0); //TEST
+                exit(0);
             }
             else hreference[igrid]->Write();
 
             if (!hreferencefine[igrid]) {
                 cout<<" MyGrid::write_grid() hreferencefine["<<igrid<<"] not found ! "<<endl;
-                exit(0); //TEST
+                exit(0);
             }
             else hreferencefine[igrid]->Write();
 
             for (int iproc=0; iproc<nsub; iproc++) {
                 if (!(hrefLOsubprocesseshistos[igrid][iproc])) {
                     cout<<" MyGrid::write_grid() hrefLOsubprocesseshistos["<<igrid<<"]["<<iproc<<"] not found ! "<<endl;
-                    exit(0); //TEST
+                    exit(0);
                 }
                 else hrefLOsubprocesseshistos[igrid][iproc]->Write();
 
                 if (!(hrefsubprocesseshistos[igrid][iproc])) {
                     cout<<" MyGrid::write_grid()  hrefsubprocesseshistos["<<igrid<<"]["<<iproc<<"] not found ! "<<endl;
-                    exit(0); //TEST
+                    exit(0);
                 }
                 else hrefsubprocesseshistos[igrid][iproc]->Write();
             }

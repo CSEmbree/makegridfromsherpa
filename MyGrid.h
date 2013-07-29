@@ -118,7 +118,7 @@ class MyGrid {
   
   void AddGrid(MyGrid *myOtherGrid); //add the reference histograms of another grid to this one.
 
-  int GetSubProcess() { return mypdf->GetCurrentSubProcess();};
+  //int GetSubProcess() { return mypdf->GetCurrentSubProcess();};
   //string GetSubProcessName(int isub) { return mypdf->GetSubProcessName(isub);}; //not implimented by basic_pdf
   void SetSubProcess(generic_pdf *subpro) { mypdf=subpro; return;};
   //void SetSubProcess(basic_pdf *subpro) { mypdf=subpro; return;}; //TEST
