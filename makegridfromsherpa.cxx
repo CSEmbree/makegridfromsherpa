@@ -639,6 +639,7 @@ int main(int argc, char** argv) {
             LOconvGridHistos[histoIndex][igrid]->SetTitle((TString) ("LOconvolute_for" + ntup_names[histoIndex]));
             LOconvGridHistos[histoIndex][igrid]->SetLineColor(kBlue);
             
+            /*
             for(int isubproc=0; isubproc<mygrid[histoIndex]->GetNSubProcess(igrid);  isubproc++){
                 subProcConvGridHistos[histoIndex][igrid][isubproc] = (TH1D*)mygrid[histoIndex]->GetGrid(igrid)->convolute_subproc(isubproc, evolvepdf_, alphaspdf_, nLoops );
                 string sub_proc_hist_name="subProc-"+to_string(isubproc)+"-convolute_for"+ntup_names[histoIndex];
@@ -646,6 +647,7 @@ int main(int argc, char** argv) {
                 subProcConvGridHistos[histoIndex][igrid][isubproc]->SetTitle((TString) (sub_proc_hist_name));
                 subProcConvGridHistos[histoIndex][igrid][isubproc]->SetLineColor(kBlue);
             }
+            */
             
             convGridHistos[histoIndex][igrid] = (TH1D*)mygrid[histoIndex]->GetGrid(igrid)->convolute( evolvepdf_, alphaspdf_, nLoops );
             convGridHistos[histoIndex][igrid]->SetName((TString) ("convolute_for" + ntup_names[histoIndex]));
@@ -671,12 +673,14 @@ int main(int argc, char** argv) {
             LOconvGridHistos[histoIndex][igrid]->Write();
             LOconvGridHistos[histoIndex][igrid]->Draw();
 
+/*
             for(int isubproc=0; isubproc<mygrid[histoIndex]->GetNSubProcess(igrid);  isubproc++){
                 subProcConvGridHistos[histoIndex][igrid][isubproc]->Scale(1.0/htestEventCount[histoIndex]);
                 mygrid[histoIndex]->Normalise(subProcConvGridHistos[histoIndex][igrid][isubproc],yfac,xfac,true);
                 subProcConvGridHistos[histoIndex][igrid][isubproc]->Write();
                 subProcConvGridHistos[histoIndex][igrid][isubproc]->Draw();
             }
+            */
             
             convGridHistos[histoIndex][igrid]->Scale(1.0/htestEventCount[histoIndex]);
             mygrid[histoIndex]->Normalise(convGridHistos[histoIndex][igrid],yfac,xfac,true);
