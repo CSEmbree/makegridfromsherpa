@@ -639,7 +639,7 @@ int main(int argc, char** argv) {
             LOconvGridHistos[histoIndex][igrid]->SetTitle((TString) ("LOconvolute_for" + ntup_names[histoIndex]));
             LOconvGridHistos[histoIndex][igrid]->SetLineColor(kBlue);
             
-            for(int isubproc; isubproc<mygrid[histoIndex]->GetNSubProcess(igrid);  isubproc++){
+            for(int isubproc=0; isubproc<mygrid[histoIndex]->GetNSubProcess(igrid);  isubproc++){
                 subProcConvGridHistos[histoIndex][igrid][isubproc] = (TH1D*)mygrid[histoIndex]->GetGrid(igrid)->convolute_subproc(isubproc, evolvepdf_, alphaspdf_, nLoops );
                 string sub_proc_hist_name="subProcConvolute_for"+ntup_names[histoIndex]+"_subProc-"+to_string(isubproc);
                 subProcConvGridHistos[histoIndex][igrid][isubproc]->SetName((TString) (sub_proc_hist_name));
@@ -671,7 +671,7 @@ int main(int argc, char** argv) {
             LOconvGridHistos[histoIndex][igrid]->Write();
             LOconvGridHistos[histoIndex][igrid]->Draw();
 
-            for(int isubproc; isubproc<mygrid[histoIndex]->GetNSubProcess(igrid);  isubproc++){
+            for(int isubproc=0; isubproc<mygrid[histoIndex]->GetNSubProcess(igrid);  isubproc++){
                 subProcConvGridHistos[histoIndex][igrid][isubproc]->Scale(1.0/htestEventCount[histoIndex]);
                 mygrid[histoIndex]->Normalise(subProcConvGridHistos[histoIndex][igrid][isubproc],yfac,xfac,true);
                 subProcConvGridHistos[histoIndex][igrid][isubproc]->Write();
