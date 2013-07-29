@@ -4,33 +4,33 @@
 %
 % first proton second proton 
 % 
-gluon  gluon 
+g     g
 % 
-gluon   up  
-up      gluon 
-gluon   upbar
-upbar   gluon 
-gluon   down 
-down    gluon 
-gluon   downbar 
-downbar gluon 
+g     u  
+u     g
+g     ubar
+ubar  g
+g     d 
+d     g
+g     dbar 
+dbar  g
 %
-upbar   down 
-down    upbar 
-up      up 
-upbar   downbar 
-downbar upbar 
+ubar  d
+d     ubar 
+u     u
+ubar  dbar 
+dbar  ubar 
 %
-up      upbar 
-upbar   up 
-down    downbar 
-downbar down 
+u     ubar 
+ubar  u 
+d     dbar 
+dbar  d
 %
-downbar downbar
-upbar   upbar
+dbar  dbar
+ubar  ubar
 %
-down     down
-up       down 
-down     up 
-downbar  up 
-up       downbar 
+d     d
+u     d
+d     u 
+dbar  u 
+u       dbar 
