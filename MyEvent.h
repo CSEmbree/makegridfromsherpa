@@ -68,7 +68,7 @@ class MyEvent {
   void SetEventId(int id) {eventid=id; return;};
 
   double GetX1(){ return x1;};
-  double GetX2(){ return x1;};
+  double GetX2(){ return x2;};
   void SetX1(double myx){x1=myx; return;};
   void SetX2(double myx){x2=myx; return;};
 
