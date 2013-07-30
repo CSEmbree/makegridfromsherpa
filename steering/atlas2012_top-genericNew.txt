@@ -1,4 +1,4 @@
-subprocesssteername topsubprocesses.dat
+subprocesssteername topsubprocesses-genericNew.dat
 ntupdiroutput outputtop
 ntupdirinput sherpatopinputs
 ntupname NTuple_
