@@ -20,6 +20,8 @@ MyData::MyData()
     blogx=false;
     bliny=true;
     blinx=true;
+    
+    njetcut=false;
 
     dividebybinwith=false;
 
@@ -200,6 +202,8 @@ void MyData::ReadData(const char fname[200], double myscale) {
     } else {
         if (debug) cout <<" MyData::ReadData: read data file: " << fname << endl;
     }
+    
+    cout <<"TEST: MyData::ReadData: read data file: " << fname << endl;
 
     int iline=0;
     int nsyst=1;
