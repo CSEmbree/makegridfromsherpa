@@ -728,7 +728,8 @@ void MyGrid::book_grid(int igrid)  // inital grid booking
         */
         
         
-        //******RUN WITH STEERING FILE: atlas2012_top-config.txt that will make pdf_function=top.config
+        
+        ///******RUN WITH STEERING FILE: atlas2012_top-config.txt that will make pdf_function=top.config
         appl::grid *tmpgrid = new appl::grid( nObsBins, obsBins,      // obs bins
                                               nQ2bins, q2Low, q2Up, qorder,         // Q2 bins and interpolation order
                                               nXbins,   xLow,  xUp, xorder,         // x bins and interpolation order
