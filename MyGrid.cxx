@@ -973,7 +973,7 @@ void  MyGrid::fill(MyEvent *myevent )
                 if (myorder==0) {
                     //hrefLOsubprocesseshistostmp[igrid][iproc]->Fill(obs,weight[iproc]);
                     //hrefLOsubprocesseshistossum2tmp[igrid][iproc]->Fill(obs,weight[iproc]*weight[iproc]);
-                    hrefLOsubprocesseshistostmp[igrid][iproc]->Fill(obs,xsec*xsec);
+                    hrefLOsubprocesseshistostmp[igrid][iproc]->Fill(obs,xsec);
                     hrefLOsubprocesseshistossum2tmp[igrid][iproc]->Fill(obs,xsec*xsec);
                 }
 
@@ -981,17 +981,17 @@ void  MyGrid::fill(MyEvent *myevent )
 
                 //hrefsubprocesseshistostmp[igrid][iproc]->Fill(obs,weight[iproc]);
                 //hrefsubprocesseshistossum2tmp[igrid][iproc]->Fill(obs,weight[iproc]*weight[iproc]);
-                hrefsubprocesseshistostmp[igrid][iproc]->Fill(obs,xsec*xsec);
+                hrefsubprocesseshistostmp[igrid][iproc]->Fill(obs,xsec);
                 hrefsubprocesseshistossum2tmp[igrid][iproc]->Fill(obs,xsec*xsec);
 
                 //hreferencetmp[igrid]->Fill(obs,weight[iproc]);
                 //hreferencesum2tmp[igrid]->Fill(obs,weight[iproc]*weight[iproc]);
-                hreferencetmp[igrid]->Fill(obs,xsec*xsec);
+                hreferencetmp[igrid]->Fill(obs,xsec);
                 hreferencesum2tmp[igrid]->Fill(obs,xsec*xsec);
 
                 //hreferencefinetmp[igrid]->Fill(obs,weight[iproc]);
                 //hreferencefinesum2tmp[igrid]->Fill(obs,weight[iproc]*weight[iproc]);
-                hreferencefinetmp[igrid]->Fill(obs,xsec*xsec);
+                hreferencefinetmp[igrid]->Fill(obs,xsec);
                 hreferencefinesum2tmp[igrid]->Fill(obs,xsec*xsec);
             }
         }
@@ -999,6 +999,8 @@ void  MyGrid::fill(MyEvent *myevent )
             //std::cout<<" MyGrid::fill: TEST: NEW EVENT ADD igrid: "<<igrid<<", iproc: "<<iproc<<std::endl;
             //std::cout<<" MyGrid::fill: TEST: Adding hrefLOsubprocesseshistostmp[igrid:"<<igrid<<"][iproc:"<<iproc<<"]: "<<hrefLOsubprocesseshistostmp[igrid][iproc]<<" TO hrefsubprocesseshistos[igrid:"<<igrid<<"][iproc:"<<iproc<<"]: "<<hrefsubprocesseshistos[igrid][iproc]<<std::endl;
 
+
+            /*
             hreference[igrid]->Add(hreferencetmp[igrid]);
             hreferencetmp[igrid]->Reset();
             //hreference[igrid]->Print("all");
@@ -1024,6 +1026,31 @@ void  MyGrid::fill(MyEvent *myevent )
 
             hrefsubprocesseshistossum2[igrid][iproc]->Add(hrefsubprocesseshistossum2tmp[igrid][iproc]);
             hrefsubprocesseshistossum2tmp[igrid][iproc]->Reset();
+            */
+            
+            hreference[igrid] = hreferencetmp[igrid];
+            
+            
+            hreferencefine[igrid]=hreferencefinetmp[igrid];
+            
+
+            hreferencesum2[igrid]=hreferencesum2tmp[igrid];
+            
+
+            hreferencefinesum2[igrid]=hreferencefinesum2tmp[igrid];
+
+
+            hrefLOsubprocesseshistos[igrid][iproc]=hrefLOsubprocesseshistostmp[igrid][iproc];
+
+
+            hrefLOsubprocesseshistossum2[igrid][iproc]=hrefLOsubprocesseshistossum2tmp[igrid][iproc];
+
+
+            hrefsubprocesseshistos[igrid][iproc]=hrefsubprocesseshistostmp[igrid][iproc];
+
+
+            hrefsubprocesseshistossum2[igrid][iproc] = hrefsubprocesseshistossum2tmp[igrid][iproc];
+
         } // new event
     } //loop over grid
     return;
