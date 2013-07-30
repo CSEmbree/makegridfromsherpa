@@ -867,11 +867,12 @@ void  MyGrid::fill(MyEvent *myevent )
     int iproc=mypdf->decideSubProcess(id1,id2); //<--**
 
 
+
     if (iproc==-1)  {
         cout<<" MyGrid::fill do not know what to do "<<endl;
         cout<<" MyGrid::fill incoming partons where id1= "<<id1<<" id2= "<<id2<<endl;
         myevent->Print();
-        exit(0); //TEST
+        //exit(0); //TEST
         return;
     }
 
