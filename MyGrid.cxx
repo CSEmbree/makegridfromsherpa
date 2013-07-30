@@ -867,7 +867,6 @@ void  MyGrid::fill(MyEvent *myevent )
     int iproc=mypdf->decideSubProcess(id1,id2); //<--**
 
 
-
     if (iproc==-1)  {
         cout<<" MyGrid::fill do not know what to do "<<endl;
         cout<<" MyGrid::fill incoming partons where id1= "<<id1<<" id2= "<<id2<<endl;
@@ -1350,6 +1349,8 @@ bool  MyGrid::eventcuts(MyEvent *myevent, int igrid) {
     };
 
     if (mydebug&&accept) cout<<" MyGrid::eventcuts event passed 3 "<<endl;
+    
+    //std::cout<<"TEST: MyGrid::eventcuts: accept: "<<accept<<", mydata->GetNJetCut(): "<<mydata->GetNJetCut()<<std::endl;
 
     if (accept&&mydata->GetNJetCut()) {
         if (mydebug) cout<<" MyGrid::eventcuts njets= "<<njets<<endl;
