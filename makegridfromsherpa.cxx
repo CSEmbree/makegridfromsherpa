@@ -524,7 +524,6 @@ int main(int argc, char** argv) {
             htest1[histoIndex][igrid]->Scale(1.0/htestEventCount[histoIndex]); //hR/nR, hB/nB, hBR/nBR, etc
             href[histoIndex][igrid]->Scale(1.0/htestEventCount[histoIndex]); //hrefR/nR, hrefB/nB,hrefRB/nRB, etc
 
-
             //sum the scaled R and B-type together, "should" be the same as htest[i_RB] where R and B are done together
             if(histoIndex==i_RB)
             {
@@ -534,17 +533,20 @@ int main(int argc, char** argv) {
                     htestRB[igrid]->Add(htest1[i_R][igrid]);
                     htestRB[igrid]->Add(htest1[i_B][igrid]);
 
-                    //htestRB[igrid]->Scale(1.0/htestEventCount[i_RB]);
-
+                    //htestRB[igrid]->Scale(1.0/htestEventCount[i_RB]); //doesnt need scaling because peices added together are already???
                     htestRB[igrid]->SetLineColor(4); //blue
+
                 }
             }
         }
 
         cout<<" makegridfromsherpa::main: Added R-Type and B-Type!"<<endl;
+    }
+        
+       
 
 
-
+/*
         //
         // Normalize after adding R and B-Types across all R and B events
         //
@@ -564,16 +566,6 @@ int main(int argc, char** argv) {
             evuncorr   =1;
             evalluncorr=1;
 
-
-            /*          //The evtot from the grid should be equal to what we counted in the event loop for each R, B, and RB Type
-            //NOTE: evtot is 0 if mygrid->fill(*) never runs!
-            cout<<" makegridfromsherpa::main: Comparing event counts:\n\t evtot: "<<evtot<<" events counted: "<<htestEventCount[histoIndex]+1<<endl; //+1 b/c start count at 0
-            if(evtot!=htestEventCount[histoIndex]+1) {
-            cout<<" makegridfromsherpa::main: WARNING: Event counts were not the same on histIndex: "<<histoIndex<<endl;
-            exit(0);
-            }
-            */
-
             cout<<" makegridfromsherpa::main: Norm: evalltot= "<<evalltot<<" evalluncorr= "<<evalluncorr<<endl;
             cout<<" makegridfromsherpa::main: Norm: evtot= "<<evtot<<" evuncorr= "<<evuncorr<<endl;
 
@@ -583,17 +575,27 @@ int main(int argc, char** argv) {
             double xfac=mydata->GetUnitGeVFactor();
             cout<<" makegridfromsherpa::main: MyGrid::Normalise xfac= "<<xfac<<" yfac= "<<yfac<<endl;
 
+            
+            //update names for normalised ones
+            htest1[histoIndex][igrid]->SetTitle(string("htest1"+ntup_names[histoIndex]+"-norm").c_str());
+            htest1[histoIndex][igrid]->SetName(string("htest1"+ntup_names[histoIndex]+"-norm").c_str());
+            
+            href[histoIndex][igrid]->SetTitle(string("internal_href"+ntup_names[histoIndex]+"-norm").c_str());
+            href[histoIndex][igrid]->SetName(string("internal_href"+ntup_names[histoIndex]+"-norm").c_str());
 
 
             mygrid[histoIndex]->Normalise(htest1[histoIndex][igrid],evtot*yfac,xfac,true);   //normalise 0-B, 1-R, and 2-RthenB Type
             mygrid[histoIndex]->Normalise(href[histoIndex][igrid],evtot*yfac,xfac,true);     //normalise hrefB, hrefR, and hrefRthenB
 
-            if(histoIndex==i_RB)
-                mygrid[histoIndex]->Normalise(htestRB[igrid],evtot*yfac,xfac,true);     //normalise histo of scaled R + scaled B together if it exists
+            if(histoIndex==i_RB) {
+                htestRB[igrid]->SetTitle(string("htestRplusB_-norm").c_str());
+                htestRB[igrid]->SetName(string("htestRplusB_-norm").c_str());
+                mygrid[histoIndex]->Normalise(htestRB[igrid],evtot*yfac,xfac,true);//normalise histo of scaled R + scaled B together
+            }
         }
 
     } //end of loop over all htest1 histograms
-
+*/
 
 
 
@@ -634,6 +636,7 @@ int main(int argc, char** argv) {
         {
             mygrid[histoIndex]->GetGrid(igrid)->setckm(ckm2);
 
+            ////perform convolute and set names, titles, colors
             LOconvGridHistos[histoIndex][igrid] = (TH1D*)mygrid[histoIndex]->GetGrid(igrid)->convolute( evolvepdf_, alphaspdf_, 0 );
             LOconvGridHistos[histoIndex][igrid]->SetName((TString) ("LOconvolute_for" + ntup_names[histoIndex]));
             LOconvGridHistos[histoIndex][igrid]->SetTitle((TString) ("LOconvolute_for" + ntup_names[histoIndex]));
@@ -660,7 +663,6 @@ int main(int argc, char** argv) {
             filename+=ntup_names[histoIndex]+"_histos.root";
             fout= new TFile(filename.c_str(),"recreate");
 
-
             MyData *mydata=mygrid[histoIndex]->GetMyData(igrid);
             if (!mydata) cout<<" makegridfromsherpa::main: mydata["<<igrid<<"] not found "<<endl;
             double yfac=mydata->GetUnitfbFactor();
@@ -668,39 +670,53 @@ int main(int argc, char** argv) {
             cout<<" makegridfromsherpa::main: Normalise xfac= "<<xfac<<" yfac= "<<yfac<<endl;
 
 
+            //save a scaled and normalised version
             LOconvGridHistos[histoIndex][igrid]->Scale(1.0/htestEventCount[histoIndex]);
-            mygrid[histoIndex]->Normalise(LOconvGridHistos[histoIndex][igrid],yfac,xfac,true);
             LOconvGridHistos[histoIndex][igrid]->Write();
-            LOconvGridHistos[histoIndex][igrid]->Draw();
+            mygrid[histoIndex]->Normalise(LOconvGridHistos[histoIndex][igrid],yfac,xfac,true);
+            LOconvGridHistos[histoIndex][igrid]->SetName((TString) ("LOconvolute_for" + ntup_names[histoIndex]+"-norm"));
+            LOconvGridHistos[histoIndex][igrid]->SetTitle((TString) ("LOconvolute_for" + ntup_names[histoIndex]+"-norm"));
+            LOconvGridHistos[histoIndex][igrid]->Write();
 
-/*
+            /*
             for(int isubproc=0; isubproc<mygrid[histoIndex]->GetNSubProcess(igrid);  isubproc++){
                 subProcConvGridHistos[histoIndex][igrid][isubproc]->Scale(1.0/htestEventCount[histoIndex]);
-                mygrid[histoIndex]->Normalise(subProcConvGridHistos[histoIndex][igrid][isubproc],yfac,xfac,true);
                 subProcConvGridHistos[histoIndex][igrid][isubproc]->Write();
-                subProcConvGridHistos[histoIndex][igrid][isubproc]->Draw();
+                mygrid[histoIndex]->Normalise(subProcConvGridHistos[histoIndex][igrid][isubproc],yfac,xfac,true);
+                subProcConvGridHistos[histoIndex][igrid][isubproc]->SetName((TString) (sub_proc_hist_name+"-norm"));
+                subProcConvGridHistos[histoIndex][igrid][isubproc]->SetTitle((TString) (sub_proc_hist_name+"-norm"));
+                subProcConvGridHistos[histoIndex][igrid][isubproc]->Write();
             }
             */
             
+            //save a scaled and normalised version
             convGridHistos[histoIndex][igrid]->Scale(1.0/htestEventCount[histoIndex]);
-            mygrid[histoIndex]->Normalise(convGridHistos[histoIndex][igrid],yfac,xfac,true);
             convGridHistos[histoIndex][igrid]->Write();
-            convGridHistos[histoIndex][igrid]->Draw();
+            mygrid[histoIndex]->Normalise(convGridHistos[histoIndex][igrid],yfac,xfac,true);
+            convGridHistos[histoIndex][igrid]->SetName((TString) ("convolute_for" + ntup_names[histoIndex]+"-norm"));
+            convGridHistos[histoIndex][igrid]->SetTitle((TString) ("convolute_for" + ntup_names[histoIndex]+"-norm"));
+            convGridHistos[histoIndex][igrid]->Write();
 
-
-            htest1[histoIndex][igrid]->Print("all");
+            //save a scaled and normalised version
             htest1[histoIndex][igrid]->Write();
-            htest1[histoIndex][igrid]->Draw();
+            mygrid[histoIndex]->Normalise(htest1[histoIndex][igrid],yfac,xfac,true);   //normalise 0-B, 1-R, and 2-RthenB Type
+            htest1[histoIndex][igrid]->SetTitle(string("htest1"+ntup_names[histoIndex]+"-norm").c_str());
+            htest1[histoIndex][igrid]->SetName(string("htest1"+ntup_names[histoIndex]+"-norm").c_str());
+            htest1[histoIndex][igrid]->Write();
 
-            href[histoIndex][igrid]->Print("all");
+            //save a scaled and normalised version
             href[histoIndex][igrid]->Write();
-            href[histoIndex][igrid]->Draw();
-
+            mygrid[histoIndex]->Normalise(href[histoIndex][igrid],yfac,xfac,true);     //normalise hrefB, hrefR, and hrefRthenB
+            href[histoIndex][igrid]->SetTitle(string("internal_href"+ntup_names[histoIndex]+"-norm").c_str());
+            href[histoIndex][igrid]->SetName(string("internal_href"+ntup_names[histoIndex]+"-norm").c_str());
+            href[histoIndex][igrid]->Write();
+                
+            /*
             TH1D* ratio1 = divide( convGridHistos[histoIndex][igrid],htest1[histoIndex][igrid] );
             if ( ratio1 ) {
                 ratio1->SetTitle(string("ratio1_convolute/htest1"+ntup_names[histoIndex]).c_str());
                 ratio1->SetName(string("ratio1_convolute/htest1"+ntup_names[histoIndex]).c_str());
-                ratio1->Print("all");
+                //ratio1->Print("all");
                 ratio1->Write();
                 ratio1->Draw();
             }
@@ -708,10 +724,11 @@ int main(int argc, char** argv) {
             if ( ratio2 ) {
                 ratio2->SetTitle(string("ratio2_htest1/convolute"+ntup_names[histoIndex]).c_str());
                 ratio2->SetName(string("ratio2_htest1/convolute"+ntup_names[histoIndex]).c_str());
-                ratio2->Print("all");
+                //ratio2->Print("all");
                 ratio2->Write();
                 ratio2->Draw();
             }
+            */
         }
 
         fout->Write();
@@ -751,7 +768,7 @@ int main(int argc, char** argv) {
 
     //after performing convolutes for B, R, RthenB types, add grids and histo for R and B to get RplusB and check it's convolute
     cout<<" makegridfromsherpa::main: Adding B-Type mygrid to R-Type mygrid"<<endl;
-    mygrid[i_R]->AddGrid(mygrid[i_B]); //STILL NEEDS APPLgrid add implimentation so the internals update as well as MyGrid!!
+    mygrid[i_R]->AddGrid(mygrid[i_B]); //STILL NEEDS to handle APPLgrid add/combine so the internals update as well as MyGrid!!
     mygrid[i_R]->SetGridVersionName(string("_RplusB"));
     mygrid[i_R]->write_grid();
 
@@ -796,15 +813,17 @@ int main(int argc, char** argv) {
         cout<<" makegridfromsherpa::main: Normalise xfac= "<<xfac<<" yfac= "<<yfac<<endl;
 
 
-        ConvHistoRplusB[igrid]->Print("all");
+        //ConvHistoRplusB[igrid]->Print("all");
         ConvHistoRplusB[igrid]->Scale(1.0/(htestEventCount[i_R]+htestEventCount[i_B]));
+        ConvHistoRplusB[igrid]->Write();
+        ConvHistoRplusB[igrid]->Draw();
         mygrid[i_R]->Normalise(ConvHistoRplusB[igrid],yfac,xfac,true);
-
-        ConvHistoRplusB[igrid]->Print("all");
+        ConvHistoRplusB[igrid]->SetName((TString) ("convolute_for_RplusB-norm"));
+        ConvHistoRplusB[igrid]->SetTitle((TString) ("convolute_for_RplusB-norm"));
         ConvHistoRplusB[igrid]->Write();
         ConvHistoRplusB[igrid]->Draw();
 
-        htestRB[igrid]->Print("all");
+        //htestRB[igrid]->Print("all");
         htestRB[igrid]->Write();
         htestRB[igrid]->Draw();
 
