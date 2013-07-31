@@ -341,13 +341,9 @@ int main(int argc, char** argv) {
             myevent->ClearEvent();;
             myevent->SetCMS(7000.);
 
-            double wgt2_fac = (1.0/ (double)(2.*PI));
-            if(iorder==2) {
-                wgt2_fac = pow(wgt2_fac,2.0);
-            } else { //3
-                wgt2_fac = pow(wgt2_fac,3.0);
-            }
-
+            //double wgt2_fac = (2.*PI);
+            //iorder 
+            double wgt2_fac = pow((2.0*PI)/t.alphas,iorder);
 
             myevent->SetWeight(t.me_wgt2*wgt2_fac); //dealing entirely with weight2
             myevent->SetXSection(t.weight2);
@@ -790,14 +786,14 @@ int main(int argc, char** argv) {
 
 
     //Add R and B grids together whenall needed grid spaces exist
-    if(startIndex<=i_B && endIndex>=i_RB) 
+    if(startIndex<=i_B && endIndex>i_RB) 
     {
         //after performing convolutes for B, R, RthenB types, add grids and histo for R and B to get RplusB and check it's convolute
         cout<<" makegridfromsherpa::main: Adding B-Type mygrid to R-Type mygrid"<<endl;
         mygrid[i_R]->AddGrid(mygrid[i_B]); //STILL NEEDS to handle APPLgrid add/combine so the internals update as well as MyGrid!!
         mygrid[i_R]->SetGridVersionName(string("_RplusB"));
         mygrid[i_R]->write_grid();
-
+    }
 
 
         cout<<" makegridfromsherpa::main: Normalising Internal Reference hIstograms "<<endl;
@@ -813,7 +809,9 @@ int main(int argc, char** argv) {
         cout<<" makegridfromsherpa::main: Internal Reference hIstograms normalised!"<<endl;
 
 
-
+    //Add R and B grids together whenall needed grid spaces exist
+    if(startIndex<=i_B && endIndex>i_RB) 
+    {
         TH1D* ConvHistoRplusB[mygrid[i_R]->GetNGrid()];
         TH1D* hrefRplusB[mygrid[i_R]->GetNGrid()];
 
