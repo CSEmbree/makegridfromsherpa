@@ -1,0 +1,11 @@
+subprocesssteername top-gg.config
+ntupdiroutput outputtop
+ntupdirinput sherpatopinputs
+ntupname NTuple_
+nprocessnumber 4
+griddir data
+Gridnamedir outputtop
+gridname atlas2012_5fb_top_mtt_ljet.txt
+%gridname data/atlas2012_top_ptt_ljet.txt
+%gridname data/atlas2012_top_pttt_ljet.txt
+%gridname data/atlas2012_top_ytt_ljet.txt
