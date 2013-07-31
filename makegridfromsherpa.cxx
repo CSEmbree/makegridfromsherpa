@@ -439,7 +439,59 @@ int main(int argc, char** argv) {
             */
 
             if(debug) myevent->Print2();
-
+            
+            
+            /*
+            //****START -- TEST TO CHECK CORRECT WEIGHT
+            LHAPDF::initPDFSet(pdfSetFile.c_str(), 0);
+            
+            int size=13;
+            double *f1 = new double[size];
+            double *f2 = new double[size];
+            for(int i=0;i<size;i++) {
+                f1[i]=0.0; f2[i]=0.0; //reset
+            }
+            
+            evolvepdf_(t.x1,(t.fac_scale*t.fac_scale),f1);
+            evolvepdf_(t.x2,(t.fac_scale*t.fac_scale),f2);
+            
+            for(int i=0; i<13; i++) {
+                std::cout<<"f1["<<i<<"]: "<<f1[i]<<std::endl;
+            }
+            
+            for(int i=0; i<13; i++) {
+                std::cout<<"f2["<<i<<"]: "<<f2[i]<<std::endl;
+            }
+            
+            int id1, id2;
+            id1=t.id1;
+            id2=t.id2;
+            
+            if(t.id1==21) id1=0;
+            id1 = id1+6; 
+            if(t.id2==21) id2=0;
+            id2 = id2+6;
+            
+            //id1=t.id1;
+            //id2=t.id2;
+            
+            std::cout<<" evolvepdf_(t.x1:"<<t.x1<<",(t.fac_scale*t.fac_scale:"<<t.fac_scale*t.fac_scale<<"),f1)"<<std::endl;
+            std::cout<<" id1: "<<id1<<", id2: "<<id2<<std::endl;
+            std::cout<<"  f1["<<id1<<"]: "<<f1[id1]<<std::endl;
+            std::cout<<"  f2["<<id2<<"]: "<<f2[id2]<<std::endl;
+            std::cout<<"  t.me_wgt: "<<t.me_wgt<<std::endl;
+            std::cout<<"  f1["<<id1<<"]*f2["<<id2<<"]*t.me_wgt= "<<f1[id1]*f2[id2]*t.me_wgt<<std::endl;
+            std::cout<<"  t.weight: "<<t.weight<<std::endl;
+            
+            if(t.weight == f1[id1]*f2[id2]*t.me_wgt)
+                std::cout<<"Weights are SAME"<<std::endl;
+            else
+                std::cout<<"Weights are DIFF"<<std::endl;
+            
+            exit(0); //TEST
+            //****END -- TEST TO CHECK CORRECT WEIGHT
+            */
+            
 
             //
             // fill the grid with the event for this histogram
@@ -620,6 +672,8 @@ int main(int argc, char** argv) {
     //string pdf_set_name = "PDFsets/CT10.LHgrid"; //hardcoded
     //LHAPDF::initPDFSet(pdf_set_name.c_str(), 0);
     LHAPDF::initPDFSet(pdfSetFile.c_str(), 0);
+
+
 
 
 
