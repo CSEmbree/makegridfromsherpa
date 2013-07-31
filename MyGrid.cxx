@@ -14,7 +14,7 @@ using namespace std;
 MyGrid::MyGrid(string name, string version)
 {
 
-    debug=false;
+    debug=true;
     bookrefsubprocess=true;
 
     alluncorrevents  =  0; // uncorrelated events passing cuts (subevents are counted as one event)
@@ -1070,7 +1070,6 @@ void MyGrid::Normalise(TH1D* h1, double yscale, double xscale=1., bool normtot=f
     }
 
 //cout<<" MyGrid::Normalise sigtot= "<<sigtot<<endl;
-
     for (Int_t i=0; i<=h1->GetNbinsX(); i++) {
         x =h1->GetBinWidth(i);
         y =h1->GetBinContent(i)*yscale*x;

@@ -10,7 +10,7 @@ using namespace std;
 
 MyData::MyData()
 {
-    debug=false;
+    debug=true;
 
     normtot=false;
     unitsxTeV=false;

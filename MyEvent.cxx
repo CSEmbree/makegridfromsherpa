@@ -8,7 +8,7 @@ using namespace std;
 
 MyEvent::MyEvent()
 {
-  debug=false;
+  debug=true;
   sqrts=0.; 
 }
 
@@ -46,7 +46,7 @@ void MyEvent::Print()
 
 void MyEvent::Print2()
 {
-
+  std::cout<<"\n MyEvent: >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"<<std::endl;
   std::cout<<" Event record N= "<<event.size()<<std::endl;
   for (int  i = 0; i <   event.size(); i++)
   {
