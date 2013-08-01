@@ -33,7 +33,7 @@
  * EXAMPLE Execution:
  *                   ./makegridfromsherpa
  *                   ./makegridfromsherpa <filename> <numevents>
- *                   ./makegridfromsherpa atlas2012_top.txt 1000000
+ *                   ./makegridfromsherpa steering/atlas2012_top-config.txt 1000000
  */
 
 //enum ntup_types {i_R=0,i_B,i_RB};           //indexes for different histograms depending on "NTuple_*-like" in htest1
@@ -49,6 +49,12 @@ bool debug=true;
 extern "C" void evolvepdf_(const double& , const double& , double* );
 extern "C" double alphaspdf_(const double& Q);
 
+//makes conversion of id1, id2 and fills f[]
+void getPDF(const double& x, const double& Q2, double* f) {
+    evolvepdf_(x, Q2, f);
+
+    for(int id=0; id<13; id++) f[id]/x;
+}
 
 string GetEnv( const string & var ) {
 
@@ -292,42 +298,42 @@ int main(int argc, char** argv) {
                 cout<<"TOTAL EVENTS: "<<nentries<<""<<endl;
             }
 
-            /*
-              if (debug) {
-              // Documentation see
-              // http://sherpa.hepforge.org/doc/SHERPA-MC-2.0.0.html
-              //
-              cout<<" " <<endl;
-              cout<<" Event id = "<<t.id<<endl; //Event ID to identify correlated real sub-events.
 
-              cout<<" Incoming parton id1 = "<<t.id1<<" id2 = "<<t.id2<<endl; // PDG code of incoming parton 1/2
-              for (int i=0; i<np; i++)
-              cout<<" Outcoming parton kf["<<i<<"]= "<<t.kf[i]<<endl; //
+            if (debug) {
+                // Documentation see
+                // http://sherpa.hepforge.org/doc/SHERPA-MC-2.0.0.html
+                //
+                cout<<" " <<endl;
+                cout<<" Event id = "<<t.id<<endl; //Event ID to identify correlated real sub-events.
 
-              cout<<" x1 = "<<t.x1<<" x2 = "<<t.x2<<endl;     // Bjorken-x of incoming parton 1/2
-              cout<<" x1p= "<<t.x1p<<" x2p= "<<t.x2p<<endl;   // x’ for I-piece of incoming parton 1/2
-              // Factorisation and Factorisaton scale.
-              cout<<" fac_scale= "<<t.fac_scale<<" ren_scale= "<<t.ren_scale
-              <<" alphas= "<<t.alphas<<endl; //" alphasPower= "<<(Char_t)t.alphasPower<<endl;
-              //
-              // nuwgt Number of additional ME weights for loops and integrated subtraction terms.
-              // usr_wgt[nuwgt] Additional ME weights for loops and integrated subtraction terms.
-              //8.8.4.1 Computing (differential) cross sections of real correction events with statistical errors
-              cout<<" nuwgt= "<<t.nuwgt<<endl;
-              // units are GeV and pb
-              // weight    Event weight, if sub-event is treated independently.
-              // weight2   Event weight, if correlated sub-events are treated as single event.
-              // see
-              cout<<" weight= "<<t.weight<<" weight2= "<<t.weight2<<endl;
-              // me_wgt    ME weight (w/o PDF), corresponds to ’weight’.
-              // me_wgt2   ME weight (w/o PDF), corresponds to ’weight2’.
-              cout<<" me_wgt= "<<t.me_wgt<<" me_wgt2= "<<t.me_wgt2<<endl;
-              cout<<" b_part= "<<t.part<<endl;
-              cout<<" b_nparticle= "<<t.nparticle<<endl; //Number of outgoing partons.
-              //cout<<" np= "<<np<<endl;
-              //Int_t np=t.b_nparticle;
-              }
-            */
+                cout<<" Incoming parton id1 = "<<t.id1<<" id2 = "<<t.id2<<endl; // PDG code of incoming parton 1/2
+                for (int i=0; i<np; i++)
+                    cout<<" Outcoming parton kf["<<i<<"]= "<<t.kf[i]<<endl; //
+
+                cout<<" x1 = "<<t.x1<<" x2 = "<<t.x2<<endl;     // Bjorken-x of incoming parton 1/2
+                cout<<" x1p= "<<t.x1p<<" x2p= "<<t.x2p<<endl;   // x’ for I-piece of incoming parton 1/2
+                // Factorisation and Factorisaton scale.
+                cout<<" fac_scale= "<<t.fac_scale<<" ren_scale= "<<t.ren_scale
+                    <<" alphas= "<<t.alphas<<endl; //" alphasPower= "<<(Char_t)t.alphasPower<<endl;
+                //
+                // nuwgt Number of additional ME weights for loops and integrated subtraction terms.
+                // usr_wgt[nuwgt] Additional ME weights for loops and integrated subtraction terms.
+                //8.8.4.1 Computing (differential) cross sections of real correction events with statistical errors
+                cout<<" nuwgt= "<<t.nuwgt<<endl;
+                // units are GeV and pb
+                // weight    Event weight, if sub-event is treated independently.
+                // weight2   Event weight, if correlated sub-events are treated as single event.
+                // see
+                cout<<" weight= "<<t.weight<<" weight2= "<<t.weight2<<endl;
+                // me_wgt    ME weight (w/o PDF), corresponds to ’weight’.
+                // me_wgt2   ME weight (w/o PDF), corresponds to ’weight2’.
+                cout<<" me_wgt= "<<t.me_wgt<<" me_wgt2= "<<t.me_wgt2<<endl;
+                cout<<" b_part= "<<t.part<<endl;
+                cout<<" b_nparticle= "<<t.nparticle<<endl; //Number of outgoing partons.
+                //cout<<" np= "<<np<<endl;
+                //Int_t np=t.b_nparticle;
+            }
+
 
 
             int iorder=int(t.alphasPower);
@@ -342,7 +348,7 @@ int main(int argc, char** argv) {
             myevent->SetCMS(7000.);
 
             //double wgt2_fac = (2.*PI);
-            //iorder 
+            //iorder
             double wgt2_fac = pow((2.0*PI)/t.alphas,iorder);
 
             myevent->SetWeight(t.me_wgt2*wgt2_fac); //dealing entirely with weight2
@@ -378,7 +384,7 @@ int main(int argc, char** argv) {
             int pid=t.id1;
             double ep = (sqrt(s)/2.0);
             cout<<" makegridfromsherpa::main: ep: "<<ep<<endl;
-            
+
             if(pid==21) pid=0; //conversion from sherpa gluon to appl_grid convention
             myevent->push_back(pxin,pyin, t.x1*ep,t.x1*ep,pid);
             cout<<" makegridfromsherpa::main: pid1: "<<pid<<endl;
@@ -439,59 +445,278 @@ int main(int argc, char** argv) {
             */
 
             if(debug) myevent->Print2();
-            
-            
+
+
             /*
-            //****START -- TEST TO CHECK CORRECT WEIGHT
+            //****START -- TEST TO CHECK CORRECT WEIGHT - OLD
             LHAPDF::initPDFSet(pdfSetFile.c_str(), 0);
-            
+
             int size=13;
             double *f1 = new double[size];
             double *f2 = new double[size];
             for(int i=0;i<size;i++) {
                 f1[i]=0.0; f2[i]=0.0; //reset
             }
-            
-            evolvepdf_(t.x1,(t.fac_scale*t.fac_scale),f1);
-            evolvepdf_(t.x2,(t.fac_scale*t.fac_scale),f2);
-            
+
+            evolvepdf_(t.x1,t.fac_scale,f1);
+            evolvepdf_(t.x2,t.fac_scale,f2);
+
             for(int i=0; i<13; i++) {
                 std::cout<<"f1["<<i<<"]: "<<f1[i]<<std::endl;
             }
-            
+
             for(int i=0; i<13; i++) {
                 std::cout<<"f2["<<i<<"]: "<<f2[i]<<std::endl;
             }
-            
+
             int id1, id2;
             id1=t.id1;
             id2=t.id2;
-            
+
             if(t.id1==21) id1=0;
-            id1 = id1+6; 
+            id1 = id1+6;
             if(t.id2==21) id2=0;
             id2 = id2+6;
-            
+
             //id1=t.id1;
             //id2=t.id2;
-            
-            std::cout<<" evolvepdf_(t.x1:"<<t.x1<<",(t.fac_scale*t.fac_scale:"<<t.fac_scale*t.fac_scale<<"),f1)"<<std::endl;
+
+
+            std::cout<<" evolvepdf_(t.x1:"<<t.x1<<",(t.fac_scale:"<<t.fac_scale<<"),f1)"<<std::endl;
             std::cout<<" id1: "<<id1<<", id2: "<<id2<<std::endl;
             std::cout<<"  f1["<<id1<<"]: "<<f1[id1]<<std::endl;
             std::cout<<"  f2["<<id2<<"]: "<<f2[id2]<<std::endl;
             std::cout<<"  t.me_wgt: "<<t.me_wgt<<std::endl;
-            std::cout<<"  f1["<<id1<<"]*f2["<<id2<<"]*t.me_wgt= "<<f1[id1]*f2[id2]*t.me_wgt<<std::endl;
+
+            double myweight=(f1[id1]*f2[id2]*t.me_wgt)/(t.x1*t.x2);
+            std::cout<<" f1["<<id1<<"]*f2["<<id2<<"]*t.me_wgt= "<<myweight<<std::endl;
+
             std::cout<<"  t.weight: "<<t.weight<<std::endl;
-            
-            if(t.weight == f1[id1]*f2[id2]*t.me_wgt)
+
+            if(t.weight == myweight)
                 std::cout<<"Weights are SAME"<<std::endl;
             else
                 std::cout<<"Weights are DIFF"<<std::endl;
-            
+
             exit(0); //TEST
-            //****END -- TEST TO CHECK CORRECT WEIGHT
+            //****END -- TEST TO CHECK CORRECT WEIGHT - OLD
             */
-            
+
+
+
+
+
+            //****START -- TEST TO CHECK CORRECT WEIGHT - NEW
+            LHAPDF::initPDFSet(pdfSetFile.c_str(), 0);
+
+            int Wsize=13;
+            double *f1 = new double[Wsize];
+            double *f2 = new double[Wsize];
+            for(int i=0; i<Wsize; i++) {
+                f1[i]=0.0;
+                f2[i]=0.0; //reset
+            }
+
+            //evolve to get weights in f1, f2
+
+            evolvepdf_(t.x1,t.fac_scale,f1);
+            evolvepdf_(t.x2,t.fac_scale,f2);
+            double asf=1;
+            //double lr=log(mur2/sqr(p_vars->m_mur));
+            //double lf=log(muf2/sqr(p_vars->m_muf));
+            double lr=0;
+            double lf=0;
+            for(int i=0; i<Wsize; i++) std::cout<<"f1["<<i<<"]: "<<f1[i]<<std::endl; //show all
+            for(int i=0; i<Wsize; i++) std::cout<<"f2["<<i<<"]: "<<f2[i]<<std::endl; //show all
+
+
+            //num convention conversion
+            int id1 = t.id1;
+            int id2 = t.id2;
+            if(t.id1==21) id1=0;
+            id1 = id1+6;
+            if(t.id2==21) id2=0;
+            id2 = id2+6;
+
+
+
+            std::cout<<" evolvepdf_(t.x1:"<<t.x1<<",(t.fac_scale:"<<t.fac_scale<<"),f1)"<<std::endl;
+            std::cout<<" id1: "<<id1<<", id2: "<<id2<<std::endl;
+            std::cout<<"  f1["<<id1<<"]: "<<f1[id1]<<std::endl;
+            std::cout<<"  f2["<<id2<<"]: "<<f2[id2]<<std::endl;
+            std::cout<<"  t.me_wgt: "<<t.me_wgt<<std::endl;
+            double myweight=(f1[id1]*f2[id2]*t.me_wgt)/(t.x1*t.x2);
+            std::cout<<" f1["<<id1<<"]*f2["<<id2<<"]*t.me_wgt= "<<myweight<<std::endl;
+            std::cout<<"  t.weight: "<<t.weight<<std::endl;
+
+
+
+
+            double fa = f1[id1]/t.x1;
+            double fb = f2[id2]/t.x2;
+
+            /*
+            int id1 = t.id1;
+            int id2 = t.id2;
+            getPDF(t.x1, t.fac_scale, f1);
+            getPDF(t.x2, t.fac_scale, f2);
+
+            int id1 = t.id1; int id2 = t.id2;
+            if(t.id1==21) id1=0;
+            id1 = id1+6;
+            if(t.id2==21) id2=0;
+            id2 = id2+6;
+
+            double asf=1;
+            double lr=0;
+            double lf=0;
+
+            double fa = f1[id1];
+            double fb = f2[id2];
+            */
+
+
+            double w[9];
+
+            double wgt=t.me_wgt*fa*fb;
+            std::cout<<"wgt: "<<wgt<<std::endl;
+
+            if(t.alphasPower==3) {
+                w[0]=t.me_wgt+t.usr_wgts[0]*lr+t.usr_wgts[1]*lr*lr/2.0; //<---needs to be set. See next w[i] bellow
+
+                bool wnz=false;
+                for (int i=1; i<9; ++i) {
+                    w[i]=t.usr_wgts[i+1]+t.usr_wgts[i+9]*lf; //<---needs to be set. The indexing seems off here? Also, we have lf=1 currently.
+                    if (w[i]==0) wnz=true;
+                }
+
+                wgt=w[0]*fa*fb;
+                //wgt=t.me_wgt2+t.usr_wgts[0]*lr+t.usr_wgts[1]*lr*lr/2.0;
+                std::cout<<" alphasPower==3: wgt: "<<wgt<<std::endl;
+                
+                if (wnz==true) {
+                    double faq=0.0, faqx=0.0, fag=0.0, fagx=0.0;
+                    double fbq=0.0, fbqx=0.0, fbg=0.0, fbgx=0.0;
+                    if (id1!=6) { //not a glu
+                        faq=fa;
+                        fag=f1[6]/t.x1;
+                        evolvepdf_(t.x1/t.x1p,t.fac_scale,f1);
+                        faqx=f1[id1]/t.x1;
+                        fagx=f1[6]/t.x1;
+                    }
+                    else {
+                        fag=fa;
+                        for (int i=1; i<Wsize-1; ++i)
+                            if(i!=6) faq+=f1[i]/t.x1;
+                        evolvepdf_(t.x1/t.x1p,t.fac_scale,f1);
+                        fagx=f1[id1]/t.x1;
+                        for (int i=1; i<Wsize-1; ++i)
+                            if(i!=6) faqx+=f1[i]/t.x1;
+                    }
+                    if (id2!=6) { //not a glu
+                        fbq=fb;
+                        fbg=f2[6]/t.x2;
+                        evolvepdf_(t.x2/t.x2p,t.fac_scale,f2);
+                        fbqx=f2[id2]/t.x2;
+                        fbgx=f2[6]/t.x2;
+                    }
+                    else {
+                        fbg=fb;
+                        for (int i=1; i<Wsize-1; ++i)
+                            if(i!=6) fbq+=f2[i]/t.x2;
+                        evolvepdf_(t.x2/t.x2p,t.fac_scale,f2);
+                        fbgx=f2[id2]/t.x2;
+                        for (int i=1; i<Wsize-1; ++i)
+                            if(i!=6) fbqx+=f2[i]/t.x2;
+                    }
+                    wgt+=(faq*w[1]+faqx*w[2]+fag*w[3]+fagx*w[4])*fb;
+                    wgt+=(fbq*w[5]+fbqx*w[6]+fbg*w[7]+fbgx*w[8])*fa;
+                }
+            }
+
+
+            std::cout<<"Result: "<<wgt*asf<<std::endl;
+            std::cout<<"t.weight: "<<t.weight<<std::endl;
+
+            //****END -- TEST TO CHECK CORRECT WEIGHT - NEW
+
+
+
+
+
+            /*
+            //****START -- STEFAN code testing
+            //p_vars holds the parameters from the NTuple
+            //mur2 and muf2 are the newly computed ren/fac scales squared
+            //GetXPDF returns x*f(x,Q^2) for the given flavour
+            //the quark container has all light partons (incl. b)
+
+            Flavour fl1(p_vars->m_id1);
+            Flavour fl2(p_vars->m_id2);
+            PDF0->Calculate(p_vars->m_x1,muf2);
+            PDF1->Calculate(p_vars->m_x2,muf2);
+            double fa=PDF0->GetXPDF(fl1)/p_vars->m_x1;
+            double fb=PDF1->GetXPDF(fl2)/p_vars->m_x2;
+            double asf=pow((*MODEL::as)(mur2)/p_vars->m_as,p_vars->m_oqcd);
+
+
+            // up to this point everything is tree-level
+            // now comes the I & V part
+
+            double w[9];
+            double lr=log(mur2/sqr(p_vars->m_mur));
+            double lf=log(muf2/sqr(p_vars->m_muf));
+            w[0]=p_vars->m_mewgt+p_vars->p_uwgt[0]*lr+p_vars->p_uwgt[1]*lr*lr/2.0;
+            bool wnz=false;
+            for (int i(1); i<9; ++i) {
+                w[i]=p_vars->p_uwgt[i+1]+p_vars->p_uwgt[i+9]*lf;
+                if (w[i]) wnz=true;
+            }
+            double wgt=w[0]*fa*fb;
+            if (wnz) {
+                double faq=0.0, faqx=0.0, fag=0.0, fagx=0.0;
+                double fbq=0.0, fbqx=0.0, fbg=0.0, fbgx=0.0;
+                Flavour quark(kf_quark), gluon(kf_gluon);
+                if (fl1.IsQuark()) {
+                    faq=fa;
+                    fag=PDF0->GetXPDF(gluon)/p_vars->m_x1;
+                    PDF0->Calculate(p_vars->m_x1/p_vars->m_x1p,muf2);
+                    faqx=PDF0->GetXPDF(fl1)/p_vars->m_x1;
+                    fagx=PDF0->GetXPDF(gluon)/p_vars->m_x1;
+                }
+                else {
+                    fag=fa;
+                    for (size_t i=0; i<quark.Size(); ++i)
+                        faq+=PDF0->GetXPDF(quark[i])/p_vars->m_x1;
+                    PDF0->Calculate(p_vars->m_x1/p_vars->m_x1p,muf2);
+                    fagx=PDF0->GetXPDF(fl1)/p_vars->m_x1;
+                    for (size_t i=0; i<quark.Size(); ++i)
+                        faqx+=PDF0->GetXPDF(quark[i])/p_vars->m_x1;
+                }
+                if (fl2.IsQuark()) {
+                    fbq=fb;
+                    fbg=PDF1->GetXPDF(gluon)/p_vars->m_x2;
+                    PDF1->Calculate(p_vars->m_x2/p_vars->m_x2p,muf2);
+                    fbqx=PDF1->GetXPDF(fl2)/p_vars->m_x2;
+                    fbgx=PDF1->GetXPDF(gluon)/p_vars->m_x2;
+                }
+                else {
+                    fbg=fb;
+                    for (size_t i=0; i<quark.Size(); ++i)
+                        fbq+=PDF1->GetXPDF(quark[i])/p_vars->m_x2;
+                    PDF1->Calculate(p_vars->m_x2/p_vars->m_x2p,muf2);
+                    fbgx=PDF1->GetXPDF(fl2)/p_vars->m_x2;
+                    for (size_t i=0; i<quark.Size(); ++i)
+                        fbqx+=PDF1->GetXPDF(quark[i])/p_vars->m_x2;
+                }
+                wgt+=(faq*w[1]+faqx*w[2]+fag*w[3]+fagx*w[4])*fb;
+                wgt+=(fbq*w[5]+fbqx*w[6]+fbg*w[7]+fbgx*w[8])*fa;
+            }
+            return wgt*asf;
+            //****END -- STEFAN code testing
+            */
+
+
 
             //
             // fill the grid with the event for this histogram
@@ -559,8 +784,6 @@ int main(int argc, char** argv) {
         mygrid[histoIndex]->write_grid();
     }
     cout<<" makegridfromsherpa::main: Grid written "<<endl;
-
-
 
 
 
@@ -708,7 +931,7 @@ int main(int argc, char** argv) {
                 subProcConvGridHistos[histoIndex][igrid][isubproc]->SetName((TString) (sub_proc_hist_name));
                 subProcConvGridHistos[histoIndex][igrid][isubproc]->SetTitle((TString) (sub_proc_hist_name));
                 subProcConvGridHistos[histoIndex][igrid][isubproc]->SetLineColor(kBlue);
-                
+
                 //LO convolute for subprocs
                 LOsubProcConvGridHistos[histoIndex][igrid][isubproc] = (TH1D*)mygrid[histoIndex]->GetGrid(igrid)->convolute_subproc(isubproc, evolvepdf_, alphaspdf_, 0 );
                 sub_proc_hist_name="LOsubProc-"+to_string(isubproc)+"-convolute_for"+ntup_names[histoIndex];
@@ -753,7 +976,7 @@ int main(int argc, char** argv) {
                 subProcConvGridHistos[histoIndex][igrid][isubproc]->SetName((TString) (sub_proc_hist_name+"-norm"));
                 subProcConvGridHistos[histoIndex][igrid][isubproc]->SetTitle((TString) (sub_proc_hist_name+"-norm"));
                 subProcConvGridHistos[histoIndex][igrid][isubproc]->Write();
-                
+
                 //LO convolute for subprocs
                 LOsubProcConvGridHistos[histoIndex][igrid][isubproc]->Scale(1.0/htestEventCount[histoIndex]);
                 LOsubProcConvGridHistos[histoIndex][igrid][isubproc]->Write();
@@ -840,7 +1063,7 @@ int main(int argc, char** argv) {
 
 
     //Add R and B grids together whenall needed grid spaces exist
-    if(startIndex<=i_B && endIndex>i_RB) 
+    if(startIndex<=i_B && endIndex>i_RB)
     {
         //after performing convolutes for B, R, RthenB types, add grids and histo for R and B to get RplusB and check it's convolute
         cout<<" makegridfromsherpa::main: Adding B-Type mygrid to R-Type mygrid"<<endl;
@@ -850,21 +1073,21 @@ int main(int argc, char** argv) {
     }
 
 
-        cout<<" makegridfromsherpa::main: Normalising Internal Reference hIstograms "<<endl;
-        for(int histoIndex=startIndex; histoIndex<endIndex; histoIndex++)
-        {
-            for (int igrid=0; igrid<mygrid[histoIndex]->GetNGrid(); igrid++) {
-                mygrid[histoIndex]->NormaliseInternalRefHistos(igrid);
+    cout<<" makegridfromsherpa::main: Normalising Internal Reference hIstograms "<<endl;
+    for(int histoIndex=startIndex; histoIndex<endIndex; histoIndex++)
+    {
+        for (int igrid=0; igrid<mygrid[histoIndex]->GetNGrid(); igrid++) {
+            mygrid[histoIndex]->NormaliseInternalRefHistos(igrid);
 
-                mygrid[histoIndex]->SetGridVersionName(ntup_names[histoIndex]+"_norm");
-                mygrid[histoIndex]->write_grid();
-            }
+            mygrid[histoIndex]->SetGridVersionName(ntup_names[histoIndex]+"_norm");
+            mygrid[histoIndex]->write_grid();
         }
-        cout<<" makegridfromsherpa::main: Internal Reference hIstograms normalised!"<<endl;
+    }
+    cout<<" makegridfromsherpa::main: Internal Reference hIstograms normalised!"<<endl;
 
 
     //Add R and B grids together whenall needed grid spaces exist
-    if(startIndex<=i_B && endIndex>i_RB) 
+    if(startIndex<=i_B && endIndex>i_RB)
     {
         TH1D* ConvHistoRplusB[mygrid[i_R]->GetNGrid()];
         TH1D* hrefRplusB[mygrid[i_R]->GetNGrid()];
