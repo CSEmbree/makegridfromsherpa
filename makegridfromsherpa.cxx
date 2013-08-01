@@ -539,47 +539,12 @@ int main(int argc, char** argv) {
             id2 = id2+6;
 
 
-
-            std::cout<<" evolvepdf_(t.x1:"<<t.x1<<",(t.fac_scale:"<<t.fac_scale<<"),f1)"<<std::endl;
-            std::cout<<" id1: "<<id1<<", id2: "<<id2<<std::endl;
-            std::cout<<"  f1["<<id1<<"]: "<<f1[id1]<<std::endl;
-            std::cout<<"  f2["<<id2<<"]: "<<f2[id2]<<std::endl;
-            std::cout<<"  t.me_wgt: "<<t.me_wgt<<std::endl;
-            double myweight=(f1[id1]*f2[id2]*t.me_wgt)/(t.x1*t.x2);
-            std::cout<<" f1["<<id1<<"]*f2["<<id2<<"]*t.me_wgt= "<<myweight<<std::endl;
-            std::cout<<"  t.weight: "<<t.weight<<std::endl;
-
-
-
-
             double fa = f1[id1]/t.x1;
             double fb = f2[id2]/t.x2;
-
-            /*
-            int id1 = t.id1;
-            int id2 = t.id2;
-            getPDF(t.x1, t.fac_scale, f1);
-            getPDF(t.x2, t.fac_scale, f2);
-
-            int id1 = t.id1; int id2 = t.id2;
-            if(t.id1==21) id1=0;
-            id1 = id1+6;
-            if(t.id2==21) id2=0;
-            id2 = id2+6;
-
-            double asf=1;
-            double lr=0;
-            double lf=0;
-
-            double fa = f1[id1];
-            double fb = f2[id2];
-            */
-
-
             double w[9];
 
             double wgt=t.me_wgt*fa*fb;
-            std::cout<<"wgt: "<<wgt<<std::endl;
+            std::cout<<"wgt==t.me_wgt*fa*fb: "<<wgt<<std::endl;
 
             if(t.alphasPower==3) {
                 w[0]=t.me_wgt+t.usr_wgts[0]*lr+t.usr_wgts[1]*lr*lr/2.0; //<---needs to be set. See next w[i] bellow
@@ -635,8 +600,18 @@ int main(int argc, char** argv) {
             }
 
 
-            std::cout<<"Result: "<<wgt*asf<<std::endl;
-            std::cout<<"t.weight: "<<t.weight<<std::endl;
+            std::cout<<"RESULT: "<<wgt*asf<<std::endl;
+            
+            //reference prints
+            std::cout<<"  id1: "<<id1<<", id2: "<<id2<<std::endl;
+            std::cout<<"  f1["<<id1<<"]: "<<f1[id1]<<std::endl;
+            std::cout<<"  f2["<<id2<<"]: "<<f2[id2]<<std::endl;
+            std::cout<<"  t.weight: "<<t.weight<<std::endl;
+            std::cout<<"  t.weight2: "<<t.weight2<<std::endl;
+            std::cout<<"  t.me_wgt: "<<t.me_wgt<<std::endl;
+            std::cout<<"  t.me_wgt2: "<<t.me_wgt2<<std::endl;
+            double myweight=(f1[id1]*f2[id2]*t.me_wgt)/(t.x1*t.x2);
+            std::cout<<"  (f1["<<id1<<"]*f2["<<id2<<"]*t.me_wgt)/(t.x1*t.x2)= "<<myweight<<std::endl;
 
             //****END -- TEST TO CHECK CORRECT WEIGHT - NEW
 
