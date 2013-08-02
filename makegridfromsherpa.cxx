@@ -303,35 +303,37 @@ int main(int argc, char** argv) {
                 // Documentation see
                 // http://sherpa.hepforge.org/doc/SHERPA-MC-2.0.0.html
                 //
-                cout<<" " <<endl;
-                cout<<" Event id = "<<t.id<<endl; //Event ID to identify correlated real sub-events.
+                
+                cout<<"\nmakegridfromsherpa::main: SHERPA EVENT INFO >>>>>>>>" <<endl;
+                cout<<"  Event id = "<<t.id<<endl; //Event ID to identify correlated real sub-events.
 
-                cout<<" Incoming parton id1 = "<<t.id1<<" id2 = "<<t.id2<<endl; // PDG code of incoming parton 1/2
+                cout<<"  Incoming parton id1 = "<<t.id1<<", id2 = "<<t.id2<<endl; // PDG code of incoming parton 1/2
                 for (int i=0; i<np; i++)
-                    cout<<" Outcoming parton kf["<<i<<"]= "<<t.kf[i]<<endl; //
+                    cout<<"  Outcoming parton kf["<<i<<"]= "<<t.kf[i]<<endl; //
 
-                cout<<" x1 = "<<t.x1<<" x2 = "<<t.x2<<endl;     // Bjorken-x of incoming parton 1/2
-                cout<<" x1p= "<<t.x1p<<" x2p= "<<t.x2p<<endl;   // x’ for I-piece of incoming parton 1/2
+                cout<<"  x1 = "<<t.x1<<", x2 = "<<t.x2<<endl;     // Bjorken-x of incoming parton 1/2
+                cout<<"  x1p= "<<t.x1p<<", x2p= "<<t.x2p<<endl;   // x’ for I-piece of incoming parton 1/2
                 // Factorisation and Factorisaton scale.
-                cout<<" fac_scale= "<<t.fac_scale<<" ren_scale= "<<t.ren_scale
+                cout<<"  fac_scale= "<<t.fac_scale<<", ren_scale= "<<t.ren_scale
                     <<" alphas= "<<t.alphas<<endl; //" alphasPower= "<<(Char_t)t.alphasPower<<endl;
                 //
                 // nuwgt Number of additional ME weights for loops and integrated subtraction terms.
                 // usr_wgt[nuwgt] Additional ME weights for loops and integrated subtraction terms.
                 //8.8.4.1 Computing (differential) cross sections of real correction events with statistical errors
-                cout<<" nuwgt= "<<t.nuwgt<<endl;
+                cout<<"  nuwgt= "<<t.nuwgt<<endl;
                 // units are GeV and pb
                 // weight    Event weight, if sub-event is treated independently.
                 // weight2   Event weight, if correlated sub-events are treated as single event.
                 // see
-                cout<<" weight= "<<t.weight<<" weight2= "<<t.weight2<<endl;
+                cout<<"  weight= "<<t.weight<<", weight2= "<<t.weight2<<endl;
                 // me_wgt    ME weight (w/o PDF), corresponds to ’weight’.
                 // me_wgt2   ME weight (w/o PDF), corresponds to ’weight2’.
-                cout<<" me_wgt= "<<t.me_wgt<<" me_wgt2= "<<t.me_wgt2<<endl;
-                cout<<" b_part= "<<t.part<<endl;
-                cout<<" b_nparticle= "<<t.nparticle<<endl; //Number of outgoing partons.
+                cout<<"  me_wgt= "<<t.me_wgt<<", me_wgt2= "<<t.me_wgt2<<endl;
+                cout<<"  b_part= "<<t.part<<endl;
+                cout<<"  b_nparticle= "<<t.nparticle<<endl; //Number of outgoing partons.
                 //cout<<" np= "<<np<<endl;
                 //Int_t np=t.b_nparticle;
+                cout<<"<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n"<<endl;
             }
 
 
@@ -376,14 +378,16 @@ int main(int argc, char** argv) {
             
             double wgt=t.me_wgt2*fa*fb;
             //double wgt2_fac = pow((2.0*PI)/t.alphas,iorder);
-            //double wgt2_fac = pow(1.0/(2.0*PI),iorder);
+            double wgt2_fac = pow(1.0/(2.0*PI),iorder);
             
-            std::cout<<"TEST: Setting Wgt: "<<wgt<<std::endl;
-            std::cout<<"TEST: Setting Xsec: "<<t.weight2<<std::endl;
+            std::cout<<" makegridfromsherpa::main: wgt2_fac: "<<wgt2_fac<<std::endl;
+            std::cout<<" makegridfromsherpa::main: Wgt: "<<wgt<<std::endl;
+            std::cout<<" makegridfromsherpa::main: wgt*wgt2_fac: "<<wgt*wgt2_fac<<std::endl;
+            std::cout<<" makegridfromsherpa::main: t.weight(Xsec): "<<t.weight2<<std::endl;
             
             
-
-            myevent->SetWeight(wgt);//*wgt2_fac);//t.me_wgt2*wgt2_fac); //dealing entirely with weight2
+            std::cout<<" makegridfromsherpa::main: Event weight set to: "<<wgt<<std::endl;
+            myevent->SetWeight(wgt);//t.me_wgt2*wgt2_fac); //dealing entirely with weight2
             myevent->SetXSection(t.weight2);
 
             myevent->SetOrder(iorder);
@@ -566,25 +570,25 @@ int main(int argc, char** argv) {
             double fb = f2[id2]/t.x2;
             double w[9];
 
-            double wgt=t.me_wgt*fa*fb;
-            std::cout<<"wgt==t.me_wgt*fa*fb: "<<wgt<<std::endl;
+            double wgt = t.me_wgt * fa * fb;
+            std::cout<<"wgt == t.me_wgt * fa * fb: "<<wgt<<std::endl;
 
-            if(t.alphasPower==3) {
-                w[0]=t.me_wgt+t.usr_wgts[0]*lr+t.usr_wgts[1]*lr*lr/2.0; //<---needs to be set. See next w[i] bellow
+            if( t.alphasPower == 3 ) {
+                w[0] = t.me_wgt + t.usr_wgts[0] * lr + t.usr_wgts[1] * lr * lr / 2.0; //<---needs to be set. See next w[i] bellow
 
                 bool wnz=false;
-                for (int i=1; i<9; ++i) {
-                    w[i]=t.usr_wgts[i+1]+t.usr_wgts[i+9]*lf; //<---needs to be set. The indexing seems off here? Also, we have lf=1 currently.
+                for ( int i=1 ; i<9 ; ++i ) {
+                    w[i] = t.usr_wgts[i+1] + t.usr_wgts[i+9] * lf; //<---needs to be set. The indexing seems off here? Also, we have lf=1 currently.
                     if (w[i]==0) wnz=true;
                 }
 
-                wgt=w[0]*fa*fb;
+                wgt = w[0] * fa * fb;
                 //wgt=t.me_wgt2+t.usr_wgts[0]*lr+t.usr_wgts[1]*lr*lr/2.0;
                 std::cout<<" alphasPower==3: wgt: "<<wgt<<std::endl;
                 
                 if (wnz==true) {
-                    double faq=0.0, faqx=0.0, fag=0.0, fagx=0.0;
-                    double fbq=0.0, fbqx=0.0, fbg=0.0, fbgx=0.0;
+                    double faq = 0.0, faqx = 0.0, fag = 0.0, fagx = 0.0;
+                    double fbq = 0.0, fbqx = 0.0, fbg = 0.0, fbgx = 0.0;
                     if (id1!=6) { //not a glu
                         faq=fa;
                         fag=f1[6]/t.x1;
@@ -594,28 +598,34 @@ int main(int argc, char** argv) {
                     }
                     else {
                         fag=fa;
-                        for (int i=1; i<Wsize-1; ++i)
+                        for ( int i=1 ; i<Wsize-1 ; ++i)
                             if(i!=6) faq+=f1[i]/t.x1;
-                        evolvepdf_(t.x1/t.x1p,t.fac_scale,f1);
+                        
+                        evolvepdf_( t.x1 / t.x1p, t.fac_scale , f1 );
+                        
                         fagx=f1[id1]/t.x1;
                         for (int i=1; i<Wsize-1; ++i)
-                            if(i!=6) faqx+=f1[i]/t.x1;
+                            if( i != 6 ) faqx += f1[i]/t.x1;
                     }
-                    if (id2!=6) { //not a glu
-                        fbq=fb;
-                        fbg=f2[6]/t.x2;
+                    if ( id2 != 6 ) { //not a glu
+                        fbq = fb;
+                        fbg = f2[6]/t.x2;
+                        
                         evolvepdf_(t.x2/t.x2p,t.fac_scale,f2);
-                        fbqx=f2[id2]/t.x2;
-                        fbgx=f2[6]/t.x2;
+                        
+                        fbqx = f2[id2] / t.x2;
+                        fbgx = f2[6] / t.x2;
                     }
                     else {
-                        fbg=fb;
-                        for (int i=1; i<Wsize-1; ++i)
-                            if(i!=6) fbq+=f2[i]/t.x2;
-                        evolvepdf_(t.x2/t.x2p,t.fac_scale,f2);
-                        fbgx=f2[id2]/t.x2;
-                        for (int i=1; i<Wsize-1; ++i)
-                            if(i!=6) fbqx+=f2[i]/t.x2;
+                        fbg = fb;
+                        for ( int i = 1 ; i < Wsize-1 ; ++i)
+                            if( i != 6 ) fbq += f2[i] / t.x2;
+                        
+                        evolvepdf_( t.x2/t.x2p , t.fac_scale , f2);
+                        
+                        fbgx = f2[id2] / t.x2;
+                        for ( int i=1 ; i < Wsize-1 ; ++i )
+                            if( i != 6 ) fbqx+=f2[i] / t.x2;
                     }
                     wgt+=(faq*w[1]+faqx*w[2]+fag*w[3]+fagx*w[4])*fb;
                     wgt+=(fbq*w[5]+fbqx*w[6]+fbg*w[7]+fbgx*w[8])*fa;

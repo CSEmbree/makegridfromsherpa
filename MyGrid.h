@@ -284,7 +284,7 @@ class MyGrid {
 
   void SetEventId(int evid){
    newevent=false;
-   //cout<<" MyGrid::NewEvent: present eventid= "<<eventid<<" evid= "<<evid<<endl;
+   cout<<" MyGrid::SetEventId: previous eventid= "<<eventid<<", new evid= "<<evid<<endl;
    if (eventid!=evid){
     eventid=evid;
     newevent=true;

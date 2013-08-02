@@ -796,9 +796,10 @@ void  MyGrid::fill(MyEvent *myevent )
     //eventid=
     //newevent=true;
     //}
-    if (debug) cout<<" MyGrid::fill newevent= "<<newevent<<endl;
+    if (debug) cout<<" MyGrid::fill newevent= "<<(newevent?"TRUE":"FALSE")<<endl;
     this->SetEventId(myevent->GetEventId());
-    if (debug&&this->NewEvent()) cout<<" MyGrid::fill new event "<<endl;
+    if (debug) cout<<" MyGrid::fill After event ID set, newevent= "<<(newevent?"TRUE":"FALSE")<<endl;
+    if (debug&&this->NewEvent()) cout<<" MyGrid::fill new event encountered! "<<endl;
 
     if (newevent) alluncorrevents++;
     //else cout<<" not new event "<<endl;
@@ -902,8 +903,8 @@ void  MyGrid::fill(MyEvent *myevent )
             cout<<" MyGrid::fill uncorrelated events= "<<uncorrevents[igrid]<<endl;
             cout<<" MyGrid::fill events= "<<events[igrid]<<" iproc= "<<iproc<<endl;
             this->PrintWeight();
-            cout<<" MyGrid::fill x1= "<<x1<<" x2= "<<x2<<" q2= "<<q2
-                <<" mewgt= "<<mewgt<<" xsec= "<<xsec<<" myorder= "<<myorder<<endl;
+            cout<<" MyGrid::fill: Filling with: x1= "<<x1<<", x2= "<<x2<<", q2= "<<q2
+                <<", mewgt= "<<mewgt<<", xsec= "<<xsec<<", myorder= "<<myorder<<endl;
         }
 
         //double obsmax=this->GetObsMax(igrid);
@@ -958,17 +959,21 @@ void  MyGrid::fill(MyEvent *myevent )
             }
             if (debug) cout<<" MyGrid::fill "<<" ijets= "<<ijets<<" obs= "<<obs<<endl;
             if (mygrid[igrid]->isOptimised()) {
-                if (debug) cout<<" MyGrid::fill filling grid and reference "<<endl;
+                if (debug) cout<<" MyGrid::fill filling grid and reference!\n"<<endl;
                 if (!mygrid[igrid]) cout<<"MyGrid::fill grid not found igrid= "<<igrid<<endl;
-                mygrid[igrid]->fill(x1,x2, q2, obs, weight, myorder );
+                mygrid[igrid]->fill(x1, x2, q2, obs, weight, myorder );
             } else {
-                if (debug) cout<<" MyGrid::fill filling phasespace "<<endl;
+                if (debug) cout<<" MyGrid::fill filling phasespace!\n"<<endl;
                 if (!mygrid[igrid]) cout<<" MyGrid::fill grid not found igrid= "<<igrid<<endl;
                 mygrid[igrid]->fill_phasespace(x1, x2, q2, obs, weight, myorder );
             }
+            if(debug)
+                std::cout<<" MyGrid::fill: Filled with: x1= "<<x1<<", x2= "<<x2<<", obs= "<<obs<<", q2= "<<q2
+                <<", mewgt= "<<mewgt<<", xsec= "<<xsec<<", myorder= "<<myorder<<std::endl;
             mygrid[igrid]->getReference()->Fill( obs,xsec);
             
-            std::cout<<" MyGrid::fill: filled refHisto with xsec: "<<xsec<<", filled grid with weight,iproc: "<<mewgt<<","<<iproc<<std::endl;
+            std::cout<<" MyGrid::fill: filled refHisto with xsec: "<<xsec
+                <<", filled grid with (weight,iproc): ("<<mewgt<<","<<iproc<<")"<<std::endl;
 
             if (bookrefsubprocess) {
 
@@ -998,6 +1003,8 @@ void  MyGrid::fill(MyEvent *myevent )
             }
         }
         if (this->NewEvent()) {
+            if (debug) cout<<" MyGrid::fill updating MyGrid ref histos"<<endl;
+            
             /*
             hreference[igrid]->Add(hreferencetmp[igrid]);
             hreferencetmp[igrid]->Reset();
