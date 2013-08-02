@@ -336,22 +336,54 @@ int main(int argc, char** argv) {
 
 
 
+
+
+
+
+
             int iorder=int(t.alphasPower);
             int itype =int(t.part[0]);
-            //   int itype1 =int(t.part[1]);
-            //cout<<" itype= "<<itype<<" itype1= "<<itype1<<endl;
-            //cout<<" iorder= "<<iorder<<" itype= "<<itype<<endl;
-            //if (iorder!=1) continue;
-
+            
             jetclus->ClearJets();
             myevent->ClearEvent();;
             myevent->SetCMS(7000.);
+            
+            
+            
+            //pepare LO weight
+            LHAPDF::initPDFSet(pdfSetFile.c_str(), 0);
+            int Wsize=13;
+            double *f1 = new double[Wsize];
+            double *f2 = new double[Wsize];
+            for(int i=0; i<Wsize; i++) {
+                f1[i]=0.0; f2[i]=0.0; //reset
+            }
 
-            //double wgt2_fac = (2.*PI);
-            //iorder
-            double wgt2_fac = pow((2.0*PI)/t.alphas,iorder);
+            //evolve to get weights in f1, f2
+            evolvepdf_(t.x1,t.fac_scale,f1);
+            evolvepdf_(t.x2,t.fac_scale,f2);
 
-            myevent->SetWeight(t.me_wgt2*wgt2_fac); //dealing entirely with weight2
+            //num convention conversion
+            int id1 = t.id1;
+            int id2 = t.id2;
+            if(t.id1==21) id1=0;
+            id1 = id1+6;
+            if(t.id2==21) id2=0;
+            id2 = id2+6;
+
+            double fa = f1[id1]/t.x1;
+            double fb = f2[id2]/t.x2;
+            
+            double wgt=t.me_wgt2*fa*fb;
+            //double wgt2_fac = pow((2.0*PI)/t.alphas,iorder);
+            //double wgt2_fac = pow(1.0/(2.0*PI),iorder);
+            
+            std::cout<<"TEST: Setting Wgt: "<<wgt<<std::endl;
+            std::cout<<"TEST: Setting Xsec: "<<t.weight2<<std::endl;
+            
+            
+
+            myevent->SetWeight(wgt);//*wgt2_fac);//t.me_wgt2*wgt2_fac); //dealing entirely with weight2
             myevent->SetXSection(t.weight2);
 
             myevent->SetOrder(iorder);
@@ -395,15 +427,6 @@ int main(int argc, char** argv) {
             cout<<" makegridfromsherpa::main: pid2: "<<pid<<endl;
 
 
-            //std::cout<<" TEST: Checking name: "<<steeringFile<<std::endl;
-            /*
-            TString subProcType = steeringFile.c_str();
-            if(subProcType.Contains("-gg")) {
-              if(pid!=0) {
-                  continue;
-              }
-            }
-            */
 
 
             for (int ip=0; ip<np; ip++)
@@ -425,6 +448,8 @@ int main(int argc, char** argv) {
                     jetclus->push_back(t.px[ip],t.py[ip],t.pz[ip],t.E[ip],pid);
             }
 
+            if(debug) myevent->Print2();
+            
             //
             // run jet algorithm
             //
@@ -443,8 +468,6 @@ int main(int argc, char** argv) {
               myevent->Print2();
               }
             */
-
-            if(debug) myevent->Print2();
 
 
             /*
@@ -505,7 +528,7 @@ int main(int argc, char** argv) {
 
 
 
-
+            /*
             //****START -- TEST TO CHECK CORRECT WEIGHT - NEW
             LHAPDF::initPDFSet(pdfSetFile.c_str(), 0);
 
@@ -614,7 +637,7 @@ int main(int argc, char** argv) {
             std::cout<<"  (f1["<<id1<<"]*f2["<<id2<<"]*t.me_wgt)/(t.x1*t.x2)= "<<myweight<<std::endl;
 
             //****END -- TEST TO CHECK CORRECT WEIGHT - NEW
-
+            */
 
 
 
@@ -713,7 +736,7 @@ int main(int argc, char** argv) {
             htestEventCount[histoIndex]++; //keep count of event for each type, 0-B, 1-R, 2-RthenB
         } //end loop over events
 
-
+        std::cout<<"\nmakegridfromsherpa::main: Finished running over events!\n"<<std::endl;
 
 
         //
@@ -724,7 +747,7 @@ int main(int argc, char** argv) {
             href[histoIndex][igrid]=(TH1D*)mygrid[histoIndex]->GetReference(igrid);
             if (!href[histoIndex][igrid]) cout<<" makegridfromsherpa::main: Reference from grid not found ! "<<endl;
             else {
-                cout<<" makegridfromsherpa::main: Reference from grid found ! "<<endl;
+                std::cout<<" makegridfromsherpa::main: Reference from grid found ! "<<std::endl;
 
                 //Normalise(href[igrid],evuncorr*yfac,xfac,true);
                 TString nameTitle="internal_href"+ntup_names[histoIndex];

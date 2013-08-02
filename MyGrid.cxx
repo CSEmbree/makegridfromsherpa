@@ -867,7 +867,7 @@ void  MyGrid::fill(MyEvent *myevent )
     int iproc=mypdf->decideSubProcess(id1,id2); //<--**
 
 
-
+    std::cout<<" MyGrid::fill: decideSubProc: "<<iproc<<std::endl;
     if (iproc==-1)  {
         cout<<" MyGrid::fill do not know what to do "<<endl;
         cout<<" MyGrid::fill incoming partons where id1= "<<id1<<" id2= "<<id2<<endl;
@@ -876,7 +876,7 @@ void  MyGrid::fill(MyEvent *myevent )
         return;
     }
 
-    if (debug) cout<<" MyGrid::fill iproc= "<<iproc<<endl;
+    if (debug) cout<<" MyGrid::fill valid iproc: "<<iproc<<endl;
 
     this->ResetWeight();
     this->SetWeight(iproc,mewgt);
@@ -967,6 +967,8 @@ void  MyGrid::fill(MyEvent *myevent )
                 mygrid[igrid]->fill_phasespace(x1, x2, q2, obs, weight, myorder );
             }
             mygrid[igrid]->getReference()->Fill( obs,xsec);
+            
+            std::cout<<" MyGrid::fill: filled refHisto with xsec: "<<xsec<<", filled grid with weight,iproc: "<<mewgt<<","<<iproc<<std::endl;
 
             if (bookrefsubprocess) {
 
@@ -996,18 +998,12 @@ void  MyGrid::fill(MyEvent *myevent )
             }
         }
         if (this->NewEvent()) {
-            //std::cout<<" MyGrid::fill: TEST: NEW EVENT ADD igrid: "<<igrid<<", iproc: "<<iproc<<std::endl;
-            //std::cout<<" MyGrid::fill: TEST: Adding hrefLOsubprocesseshistostmp[igrid:"<<igrid<<"][iproc:"<<iproc<<"]: "<<hrefLOsubprocesseshistostmp[igrid][iproc]<<" TO hrefsubprocesseshistos[igrid:"<<igrid<<"][iproc:"<<iproc<<"]: "<<hrefsubprocesseshistos[igrid][iproc]<<std::endl;
-
-
             /*
             hreference[igrid]->Add(hreferencetmp[igrid]);
             hreferencetmp[igrid]->Reset();
-            //hreference[igrid]->Print("all");
 
             hreferencefine[igrid]->Add(hreferencefinetmp[igrid]);
             hreferencefinetmp[igrid]->Reset();
-            //hreference[igrid]->Print("all");
 
             hreferencesum2[igrid]->Add(hreferencesum2tmp[igrid]);
             hreferencesum2tmp[igrid]->Reset();
@@ -1030,27 +1026,21 @@ void  MyGrid::fill(MyEvent *myevent )
             
             hreference[igrid] = hreferencetmp[igrid];
             
-            
             hreferencefine[igrid]=hreferencefinetmp[igrid];
             
-
             hreferencesum2[igrid]=hreferencesum2tmp[igrid];
-            
 
             hreferencefinesum2[igrid]=hreferencefinesum2tmp[igrid];
 
-
             hrefLOsubprocesseshistos[igrid][iproc]=hrefLOsubprocesseshistostmp[igrid][iproc];
-
 
             hrefLOsubprocesseshistossum2[igrid][iproc]=hrefLOsubprocesseshistossum2tmp[igrid][iproc];
 
-
             hrefsubprocesseshistos[igrid][iproc]=hrefsubprocesseshistostmp[igrid][iproc];
 
-
             hrefsubprocesseshistossum2[igrid][iproc] = hrefsubprocesseshistossum2tmp[igrid][iproc];
-
+            
+            
         } // new event
     } //loop over grid
     return;
