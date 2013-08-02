@@ -280,6 +280,8 @@ int main(int argc, char** argv) {
         //
         cout<<" makegridfromsherpa::main: Loop over events for: "<<ntup_names[histoIndex]<<endl;
         Long64_t nbytes = 0, nb = 0;
+        
+        LHAPDF::initPDFSet(pdfSetFile.c_str(), 0);
 
         for (Long64_t jentry=0; jentry<nentries && jentry<nevmax; jentry++)
         {
@@ -353,7 +355,6 @@ int main(int argc, char** argv) {
             
             
             //pepare LO weight
-            LHAPDF::initPDFSet(pdfSetFile.c_str(), 0);
             int Wsize=13;
             double *f1 = new double[Wsize];
             double *f2 = new double[Wsize];
@@ -372,30 +373,38 @@ int main(int argc, char** argv) {
             id1 = id1+6;
             if(t.id2==21) id2=0;
             id2 = id2+6;
+            
+            std::cout<<" makegridfromsherpa::main: iorder: "<<iorder<<std::endl;
+            if(iorder>2) continue;
+
+            if(!(id1==6 && id2==6) ) continue;
 
             double fa = f1[id1]/t.x1;
             double fb = f2[id2]/t.x2;
             
             double wgt=t.me_wgt2*fa*fb;
-            //double wgt2_fac = pow((2.0*PI)/t.alphas,iorder);
-            double wgt2_fac = pow(1.0/(2.0*PI),iorder);
+            double wgt2_fac = pow((2.0*PI)/t.alphas,iorder);
+            //double wgt2_fac = pow(1.0/(2.0*PI),iorder);
             
             std::cout<<" makegridfromsherpa::main: wgt2_fac: "<<wgt2_fac<<std::endl;
-            std::cout<<" makegridfromsherpa::main: Wgt: "<<wgt<<std::endl;
+            std::cout<<" makegridfromsherpa::main: me_wgt: "<<t.me_wgt<<std::endl;
+            std::cout<<" makegridfromsherpa::main: me_wgt2: "<<t.me_wgt2<<std::endl;
+            std::cout<<" makegridfromsherpa::main: wgt: "<<wgt<<std::endl;
             std::cout<<" makegridfromsherpa::main: wgt*wgt2_fac: "<<wgt*wgt2_fac<<std::endl;
-            std::cout<<" makegridfromsherpa::main: t.weight(Xsec): "<<t.weight2<<std::endl;
+            std::cout<<" makegridfromsherpa::main: t.weight: "<<t.weight<<std::endl;
+            std::cout<<" makegridfromsherpa::main: t.weight2(Xsec): "<<t.weight2<<std::endl;
             
             
             std::cout<<" makegridfromsherpa::main: Event weight set to: "<<wgt<<std::endl;
-            myevent->SetWeight(wgt);//t.me_wgt2*wgt2_fac); //dealing entirely with weight2
+            myevent->SetWeight(t.me_wgt2*(1/wgt2_fac));//t.me_wgt2*wgt2_fac); //dealing entirely with weight2
             myevent->SetXSection(t.weight2);
 
             myevent->SetOrder(iorder);
             myevent->SetType (itype);
-            myevent->SetEventId(t.id==21? 0:t.id); //conversion from sherpa gluon to appl_grid convention
+            myevent->SetEventId(t.id); //conversion from sherpa gluon to appl_grid convention
             myevent->SetX1(t.x1);
             myevent->SetX2(t.x2);
-            myevent->SetQ2(t.fac_scale*t.fac_scale);
+            myevent->SetQ2(t.fac_scale);
 
 
             //
@@ -901,8 +910,7 @@ int main(int argc, char** argv) {
     int nLoops = 1;
 
     //string pdf_set_name = "PDFsets/CT10.LHgrid"; //hardcoded
-    //LHAPDF::initPDFSet(pdf_set_name.c_str(), 0);
-    LHAPDF::initPDFSet(pdfSetFile.c_str(), 0);
+    //LHAPDF::initPDFSet(pdfSetFile.c_str(), 0);
 
 
 
