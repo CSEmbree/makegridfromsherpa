@@ -52,13 +52,13 @@ extern "C" double alphaspdf_(const double& Q);
 
 
 void GetRenAndFacMaxAndMins(string NtupName, double *facMin, double *facMax, double *renMin, double *renMax) {
-    
+
     TChain *fChaintmp= new TChain("t3");
-    
+
     fChaintmp->Add(TString(NtupName));
     if(debug) fChaintmp->Print();
 
-    t3 ttmp(fChaintmp); 
+    t3 ttmp(fChaintmp);
 
 
     // determine Q2 and x boundaries from fac and ren scales
@@ -70,12 +70,12 @@ void GetRenAndFacMaxAndMins(string NtupName, double *facMin, double *facMax, dou
         if (ttmp.ren_scale < *renMin) *renMin = ttmp.ren_scale;
         if (ttmp.ren_scale > *renMax) *renMax = ttmp.ren_scale;
     }
-    
+
     if(debug) std::cout<<" makegridfromsherpa::GetRenAndFacMaxAndMins: ntuple:"<<NtupName
-             <<", facMin= "<<*facMin
-             <<", facMax= "<<*facMax
-             <<", renMin= "<<*renMin
-             <<", renMax= "<<*renMax<<std::endl;
+                           <<", facMin= "<<*facMin
+                           <<", facMax= "<<*facMax
+                           <<", renMin= "<<*renMin
+                           <<", renMax= "<<*renMax<<std::endl;
 
     delete fChaintmp; //cleanup
 }
@@ -83,7 +83,7 @@ void GetRenAndFacMaxAndMins(string NtupName, double *facMin, double *facMax, dou
 
 //makes conversion of id1, id2 and fills f[]
 void getPDF(const double& x, const double& Q2, double* f) {
-    
+
     evolvepdf_(x, Q2, f);
 
     for(int id=0; id<13; id++) f[id]/x;
@@ -91,9 +91,9 @@ void getPDF(const double& x, const double& Q2, double* f) {
 
 //allows for getting value of environment variables
 string GetEnv( const string & var ) {
-    
+
     const char* res= getenv( var.c_str() );
-    
+
     std::string s = res!=NULL? res:"";
     return s;
 }
@@ -158,7 +158,7 @@ int main(int argc, char** argv) {
     string steeringFile = steeringPath + "/" + steeringName;
 
     string steeringDefaultPath = GetEnv("STEERINGPATH");
-    
+
     if( steeringDefaultPath.size() > 0 ) {
         steeringFile=steeringDefaultPath+"/"+steeringName;
         if (debug) cout<<" makegridfromsherpa::main: STEERINGPATH environment variable found, using path: "<<steeringFile<<endl;
@@ -208,14 +208,14 @@ int main(int argc, char** argv) {
         string version=ntup_names[i];
         if (debug) cout<<" makegridfromsherpa::main: Creating grid using steeringFile: "<<steeringFile<<", version: "<<version<<endl;
         mygrid[i] = new MyGrid(steeringFile, version);
-        
+
         /*
         double facMin =  1.e20;
         double facMax = -1.e20;
-        
+
         double renMin =  1.e20;
         double renMax = -1.e20;
-        
+
         string NtupName=mygrid[histoIndex]->GetInputNtupDir();
         if ( histoIndex==i_R || histoIndex==i_B )
             NtupName += "/NTuple" + ntup_names[histoIndex] + "-like";
@@ -243,15 +243,15 @@ int main(int argc, char** argv) {
         mygrid[i]->SetQ2Low (q2low*q2low);
         mygrid[i]->SetQ2Up  (q2up*q2up);
         mygrid[i]->SetQ2bins(nQ2bins);
-        
+
         if(debug)
             std::cout<<" makegridfromsherpa::main: SetQ2Low: "<<q2low*q2low
                     <<", SetQ: "<<q2up*q2up
                     <<", nQ2bins: "<<nQ2bins<<std::endl;
         */
     }
-    
-    
+
+
     const int NGrid=mygrid[0]->GetNGrid(); //NGrid happens to be the same for all Types
 
 
@@ -397,12 +397,12 @@ int main(int argc, char** argv) {
             int Wsize=13;
             double f1[Wsize];
             double f2[Wsize];
-            
+
             for(int i=0; i<Wsize; i++) {
                 f1[i]=0.0; //reset
                 f2[i]=0.0; //reset
             }
-            
+
 
             //evolve to get weights in f1, f2
             evolvepdf_(t.x1,t.fac_scale,f1);
@@ -420,15 +420,17 @@ int main(int argc, char** argv) {
 
             //only fill the order and types you want
             if(iorder>2) continue;
-            //if(!(id1==6 && id2==6) ) continue;
+            //if(!(id1==-6 && id2==6)) continue;
+            //if(!(t.id1==-4 && t.id2==4)) continue;
+            //std::cout<<"TEST: t.id1: "<<t.id1<<", t.id2: "<<t.id2<<std::endl;
 
             double fa = f1[id1]/t.x1;
             double fb = f2[id2]/t.x2;
-            
+
 
             double wgt=t.me_wgt2*fa*fb;
             double wgt2_fac = pow((2.0*PI)/t.alphas,iorder);
-            
+
             if (debug) {
                 std::cout<<" makegridfromsherpa::main: iorder= "<<iorder<<std::endl;
                 std::cout<<" makegridfromsherpa::main: wgt2_fac: "<<wgt2_fac<<std::endl;
@@ -657,11 +659,11 @@ int main(int argc, char** argv) {
 
             // fill the grid with the event for this histogram
             //
-            //mygrid[histoIndex]->fill(myevent);
-            
-            
-            
-            
+            mygrid[histoIndex]->fill(myevent);
+
+
+
+
             //
             // fill each test histogram
             //
@@ -855,7 +857,7 @@ int main(int argc, char** argv) {
             string filename=mygrid[histoIndex]->GetGridName(igrid);
             filename+=ntup_names[histoIndex]+"_histos.root";
             fout= new TFile(filename.c_str(),"recreate");
-            mygrid[histoIndex]->GetGrid(igrid)->setckm(ckm2);
+            //////////mygrid[histoIndex]->GetGrid(igrid)->setckm(ckm2);
 
             ////perform convolute and set names, titles, colors
             cout<<" calling convolute: "<<endl;
@@ -872,23 +874,23 @@ int main(int argc, char** argv) {
             //htest1norm->Print("all");
 
 
+
+            for(int isubproc=0; isubproc<mygrid[histoIndex]->GetNSubProcess(igrid);  isubproc++) {
+                subProcConvGridHistos[histoIndex][igrid][isubproc] = (TH1D*)mygrid[histoIndex]->GetGrid(igrid)->convolute_subproc(isubproc, evolvepdf_, alphaspdf_, nLoops );
+                string sub_proc_hist_name="subProc-"+to_string(isubproc)+"-convolute_for"+ntup_names[histoIndex];
+                subProcConvGridHistos[histoIndex][igrid][isubproc]->SetName((TString) (sub_proc_hist_name));
+                subProcConvGridHistos[histoIndex][igrid][isubproc]->SetTitle((TString) (sub_proc_hist_name));
+                subProcConvGridHistos[histoIndex][igrid][isubproc]->SetLineColor(kBlue);
+
+                //LO convolute for subprocs
+                LOsubProcConvGridHistos[histoIndex][igrid][isubproc] = (TH1D*)mygrid[histoIndex]->GetGrid(igrid)->convolute_subproc(isubproc, evolvepdf_, alphaspdf_, 0 );
+                sub_proc_hist_name="LOsubProc-"+to_string(isubproc)+"-convolute_for"+ntup_names[histoIndex];
+                LOsubProcConvGridHistos[histoIndex][igrid][isubproc]->SetName((TString) (sub_proc_hist_name));
+                LOsubProcConvGridHistos[histoIndex][igrid][isubproc]->SetTitle((TString) (sub_proc_hist_name));
+                LOsubProcConvGridHistos[histoIndex][igrid][isubproc]->SetLineColor(kBlue);
+            }
+
             /*
-                  for(int isubproc=0; isubproc<mygrid[histoIndex]->GetNSubProcess(igrid);  isubproc++) {
-                      subProcConvGridHistos[histoIndex][igrid][isubproc] = (TH1D*)mygrid[histoIndex]->GetGrid(igrid)->convolute_subproc(isubproc, evolvepdf_, alphaspdf_, nLoops );
-                      string sub_proc_hist_name="subProc-"+to_string(isubproc)+"-convolute_for"+ntup_names[histoIndex];
-                      subProcConvGridHistos[histoIndex][igrid][isubproc]->SetName((TString) (sub_proc_hist_name));
-                      subProcConvGridHistos[histoIndex][igrid][isubproc]->SetTitle((TString) (sub_proc_hist_name));
-                      subProcConvGridHistos[histoIndex][igrid][isubproc]->SetLineColor(kBlue);
-
-                      //LO convolute for subprocs
-                      LOsubProcConvGridHistos[histoIndex][igrid][isubproc] = (TH1D*)mygrid[histoIndex]->GetGrid(igrid)->convolute_subproc(isubproc, evolvepdf_, alphaspdf_, 0 );
-                      sub_proc_hist_name="LOsubProc-"+to_string(isubproc)+"-convolute_for"+ntup_names[histoIndex];
-                      LOsubProcConvGridHistos[histoIndex][igrid][isubproc]->SetName((TString) (sub_proc_hist_name));
-                      LOsubProcConvGridHistos[histoIndex][igrid][isubproc]->SetTitle((TString) (sub_proc_hist_name));
-                      LOsubProcConvGridHistos[histoIndex][igrid][isubproc]->SetLineColor(kBlue);
-                  }
-
-
                   convGridHistos[histoIndex][igrid] = (TH1D*)mygrid[histoIndex]->GetGrid(igrid)->convolute( evolvepdf_, alphaspdf_, nLoops );
                   convGridHistos[histoIndex][igrid]->SetName((TString) ("convolute_for" + ntup_names[histoIndex]));
                   convGridHistos[histoIndex][igrid]->SetTitle((TString) ("convolute_for" + ntup_names[histoIndex]));
@@ -897,13 +899,13 @@ int main(int argc, char** argv) {
             */
 
 
-            /*
-                  MyData *mydata=mygrid[histoIndex]->GetMyData(igrid);
-                  if (!mydata) cout<<" makegridfromsherpa::main: mydata["<<igrid<<"] not found "<<endl;
-                  double yfac=mydata->GetUnitfbFactor();
-                  double xfac=mydata->GetUnitGeVFactor();
-                  if (debug) cout<<" makegridfromsherpa::main: Normalise xfac= "<<xfac<<" yfac= "<<yfac<<endl;
-            */
+
+            MyData *mydata=mygrid[histoIndex]->GetMyData(igrid);
+            if (!mydata) cout<<" makegridfromsherpa::main: mydata["<<igrid<<"] not found "<<endl;
+            double yfac=mydata->GetUnitfbFactor();
+            double xfac=mydata->GetUnitGeVFactor();
+            if (debug) cout<<" makegridfromsherpa::main: Normalise xfac= "<<xfac<<" yfac= "<<yfac<<endl;
+
 
             // convoluted histograms do not need to be normalised !
             //save a scaled and normalised version
@@ -917,28 +919,33 @@ int main(int argc, char** argv) {
                   LOconvGridHistos[histoIndex][igrid]->Write();
             */
 
-            /*
-                  for(int isubproc=0; isubproc<mygrid[histoIndex]->GetNSubProcess(igrid);  isubproc++) {
-                      // convoluted histograms do not need to be normalised !
-                      //subProcConvGridHistos[histoIndex][igrid][isubproc]->Scale(1.0/htestEventCount[histoIndex]);
-                      subProcConvGridHistos[histoIndex][igrid][isubproc]->Write();
-                      string sub_proc_hist_name="subProc-"+to_string(isubproc)+"-convolute_for"+ntup_names[histoIndex];
-                      mygrid[histoIndex]->Normalise(subProcConvGridHistos[histoIndex][igrid][isubproc],yfac,xfac,true);
-                      subProcConvGridHistos[histoIndex][igrid][isubproc]->SetName((TString) (sub_proc_hist_name+"-norm"));
-                      subProcConvGridHistos[histoIndex][igrid][isubproc]->SetTitle((TString) (sub_proc_hist_name+"-norm"));
-                      subProcConvGridHistos[histoIndex][igrid][isubproc]->Write();
 
-                      //LO convolute for subprocs
-                      // convoluted histograms do not need to be normalised !
-                      //LOsubProcConvGridHistos[histoIndex][igrid][isubproc]->Scale(1.0/htestEventCount[histoIndex]);
-                      LOsubProcConvGridHistos[histoIndex][igrid][isubproc]->Write();
-                      sub_proc_hist_name="LOsubProc-"+to_string(isubproc)+"-convolute_for"+ntup_names[histoIndex];
-                      mygrid[histoIndex]->Normalise(LOsubProcConvGridHistos[histoIndex][igrid][isubproc],yfac,xfac,true);
-                      LOsubProcConvGridHistos[histoIndex][igrid][isubproc]->SetName((TString) (sub_proc_hist_name+"-norm"));
-                      LOsubProcConvGridHistos[histoIndex][igrid][isubproc]->SetTitle((TString) (sub_proc_hist_name+"-norm"));
-                      LOsubProcConvGridHistos[histoIndex][igrid][isubproc]->Write();
-                  }
-            */
+            for(int isubproc=0; isubproc<mygrid[histoIndex]->GetNSubProcess(igrid);  isubproc++) {
+                // convoluted histograms do not need to be normalised !
+                //subProcConvGridHistos[histoIndex][igrid][isubproc]->Scale(1.0/htestEventCount[histoIndex]);
+                subProcConvGridHistos[histoIndex][igrid][isubproc]->Write();
+                string sub_proc_hist_name="subProc-"+to_string(isubproc)+"-convolute_for"+ntup_names[histoIndex];
+                //mygrid[histoIndex]->Normalise(subProcConvGridHistos[histoIndex][igrid][isubproc],yfac,xfac,true);
+                
+                mygrid[histoIndex]->DivideByBinWidth(subProcConvGridHistos[histoIndex][igrid][isubproc]);
+                subProcConvGridHistos[histoIndex][igrid][isubproc]->SetName((TString) (sub_proc_hist_name+"-norm"));
+                subProcConvGridHistos[histoIndex][igrid][isubproc]->SetTitle((TString) (sub_proc_hist_name+"-norm"));
+                subProcConvGridHistos[histoIndex][igrid][isubproc]->Write();
+
+
+                //LO convolute for subprocs
+                // convoluted histograms do not need to be normalised !
+                //LOsubProcConvGridHistos[histoIndex][igrid][isubproc]->Scale(1.0/htestEventCount[histoIndex]);
+                LOsubProcConvGridHistos[histoIndex][igrid][isubproc]->Write();
+                sub_proc_hist_name="LOsubProc-"+to_string(isubproc)+"-convolute_for"+ntup_names[histoIndex];
+                
+                //mygrid[histoIndex]->Normalise(LOsubProcConvGridHistos[histoIndex][igrid][isubproc],yfac,xfac,true);
+                mygrid[histoIndex]->DivideByBinWidth(LOsubProcConvGridHistos[histoIndex][igrid][isubproc]);
+                LOsubProcConvGridHistos[histoIndex][igrid][isubproc]->SetName((TString) (sub_proc_hist_name+"-norm"));
+                LOsubProcConvGridHistos[histoIndex][igrid][isubproc]->SetTitle((TString) (sub_proc_hist_name+"-norm"));
+                LOsubProcConvGridHistos[histoIndex][igrid][isubproc]->Write();
+            }
+
             /*
                   //save a scaled and normalised version
                   convGridHistos[histoIndex][igrid]->Scale(1.0/htestEventCount[histoIndex]);
@@ -954,14 +961,15 @@ int main(int argc, char** argv) {
                   htest1[histoIndex][igrid]->SetTitle(string("htest1"+ntup_names[histoIndex]+"-norm").c_str());
                   htest1[histoIndex][igrid]->SetName(string("htest1"+ntup_names[histoIndex]+"-norm").c_str());
                   htest1[histoIndex][igrid]->Write();
-
+            */
                   //save a scaled and normalised version
                   href[histoIndex][igrid]->Write();
-                  mygrid[histoIndex]->Normalise(href[histoIndex][igrid],yfac,xfac,true);     //normalise hrefB, hrefR, and hrefRthenB
+                  //mygrid[histoIndex]->Normalise(href[histoIndex][igrid],yfac,xfac,true);     //normalise hrefB, hrefR, and hrefRthenB
+                  mygrid[histoIndex]->DivideByBinWidth(href[histoIndex][igrid]);
                   href[histoIndex][igrid]->SetTitle(string("internal_href"+ntup_names[histoIndex]+"-norm").c_str());
                   href[histoIndex][igrid]->SetName(string("internal_href"+ntup_names[histoIndex]+"-norm").c_str());
                   href[histoIndex][igrid]->Write();
-            */
+            
             std::cout<<" makegridfromsherpa::main: Printing LO convolute histo..."<<std::endl;
             LOconvGridHistos[histoIndex][igrid]->Print("all");
 
@@ -977,22 +985,12 @@ int main(int argc, char** argv) {
             //TH1D* ratio1 = divide( convGridHistos[histoIndex][igrid],htest1[histoIndex][igrid] );
             TH1D* ratio1 = divide(LOconvGridHistos[histoIndex][igrid],htest1norm );
             if ( ratio1 ) {
-                ratio1->SetTitle(string("ratio1_convolute/htest1"+ntup_names[histoIndex]).c_str());
-                ratio1->SetName(string("ratio1_convolute/htest1"+ntup_names[histoIndex]).c_str());
+                ratio1->SetTitle(string("ratio1_LOconvGridHistos/htest1norm"+ntup_names[histoIndex]).c_str());
+                ratio1->SetName(string("ratio1_LOconvGridHistos/htest1norm"+ntup_names[histoIndex]).c_str());
                 ratio1->Print("all");
                 ratio1->Write();
                 ratio1->Draw();
             }
-            /*
-                  TH1D* ratio2 = divide( htest1[histoIndex][igrid], convGridHistos[histoIndex][igrid] );
-                  if ( ratio2 ) {
-                      ratio2->SetTitle(string("ratio2_htest1/convolute"+ntup_names[histoIndex]).c_str());
-                      ratio2->SetName(string("ratio2_htest1/convolute"+ntup_names[histoIndex]).c_str());
-                      //ratio2->Print("all");
-                      ratio2->Write();
-                      ratio2->Draw();
-                  }
-                 */
         }
 
         fout->Write();
@@ -1037,8 +1035,8 @@ int main(int argc, char** argv) {
             mygrid[i_R]->write_grid();
         }
 
-
-        if (debug) cout<<" makegridfromsherpa::main: Normalising Internal Reference hIstograms "<<endl;
+    */
+        if (debug) cout<<" makegridfromsherpa::main: Normalising Internal Reference histograms "<<endl;
         for(int histoIndex=startIndex; histoIndex<endIndex; histoIndex++)
         {
             for (int igrid=0; igrid<mygrid[histoIndex]->GetNGrid(); igrid++) {
@@ -1048,9 +1046,9 @@ int main(int argc, char** argv) {
                 mygrid[histoIndex]->write_grid();
             }
         }
-        if (debug) cout<<" makegridfromsherpa::main: Internal Reference hIstograms normalised!"<<endl;
+        if (debug) cout<<" makegridfromsherpa::main: Internal Reference histograms normalised!"<<endl;
 
-
+    /*
         //Add R and B grids together whenall needed grid spaces exist
         if(startIndex<=i_B && endIndex>i_RB)
         {
@@ -1208,6 +1206,10 @@ int main(int argc, char** argv) {
 
     */
 
-
+    for( int histoIndex=0 ; histoIndex<endIndex ; histoIndex++)
+        std::cout<<"Events for "<<ntup_names[histoIndex]<<": "<<htestEventCount[histoIndex]<<std::endl;
+        
+    //system("root -l test.C");
+    
     return 0;
 }

@@ -1192,7 +1192,13 @@ void MyGrid::write_grid()   // writes out grid after some events
                     cout<<" MyGrid::write_grid()  hrefsubprocesseshistos["<<igrid<<"]["<<iproc<<"] not found ! "<<endl;
                     exit(0);
                 }
-                else hrefsubprocesseshistos[igrid][iproc]->Write();
+                else {
+                    hrefsubprocesseshistos[igrid][iproc]->Write();
+                    TH1D * hrefsubprochistosDiv = (TH1D*)hrefsubprocesseshistos[igrid][iproc]->Clone(string("hrefSubProcHistosDiv_"+to_string(iproc)).c_str());
+                    
+                    this->DivideByBinWidth(hrefsubprochistosDiv);
+                    hrefsubprochistosDiv->Write();
+                }
             }
 
             f->Close();
