@@ -395,12 +395,14 @@ int main(int argc, char** argv) {
 
             //pepare LO weight
             int Wsize=13;
-            double *f1 = new double[Wsize];
-            double *f2 = new double[Wsize];
+            double f1[Wsize];
+            double f2[Wsize];
+            
             for(int i=0; i<Wsize; i++) {
                 f1[i]=0.0; //reset
                 f2[i]=0.0; //reset
             }
+            
 
             //evolve to get weights in f1, f2
             evolvepdf_(t.x1,t.fac_scale,f1);
@@ -418,10 +420,11 @@ int main(int argc, char** argv) {
 
             //only fill the order and types you want
             if(iorder>2) continue;
-            if(!(id1==6 && id2==6) ) continue;
+            //if(!(id1==6 && id2==6) ) continue;
 
             double fa = f1[id1]/t.x1;
             double fb = f2[id2]/t.x2;
+            
 
             double wgt=t.me_wgt2*fa*fb;
             double wgt2_fac = pow((2.0*PI)/t.alphas,iorder);
@@ -654,7 +657,11 @@ int main(int argc, char** argv) {
 
             // fill the grid with the event for this histogram
             //
-            mygrid[histoIndex]->fill(myevent);
+            //mygrid[histoIndex]->fill(myevent);
+            
+            
+            
+            
             //
             // fill each test histogram
             //
