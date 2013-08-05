@@ -10,7 +10,7 @@ using namespace std;
 
 MyData::MyData()
 {
-    debug=true;
+    debug=false;
 
     normtot=false;
     unitsxTeV=false;
@@ -78,7 +78,7 @@ void MyData::ReadCorrelations(const char fname[200], double myscale) {
     /*
      * Read data correlation file provided by fname
      */
-    debug = true;
+    debug = false;
 
     if (debug) std::cout << " MyData::ReadCorrelations  Read correlations fname= "<<fname<< std::endl;
     cov_matrix = new TMatrixT<double>(datavectortoterr->GetN(), datavectortoterr->GetN());

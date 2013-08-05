@@ -62,8 +62,8 @@ class MyGrid {
   int    nXbins;
   double xLow;
   double xUp;
-  int xorder;
-  int nQ2bins;
+  int    xorder;
+  int    nQ2bins;
   double q2Low; 
   double q2Up;
   int    qorder;
@@ -147,6 +147,11 @@ class MyGrid {
   string GetInputNtupDir() { return ntupdirinput;};
   void SetInputNtupDir(TString dirinput){ ntupdirinput=dirinput; return;};
   string GetNtupName(){ return ntupname;};
+  
+  
+  void SetQ2Low (double _q2Low)     { q2Low=_q2Low; }; 
+  void SetQ2Up  (double _q2Up)      { q2Up=_q2Up; }; 
+  void SetQ2bins(double _nQ2bins)   { nQ2bins=_nQ2bins; };
 
   string GetGridName(int i){
    TString name=TString(gridname[i]); 
@@ -284,7 +289,7 @@ class MyGrid {
 
   void SetEventId(int evid){
    newevent=false;
-   cout<<" MyGrid::SetEventId: previous eventid= "<<eventid<<", new evid= "<<evid<<endl;
+   //cout<<" MyGrid::SetEventId: previous eventid= "<<eventid<<", new evid= "<<evid<<endl;
    if (eventid!=evid){
     eventid=evid;
     newevent=true;

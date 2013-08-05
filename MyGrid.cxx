@@ -14,7 +14,7 @@ using namespace std;
 MyGrid::MyGrid(string name, string version)
 {
 
-    debug=true;
+    debug=false;
     bookrefsubprocess=true;
 
     alluncorrevents  =  0; // uncorrelated events passing cuts (subevents are counted as one event)
@@ -26,16 +26,17 @@ MyGrid::MyGrid(string name, string version)
 
     // Grid architecture
     nXbins  = 30;
-    xLow    = 1.0e-8, xUp = 1.0;
+    xLow    = 1.0e-8;
+    xUp = 1.0;
     xorder  = 5;
-    nQ2bins = 5; //<--**changed
-    q2Low   = 70.*70.;
-    q2Up = 7000.*7000.; //squared
-    qorder  = 2;
+    nQ2bins = 2; 
+    q2Low   = 30624.; // this should be automated for the moment mtop=175*175
+    q2Up =    30628.; //
+    qorder  = 2;      // there seems to be a bug, if only one bins is used
 
     iorder  = 0;
 
-    // lowest order inalphas
+    // lowest order in alphas
     lowest_order = 2;
     // how many loops
     nloops = 1;
@@ -55,7 +56,7 @@ MyGrid::MyGrid(string name, string version)
     //cout<<" after reading "<<endl;
 
     bool incljets=false;
-    cout<<" MyGrid::Initialize fill for inclusive jets"<<endl;
+
 
     pdf_function=subprocesssteername; //subprocesssteername was read into from reading steering file
 
@@ -93,9 +94,6 @@ MyGrid::MyGrid(string name, string version)
 void MyGrid::Initialize() {
 
     //cout<<"start MyGrid::Initialize()"<<endl;
-
-    //MySubProcess *mySub= new MySubProcess(subprocesssteername);
-    //this->SetSubProcess(mySub);
 
     //cout<<" MyGrid:Initialize Number of grids to produce "<<gridname.size()<<endl;
     ///sherpaw_pdf *mypdf=new sherpaw_pdf(pdf_function,mysub);
@@ -273,7 +271,7 @@ void MyGrid::Initialize() {
     }
 
 
-    std::cout<<" MyGrid::Initialize: TEST: dynamic_cast using subprocesssteername: "<<subprocesssteername<<std::endl;
+    if (debug) std::cout<<" MyGrid::Initialize: TEST: dynamic_cast using subprocesssteername: "<<subprocesssteername<<std::endl;
     
     /*
     if(!mypdf)
@@ -570,7 +568,7 @@ void MyGrid::ReadSteering(string fname) {
                 nQ2bins=mys;
             } else if (strstr(line,"q2Low")!=0) {
                 sscanf(line," %s %f ",text, &mys);
-                cout<<" MyGrid::Read "<<text<<" "<<mys<<endl;
+                if (debug) cout<<" MyGrid::Read "<<text<<" "<<mys<<endl;
                 q2Low=mys;
             } else if (strstr(line,"q2Up")!=0) {
                 sscanf(line," %s %f ",text, &mys);
@@ -630,7 +628,7 @@ void MyGrid::Print() {
     }
 
 
-    cout<<"MyGrid <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"<<endl;
+    cout<<" MyGrid <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"<<endl;
 
 }
 
@@ -653,9 +651,8 @@ void MyGrid::book_grid(int igrid)  // inital grid booking
     std::cout<<" booking the grids " << ctime(&_t) << std::endl;
     //std::cout<<" Grid Name= "<<this->GetGridName(igrid)<<endl;
 
-    double apramval=5.;
-    appl::igrid::transformvar(apramval);
-    //appl::igrid transformvar(apramval);
+    //double apramval=5.;
+    //appl::igrid::transformvar(apramval);
 
 
     // binning information for the grid constructor
@@ -673,14 +670,14 @@ void MyGrid::book_grid(int igrid)  // inital grid booking
     _filename.replace( _filename.find(".root"), 5, newFileName.c_str());
     filename=_filename;
 
-    std::cout<<" MyGrid::book_grid: TEST: checking if this file exists: "<<filename<<std::endl;
+    if (debug) std::cout<<" MyGrid::book_grid: TEST: checking if this file exists: "<<filename<<std::endl;
 
 
-    std::cout << "book_grid() " << igrid << ", grid name " << filename << std::endl;
+    if (debug) std::cout << "book_grid() " << igrid << ", grid name " << filename << std::endl;
 
 
     if ( !file_exists(filename) ) {
-        cout<<"MyGrid::book_grid: file named '"<<filename<<"' does not exist. create_new=true."<<std::endl;
+        cout<<" MyGrid::book_grid: file named '"<<filename<<"' does not exist. create_new=true."<<std::endl;
         create_new = true;
     }
     // or if it does exists but root file is a zombie...
@@ -695,7 +692,7 @@ void MyGrid::book_grid(int igrid)  // inital grid booking
     }
 
 
-    std::cout<<" MyGrid::book_grid: TEST: final create_new is: "<<create_new<<" for file: "<<filename<<std::endl;
+    if (debug) std::cout<<" MyGrid::book_grid: TEST: final create_new is: "<<create_new<<" for file: "<<filename<<std::endl;
 
 
     //mydata[igrid]->Print();
@@ -706,13 +703,15 @@ void MyGrid::book_grid(int igrid)  // inital grid booking
     // cout<<i<<" obsBins= "<<obsBins[i]<<endl;
 
     if ( create_new ) {
+        cout<<" >>>>---------------------------------------------- "<<endl;
         cout<<" MyGrid::book Creating NEW grid... " << filename << "\tigrid " << igrid << endl;
         cout<<" nObsBins= "<<nObsBins<<endl;
         cout<<" nQ2bins= "<<nQ2bins<<" q2Low= "<<q2Low<<" q2Up= "<<q2Up<<" qorder= "<<qorder<<endl;
         cout<<" nXbins= "<<nXbins<<" xLow= "<<xLow<<" xUp= "<<xUp<<" xorder= "<<xorder<<endl;
         cout<<" pdf_function= "<<pdf_function<<endl;
         cout<<" lowest_order= "<<lowest_order<<" nloops= "<< nloops<<endl;
-
+        cout<<" <<<<---------------------------------------------- "<<endl;
+ 
         /*
         appl::grid *tmpgrid = new appl::grid( nObsBins, obsBins,      // obs bins
                                               nQ2bins, q2Low, q2Up, qorder,         // Q2 bins and interpolation order
@@ -730,6 +729,10 @@ void MyGrid::book_grid(int igrid)  // inital grid booking
         
         
         ///******RUN WITH STEERING FILE: atlas2012_top-config.txt that will make pdf_function=top.config
+        if (debug) printf("**MyGrid fill: tmp pdf_function= %s \n",pdf_function.c_str());
+
+        cout<<" book tmpgrid pdf_function= "<<pdf_function<<endl;
+
         appl::grid *tmpgrid = new appl::grid( nObsBins, obsBins,      // obs bins
                                               nQ2bins, q2Low, q2Up, qorder,         // Q2 bins and interpolation order
                                               nXbins,   xLow,  xUp, xorder,         // x bins and interpolation order
@@ -812,8 +815,16 @@ void  MyGrid::fill(MyEvent *myevent )
     double mewgt=myevent->GetWeight();
 
     if (debug)
-        cout<<" MyGrid::fill x1= "<<x1<<" x2= "<<x2<<" q2= "<<q2
-            <<" mewgt= "<<mewgt<<" xsec= "<<xsec<<endl;
+     cout<<" MyGrid::fill x1= "<<x1<<" x2= "<<x2<<" q2= "<<q2
+         <<" mewgt= "<<mewgt<<" xsec= "<<xsec<<endl;
+
+    if (x1<xLow) cout<<" MyGrid::fill x1 outside range x1= "<<x1<<" xLow= "<<xLow<<endl;
+    if (x2<xLow) cout<<" MyGrid::fill x2 outside range x2= "<<x1<<" xLow= "<<xLow<<endl;
+    if (x1>xUp)  cout<<" MyGrid::fill x1 outside range x1= "<<x1<<" xUp= "<<xUp<<endl;
+    if (x2>xUp)  cout<<" MyGrid::fill x2 outside range x2= "<<x1<<" xUp= "<<xUp<<endl;
+    if (q2<q2Low)cout<<" MyGrid::fill q2 outside range q2= "<<q2<<" q2Low= "<<q2Low<<endl;
+    if (q2>q2Up) cout<<" MyGrid::fill q2 outside range q2= "<<q2<<" q2Up= "<<q2Up<<endl;
+
 
     int Ngrids=this->GetNGrid();
     if (debug) cout<<" MyGrid::fill Ngrids= "<<Ngrids<<endl;
@@ -839,6 +850,9 @@ void  MyGrid::fill(MyEvent *myevent )
     //if (!mypdf) cout<<" MyGrid::fill mypdf not initialized "<<endl; //<--**
     //mypdf->SetCurrentProcess(nproc); //<--** Currently does nothing? nothing seen last code checked: 19-Jun-2013
 
+    //
+    // to be replaced by iorder ?
+    // decided on basis of lowest_order insteed of nproc
     int myorder=-1;
     if (nproc==1||nproc==2) { // Wminus and Wplus
         myorder=myevent->GetOrder();
@@ -866,9 +880,7 @@ void  MyGrid::fill(MyEvent *myevent )
 
     //std::cout<<"MyGrid::fill: decideSubProcess using: id1: "<<id1<<", id2: "<<id2<<std::endl;
     int iproc=mypdf->decideSubProcess(id1,id2); //<--**
-
-
-    std::cout<<" MyGrid::fill: decideSubProc: "<<iproc<<std::endl;
+    if (debug) std::cout<<" MyGrid::fill: decideSubProc: "<<iproc<<std::endl;
     if (iproc==-1)  {
         cout<<" MyGrid::fill do not know what to do "<<endl;
         cout<<" MyGrid::fill incoming partons where id1= "<<id1<<" id2= "<<id2<<endl;
@@ -881,7 +893,7 @@ void  MyGrid::fill(MyEvent *myevent )
 
     this->ResetWeight();
     this->SetWeight(iproc,mewgt);
-    if (debug) this->PrintWeight();
+    if (debug)  this->PrintWeight();
 
     double *weight=this->GetWeight();
 
@@ -905,7 +917,7 @@ void  MyGrid::fill(MyEvent *myevent )
             this->PrintWeight();
             cout<<" MyGrid::fill: Filling with: x1= "<<x1<<", x2= "<<x2<<", q2= "<<q2
                 <<", mewgt= "<<mewgt<<", xsec= "<<xsec<<", myorder= "<<myorder<<endl;
-        }
+	}
 
         //double obsmax=this->GetObsMax(igrid);
         //cout<<" obsmax= "<<obsmax<<endl;
@@ -967,11 +979,12 @@ void  MyGrid::fill(MyEvent *myevent )
                 if (!mygrid[igrid]) cout<<" MyGrid::fill grid not found igrid= "<<igrid<<endl;
                 mygrid[igrid]->fill_phasespace(x1, x2, q2, obs, weight, myorder );
             }
-            if(debug)
+	    if(debug)
                 std::cout<<" MyGrid::fill: Filled with: x1= "<<x1<<", x2= "<<x2<<", obs= "<<obs<<", q2= "<<q2
                 <<", mewgt= "<<mewgt<<", xsec= "<<xsec<<", myorder= "<<myorder<<std::endl;
             mygrid[igrid]->getReference()->Fill( obs,xsec);
             
+            if (debug) 
             std::cout<<" MyGrid::fill: filled refHisto with xsec: "<<xsec
                 <<", filled grid with (weight,iproc): ("<<mewgt<<","<<iproc<<")"<<std::endl;
 
@@ -1111,17 +1124,17 @@ void MyGrid::write_grid()   // writes out grid after some events
 
     int Ngrids=this->GetNGrid();
 
-    std::cout<<" MyGrid::write_grid Write out the grid ... Ngrids " << Ngrids << std::endl;
+    if (debug) std::cout<<" MyGrid::write_grid Write out the grid ... Ngrids " << Ngrids << std::endl;
 
 
     for(int igrid = 0; igrid < Ngrids; igrid++)
     {
         //mygrid[igrid]->getReference()->Print("all");
-        cout<<"MyGrid::write_grid saving grid N=" << igrid+1 << "\tof total " << Ngrids << endl;
+      if (debug) cout<<" MyGrid::write_grid saving grid N=" << igrid+1 << "\tof total " << Ngrids << endl;
         //mygrid[igrid]->setNormalised( true );
         mygrid[igrid]->run() = events[igrid];
 
-        cout<<" run stored "<<endl;
+        //cout<<" run stored "<<endl;
 
         mygrid[igrid]->trim();
 
@@ -1133,10 +1146,6 @@ void MyGrid::write_grid()   // writes out grid after some events
             cout<<"Saved Space ratio: "<<(trim_size/untrim_size*1.)<<endl;
         }
 
-
-
-
-
         string filename=this->GetGridFullFileName(igrid);//+this->GetGridVersionName();
 
         string _filename = filename;
@@ -1144,7 +1153,7 @@ void MyGrid::write_grid()   // writes out grid after some events
         _filename.replace( _filename.find(".root"), 5, newFileName.c_str());
         filename=_filename;
 
-        cout<<" MyGrid::write_grid: TEST: Writing to filename= " << filename << "\tigrid: " << igrid << endl;
+        if (debug) cout<<" MyGrid::write_grid: TEST: Writing to filename= " << filename << "\tigrid: " << igrid << endl;
         if (mygrid[igrid])   mygrid[igrid]->Write(filename);
         else                 cout<<" MyGrid::write_grid() mygrid not found ! "<<endl;
 
@@ -1157,7 +1166,7 @@ void MyGrid::write_grid()   // writes out grid after some events
             _filename.replace( _filename.find(".root"), 5, newFileName.c_str());
 
             TFile *f = new TFile( _filename.c_str(),"recreate");
-            f->Print();
+            if (debug) f->Print();
 
 
             if (!hreference[igrid]) {

@@ -8,7 +8,7 @@ using namespace std;
 
 MyEvent::MyEvent()
 {
-  debug=true;
+  debug=false;
   sqrts=0.; 
 }
 
@@ -201,7 +201,9 @@ std::vector<fastjet::PseudoJet> MyEvent::GetSelectedJets(double ptmin, double ra
    //myjet->reset(px,py,pz,en);
    //myjet->set_user_index (id);
    fastjet::PseudoJet myjet=*this->Get(i);
-   if (debug) cout<<" MyEvent::GetSelectedJets selected jets pt= "<<
+   
+   if (debug) 
+    cout<<" MyEvent::GetSelectedJets: selected jets pt= "<<
         myjet.pt()<<" rap= "<<myjet.rap()<<endl;
    myseljets.push_back(myjet);
   }
