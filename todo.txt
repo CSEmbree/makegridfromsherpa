@@ -1,0 +1,60 @@
+
+done:
+
+
+convoluted histograms do not need to be normalised by number of events
+           are already divided by bin width
+
+added in grid steering architecture, use 2 bins for Q2 around 174 176
+(could be one, but there seems to be bug)
+
+
+-------------------------------------------------
+
+to be done:
+
+test LO convolution with quarks
+
+test NLO: 
+ test convolute B,R and R+B
+ first gluon only
+
+
+
+automatic setup for factorisation scale boundaries
+introduce fac_scale sets bounderies of q2Low q2Up 
+(see code fragment in makegridfromsherpa
+
+look at grid formation with one Q2 bins
+need to fix this in appl_grid
+ if ( m_Ntau>1 ) m_deltatau = (taumax-taumin)/(m_Ntau-1);
+  else            m_deltatau = 0;
+
+lowest_order = 2; to be steered from MyData or MyCrossSection steering
+decide myorder on basis of lowest_order insteed of nproc
+
+
+check Adding B and R for references and grids
+use Marc applgrid-combine
+
+Normlize functions, set number of entries to values before normalisation
+not number of bins
+
+Why is in src not appl_grid ?
+src/appl_igrid.h:
+
+put debug print-out on appl_igrid convolute 
+
+Marc:
+remove generic_pdf 
+rename lumi_pdf to generic_pdf
+
+Split sherpa
+   sherpa
+in GridUtils
+   AnalysisUtils
+
+
+compare to grid from mcfm
+put publish Atlas data grids on svn
+together with examples
