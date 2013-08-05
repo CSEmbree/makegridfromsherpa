@@ -79,7 +79,7 @@ class MyEvent {
   int GetID(int index){return event[index].user_index();};
   int GetLeadingJetID();
 
-  bool IsJet(int id){ return abs(id)<10||abs(id)==21;};
+  bool IsJet(int id){ return abs(id)<10||abs(id)==0;};
   bool IsChargedLepton(int id){ return abs(id)==11||abs(id)==13;};
   bool IsNeutrino(int id){ return abs(id)==12||abs(id)==14;};
 

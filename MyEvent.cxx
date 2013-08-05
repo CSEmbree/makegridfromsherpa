@@ -60,16 +60,13 @@ void MyEvent::Print2()
 
 void MyEvent::push_back(double px, double py, double pz, double E, int id)
 {
- // 
-  fastjet::PseudoJet *myjet2 = new fastjet::PseudoJet(px,py,pz,E);
-  fastjet::PseudoJet myjet3 = *myjet2; 
-  //myjet->reset(px,py,pz,E);
-  //myjet->set_user_index (id);  
-   myjet3.set_user_index (id);  
-  //cout<<" id= "<<id<<" push_back pt= "<<myjet->pt()<<endl;
+ 
+  fastjet::PseudoJet myjet3(px,py,pz,E);// = *myjet2; 
+    
+  myjet3.set_user_index (id);  
+
   event.push_back(myjet3);
-  //event.push_back(fastjet::PseudoJet(px,py,pz,E));
-  delete myjet2;
+  
   return;
 }
 
