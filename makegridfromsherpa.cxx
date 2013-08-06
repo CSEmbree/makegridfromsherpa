@@ -62,6 +62,7 @@ extern "C" void evolvepdf_(const double& , const double& , double* );
 extern "C" double alphaspdf_(const double& Q);
 
 
+/*
 //calculates the NLO weight based on partons id1 and id2
 double GetWeightNLO(int id1, int id2, t3 t) {
 
@@ -153,7 +154,7 @@ double GetWeightNLO(int id1, int id2, t3 t) {
         double fbgx = 0.0;
 
         if ( id1 != GLUON ) {
-            //GLU-GLU
+            //QUARK
             faq = fa;
             fag = f1[6];
 
@@ -163,7 +164,7 @@ double GetWeightNLO(int id1, int id2, t3 t) {
             fagx = xf1p[6]   / t.x1;
         }
         else {
-            //QUARK-GLU
+            //GLU
             fag=fa;
             for ( int i=1 ; i<nWgts-1 ; ++i)
                 if( i!=GLUON ) faq += f1[i];
@@ -175,7 +176,7 @@ double GetWeightNLO(int id1, int id2, t3 t) {
                 if( i != GLUON ) faqx += (xf1p[i]/t.x1);
         }
         if ( id2 != GLUON ) {
-            //GLU-QUARK
+            //QUARK
             fbq = fb;
             fbg = f2[GLUON];
 
@@ -185,7 +186,7 @@ double GetWeightNLO(int id1, int id2, t3 t) {
             fbgx = xf2p[GLUON] / t.x2;
         }
         else {
-            //QUARK-QUARK
+            //GLU
             fbg = fb;
             for ( int i = 1 ; i<nWgts-1 ; ++i)
                 if( i != GLUON ) fbq += f2[i];
@@ -236,7 +237,7 @@ double GetWeightNLO(int id1, int id2, t3 t) {
 
 
 
-    /*
+    
     //retreive values for x# and x#prime from tree for later usage (and readability) conveyance
     double x1  = t.x1;
     double x2  = t.x2;
@@ -272,24 +273,24 @@ double GetWeightNLO(int id1, int id2, t3 t) {
         {
             if( id2 != GLUON ) {
                 //QUARK-QUARK
-                //needed: fa, fb, fap, fbp, fag, fbg, fagp, fbgp 
+                //needed: fa, fb, fap, fbp, fag, fbg, fagp, fbgp
                 //using : xf1, xf2, x1, x2, xf1p, xf2p, x1p, x2p
-                
+
                 evolvepdf_( x1, fac_scale, xf1 );
                 evolvepdf_( x2, fac_scale, xf2 );
                 fa  = xf1[id1]   / x1;
                 fb  = xf2[id2]   / x2;
                 fag = xf1[GLUON] / x1;
                 fbg = xf2[GLUON] / x2;
-                
+
                 evolvepdf_( x1/x1p, fac_scale, xf1p );
                 evolvepdf_( x2/x2p, fac_scale, xf2p );
-                fap  = xf1p[id1]   / x1; 
+                fap  = xf1p[id1]   / x1;
                 fbp  = xf2p[id2]   / x2;
                 fagp = xf1p[GLUON] / x1;
                 fbgp = xf2p[GLUON] / x2;
-                
-                
+
+
                 1  fa   * fb   *w[1];
                 2  fap  * fb   *w[2] * (1/x1p);
                 3  fag  * fb   *w[3];
@@ -298,7 +299,7 @@ double GetWeightNLO(int id1, int id2, t3 t) {
                 6  fa   * fbp  *w[6] * (1/x2p);
                 7  fa   * fbg  *w[7];
                 8  fa   * fbgp *w[8] * (1/x2p);
-                
+
             }
             else {
                 //QUARK-GLUON
@@ -309,7 +310,7 @@ double GetWeightNLO(int id1, int id2, t3 t) {
                 //GLUON-QUARK
                 //needed: sf1, sf1p, fg1, fg1p, fb, fbp, fg2, fg2p
                 //using : xf1, xf2, x1, x2, xf1p, xf2p, x1p, x2p
-                
+
                 evolvepdf_( x1, fac_scale, xf1 );
                 evolvepdf_( x2, fac_scale, xf2 );
                 fb  = xf2[id2]   / x2;
@@ -318,7 +319,7 @@ double GetWeightNLO(int id1, int id2, t3 t) {
                 for( int i=1; i<nWgts-1; i++ ) {
                     sf1 = xf1[i] / x1;
                 }
-                
+
                 evolvepdf_( x1/x1p, fac_scale, xf1p );
                 evolvepdf_( x2/x2p, fac_scale, xf2p );
                 fbp  = xf2p[id2]   / x2;
@@ -327,8 +328,8 @@ double GetWeightNLO(int id1, int id2, t3 t) {
                 for( int i=1; i<nWgts-1; i++ ) {
                     sf1p = xf1p[i] / x1;
                 }
-                
-                
+
+
                 1  sf1  * fb   * w[1];
                 2  sf1p * fb   * w[2] * (1/x1p);
                 3  fg1  * fb   * w[3];
@@ -337,7 +338,7 @@ double GetWeightNLO(int id1, int id2, t3 t) {
                 6  f1g  * fbp  * w[6] * (1/x2p);
                 7  f1g  * f2g  * w[7];
                 8  f1g  * f2gp * w[8] * (1/w2p);
-                
+
             }
             else {
                 //GLUON-GLUON
@@ -372,18 +373,19 @@ double GetWeightNLO(int id1, int id2, t3 t) {
                 6   fg1  * sf2p * w[6] * (1/x2);
                 7   fg1  * fg2  * w[7];
                 8   fg1  * fg2p * w[8] * (1/x2);
-            
+
             }
         }
     else {
         std::cout<<" makrgridfromsherpa::GetWeightNLO: ERROR: wnz invalid? wnz:"<<wnz<<std::endl;
         exit(0);
     }
-    */
+    
 
     std::cout<<" makrgridfromsherpa::GetWeightNLO: NLO weight is: "<<wgt<<std::endl;
     return wgt;
 }
+*/
 
 
 //calculates mins & maxs of ren & fac scales to get the correct Q2
@@ -752,10 +754,16 @@ int main(int argc, char** argv) {
             if(t.id2==21) id2=0;
             id2 = id2+6;
 
-            if (debug) std::cout<<" makegridfromsherpa::main: iorder: "<<iorder<<std::endl;
+            if(debug) std::cout<<" makegridfromsherpa::main: iorder: "<<iorder<<std::endl;
 
             //only fill the order and types you want
-            if(iorder>2) continue;
+            
+            
+            //**FORCING REJECTION FOR TESTING
+            if(iorder<=2) continue; //Accepting only NLO
+            //if(iorder>2) continue; //Accepting only LO
+            //**
+            
             //if(!(id1==-6 && id2==6)) continue;
 
 
@@ -789,33 +797,15 @@ int main(int argc, char** argv) {
                 std::cout<<"  (fa["<<id1<<"]*fb["<<id2<<"]*t.me_wgt2)/(t.x1*t.x2)= "<<wgt<<" xsec= "<<t.weight2<<std::endl;
             }
 
-            if(iorder==2) {
-                std::cout<<" makegridfromsherpa::main: order: LO"<<std::endl;
-                int subProcID = mygrid[histoIndex]->GetDecideSubProcess( t.id1==21? 0:t.id1, t.id2==21? 0:t.id2 );
-                double npairs = mygrid[histoIndex]->GetNSubProcessPairs( subProcID );
-                if(debug){ 
-                    std::cout<<" makegridfromsherpa::main: subProcID: "<<subProcID<<" has '"<<npairs<<"' pairs."<<std::endl;
-                    std::cout<<" makegridfromsherpa::main: weight before: "<<(t.me_wgt2*wgt2_fac)<<", weight after: "<<(t.me_wgt2*wgt2_fac)/npairs<<std::endl;
-                }
-                                
-                wgt = (t.me_wgt2 * wgt2_fac) / npairs;
-            } 
-            else { //iorder==3
-                std::cout<<" makegridfromsherpa::main: order: NLO"<<std::endl;
-                //wgt = GetWeightNLO(id1, id2, t);
-                wgt = 0; //TEST
-            }
-            
-            std::cout<<" makegridfromsherpa::main: Weight set to: "<<wgt<<std::endl;
 
-            myevent->SetWeight(wgt); //dealing entirely with weight2
+            //myevent->SetWeight(wgt); //dealing entirely with weight2
             myevent->SetXSection(t.weight2);
 
             myevent->SetOrder(iorder);
             myevent->SetType (itype);
             myevent->SetEventId(t.id);
-            myevent->SetX1(t.x1);
-            myevent->SetX2(t.x2);
+            //myevent->SetX1(t.x1);
+            //myevent->SetX2(t.x2);
             myevent->SetQ2(t.fac_scale*t.fac_scale); // applgrid takes sqrt(fac_scale) when evaluating pdf and alphas
 
             //
@@ -893,131 +883,172 @@ int main(int argc, char** argv) {
               }
             */
 
-            /*
-                //****START -- TEST TO CHECK CORRECT WEIGHT - NEW
-                LHAPDF::initPDFSet(pdfSetFile.c_str(), 0);
 
-                int Wsize=13;
-                double f1[Wsize];
-                double f2[Wsize];
-                for(int i=0; i<Wsize; i++) {
-                    f1[i]=0.0;
-                    f2[i]=0.0; //reset
+//fill weight depending on LO or NLO
+            if(iorder==2) {
+                //if(debug) std::cout<<" makegridfromsherpa::main: order: LO"<<std::endl;
+
+                int subProcID = mygrid[histoIndex]->GetDecideSubProcess( t.id1==21? 0:t.id1, t.id2==21? 0:t.id2 );
+                double npairs = mygrid[histoIndex]->GetNSubProcessPairs( subProcID );
+
+                if(debug) {
+                    std::cout<<" makegridfromsherpa::main: subProcID: "<<subProcID<<" has '"<<npairs<<"' pairs."<<std::endl;
+                    std::cout<<" makegridfromsherpa::main: weight before: "<<(t.me_wgt2*wgt2_fac)<<", weight after: "<<(t.me_wgt2*wgt2_fac)/npairs<<std::endl;
                 }
 
-                //evolve to get weights in f1, f2
 
+                wgt = (t.me_wgt2 * wgt2_fac) / npairs;
+
+
+                //set event based on LO
+                myevent->SetWeight(wgt); //dealing entirely with weight2
+                myevent->SetX1(t.x1);
+                myevent->SetX2(t.x2);
+                
+                mygrid[histoIndex]->fill(myevent);
+                //if(debug) std::cout<<" makegridfromsherpa::main: LO Weight set to: "<<wgt<<std::endl;
+            }
+            else { //iorder==3
+                //if(debug) std::cout<<" makegridfromsherpa::main: order: NLO"<<std::endl;
+                
+
+                //setup xf1 and xf2 to be filled from evolvepdf
+                int nWgts=13;
+                double f1[nWgts];
+                double f2[nWgts];
+                double xf1[nWgts];
+                double xf2[nWgts];
+                double xf1p[nWgts];
+                double xf2p[nWgts];
+                for( int iproc=0 ; iproc<nWgts ; iproc++ ) {
+                    xf1[iproc] = 0.0; //emptied
+                    xf2[iproc] = 0.0; //emptied
+                }
+
+
+                //evolve to get weights in xf1, xf2
                 evolvepdf_(t.x1,t.fac_scale,xf1);
                 evolvepdf_(t.x2,t.fac_scale,xf2);
-                double asf=1;
-                //double lr=log(mur2/sqr(p_vars->m_mur));
-                //double lf=log(muf2/sqr(p_vars->m_muf));
+
+                //computing f1 from xf1 and f2 from xf2 for later usage (and readability) conveyance
+                double fa = f1[id1]; // (xf1/x1)[id1]
+                double fb = f2[id2]; // (xf2/x2)[id2]
                 double lr=0;
                 double lf=0;
-                for(int i=0; i<Wsize; i++) std::cout<<"xf1["<<i<<"]: "<<xf1[i]<<std::endl; //show all
-                for(int i=0; i<Wsize; i++) std::cout<<"xf2["<<i<<"]: "<<xf2[i]<<std::endl; //show all
 
-
-                //num convention conversion
-                int id1 = t.id1;
-                int id2 = t.id2;
-                if(t.id1==21) id1=0;
-                id1 = id1+6;
-                if(t.id2==21) id2=0;
-                id2 = id2+6;
-
-
-                double fa = xf1[id1]/t.x1;
-                double fb = xf2[id2]/t.x2;
+                //special case for w[0]??
                 double w[9];
+                w[0] = t.me_wgt + t.usr_wgts[0] * lr + t.usr_wgts[1] * lr * lr / 2.0;
 
-                double wgt = t.me_wgt * fa * fb;
-                std::cout<<"wgt == t.me_wgt * fa * fb: "<<wgt<<std::endl;
-
-                if( t.alphasPower == 3 ) {
-                    w[0] = t.me_wgt + t.usr_wgts[0] * lr + t.usr_wgts[1] * lr * lr / 2.0; //<---needs to be set. See next w[i] bellow
-
-                    bool wnz=false;
-                    for ( int i=1 ; i<9 ; ++i ) {
-                        w[i] = t.usr_wgts[i+1] + t.usr_wgts[i+9] * lf; //<---needs to be set. The indexing seems off here? Also, we have lf=1 currently.
-                        if (w[i]==0) wnz=true;
-                    }
-
-                    wgt = w[0] * fa * fb;
-                    //wgt=t.me_wgt2+t.usr_wgts[0]*lr+t.usr_wgts[1]*lr*lr/2.0;
-                    std::cout<<" alphasPower==3: wgt: "<<wgt<<std::endl;
-
-                    if (wnz==true) {
-                        double faq = 0.0, faqx = 0.0, fag = 0.0, fagx = 0.0;
-                        double fbq = 0.0, fbqx = 0.0, fbg = 0.0, fbgx = 0.0;
-                        if (id1!=6) { //not a glu
-                            faq = fa;
-                            fag = xf1[6] / t.x1;
-
-                            evolvepdf_( t.x1/t.x1p, t.fac_scale, xf1 );
-
-                            faqx = xf1[id1] / t.x1;
-                            fagx = xf1[6] / t.x1;
-                        }
-                        else {
-                            fag=fa;
-                            for ( int i=1 ; i<Wsize-1 ; ++i)
-                                if( i!=6 ) faq += (xf1[i] / t.x1);
-
-                            evolvepdf_( t.x1/t.x1p, t.fac_scale , xf1 );
-
-                            fagx = (xf1[id1] / t.x1);
-                            for ( int i=1 ; i<Wsize-1 ; ++i )
-                                if( i != 6 ) faqx += xf1[i]/t.x1;
-                        }
-                        if ( id2 != 6 ) { //not a glu
-                            fbq = fb;
-                            fbg = xf2[6]/t.x2;
-
-                            evolvepdf_(t.x2/t.x2p,t.fac_scale,xf2);
-
-                            fbqx = xf2[id2] / t.x2;
-                            fbgx = xf2[6] / t.x2;
-                        }
-                        else {
-                            fbg = fb;
-                            for ( int i = 1 ; i < Wsize-1 ; ++i)
-                                if( i != 6 ) fbq += xf2[i] / t.x2;
-
-                            evolvepdf_( t.x2/t.x2p , t.fac_scale , xf2);
-
-                            fbgx = xf2[id2] / t.x2;
-                            for ( int i=1 ; i < Wsize-1 ; ++i )
-                                if( i != 6 ) fbqx+=xf2[i] / t.x2;
-                        }
-                        wgt+=(faq*w[1]+faqx*w[2]+fag*w[3]+fagx*w[4])*fb;
-                        wgt+=(fbq*w[5]+fbqx*w[6]+fbg*w[7]+fbgx*w[8])*fa;
-                    }
+                bool wnz=false;
+                for ( int i=1 ; i<9 ; ++i ) {
+                    w[i] = t.usr_wgts[i+1] + t.usr_wgts[i+9] * lf;
+                    if (w[i]==0) wnz=true;
                 }
 
-                std::cout<<"RESULT: "<<wgt*asf<<std::endl;
+                //wgt = w[0] * fa * fb;
+                //wgt=t.me_wgt2+t.usr_wgts[0]*lr+t.usr_wgts[1]*lr*lr/2.0;
 
-                //reference prints
-                std::cout<<"  id1: "<<id1<<", id2: "<<id2<<std::endl;
-                std::cout<<"  xf1["<<id1<<"]: "<<xf1[id1]<<std::endl;
-                std::cout<<"  xf2["<<id2<<"]: "<<xf2[id2]<<std::endl;
-                std::cout<<"  t.weight: "<<t.weight<<std::endl;
-                std::cout<<"  t.weight2: "<<t.weight2<<std::endl;
-                std::cout<<"  t.me_wgt: "<<t.me_wgt<<std::endl;
-                std::cout<<"  t.me_wgt2: "<<t.me_wgt2<<std::endl;
-                double myweight=(xf1[id1]*xf2[id2]*t.me_wgt)/(t.x1*t.x2);
-                std::cout<<"  (xf1["<<id1<<"]*xf2["<<id2<<"]*t.me_wgt)/(t.x1*t.x2)= "<<myweight<<std::endl;
+                if (wnz==true) {
+                    double faq = 0.;
+                    double faqx = 0.0;
 
-                //****END -- TEST TO CHECK CORRECT WEIGHT - NEW
-                */
+                    double fag = 0.0;
+                    double fagx = 0.0;
+
+                    double fbq = 0.0;
+                    double fbqx = 0.0;
+
+                    double fbg = 0.0;
+                    double fbgx = 0.0;
+
+                    if ( id1 != 6 ) {
+                        //parton 1 = QUARK
+                        faq = fa;
+                        fag = f1[6];
+                        myevent->SetWeight(w[1]+w[3]);
+                        myevent->SetX1(t.x1);
+                        mygrid[histoIndex]->fill(myevent);
+                        
+                        
+                        evolvepdf_( t.x1/t.x1p, t.fac_scale, xf1p );
 
 
+                        faqx = xf1p[id1] / t.x1;
+                        fagx = xf1p[6]   / t.x1;
+                        myevent->SetWeight( (w[2]+w[4]) * (1/t.x1p));
+                        myevent->SetX1(t.x1/t.x1p);
+                        mygrid[histoIndex]->fill(myevent);
+                    }
+                    else {
+                        //parton 1 = GLU
+                        fag=fa;
+                        for ( int i=1 ; i<nWgts-1 ; ++i)
+                            if( i!=6 ) faq += f1[i];
+                        myevent->SetWeight(w[1]+w[3]);
+                        myevent->SetX1(t.x1);
+                        mygrid[histoIndex]->fill(myevent);
+                        
+                        
+                        evolvepdf_( t.x1/t.x1p, t.fac_scale , xf1p );
+
+
+                        fagx = (xf1p[id1] / t.x1);
+                        for ( int i=1 ; i<nWgts-1 ; ++i )
+                            if( i != 6 ) faqx += (xf1p[i]/t.x1);
+                        myevent->SetWeight( (w[2]+w[4]) * (1/t.x1) );
+                        myevent->SetX1(t.x1/t.x1p);
+                        mygrid[histoIndex]->fill(myevent);
+                    }
+                    if ( id2 != 6 ) {
+                        //parton 2 = QUARK
+                        fbq = fb;
+                        fbg = f2[6];
+                        myevent->SetWeight(w[5]+w[7]);
+                        myevent->SetX2(t.x2);
+                        mygrid[histoIndex]->fill(myevent);
+                        
+                        
+                        evolvepdf_( t.x2/t.x2p, t.fac_scale, xf2p );
+
+
+                        fbqx = xf2p[id2] / t.x2;
+                        fbgx = xf2p[6] / t.x2;
+                        myevent->SetWeight( (w[6]+w[8]) * (1/t.x2p));
+                        myevent->SetX2(t.x2/t.x2p);
+                        mygrid[histoIndex]->fill(myevent);
+                    }
+                    else {
+                        //parton 2 = GLU
+                        fbg = fb;
+                        for ( int i = 1 ; i<nWgts-1 ; ++i)
+                            if( i != 6 ) fbq += f2[i];
+                        myevent->SetWeight( w[5]+w[7] );
+                        myevent->SetX2(t.x2);
+                        mygrid[histoIndex]->fill(myevent);
+                        
+                        
+                        evolvepdf_( t.x2/t.x2p , t.fac_scale , xf2p);
+
+
+                        fbgx = (xf2p[id2] / t.x2);
+                        for ( int i=1 ; i<nWgts-1 ; ++i )
+                            if( i != 6 ) fbqx += (xf2p[i] / t.x2);
+                        myevent->SetWeight( (w[6]+w[8]) * (1/t.x1) );
+                        myevent->SetX2(t.x2/t.x2p);
+                        mygrid[histoIndex]->fill(myevent);
+                    }
+                    //compute weight
+                    //wgt+=(faq*w[1]+faqx*w[2]+fag*w[3]+fagx*w[4])*fb;
+                    //wgt+=(fbq*w[5]+fbqx*w[6]+fbg*w[7]+fbgx*w[8])*fa;
+                }
+            }
 
 
             // fill the grid with the event for this histogram
             //
             if(debug) std::cout<<" makegridfromsherpa::main: Filling with t.id1: "<<t.id1<<", t.id2: "<<t.id2<<std::endl;
-            mygrid[histoIndex]->fill(myevent);
+            //mygrid[histoIndex]->fill(myevent);
 
 
 
