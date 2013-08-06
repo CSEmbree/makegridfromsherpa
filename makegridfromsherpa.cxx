@@ -1,3 +1,11 @@
+/*
+ * Title:   makegridfromsherpa
+ * Purpose: Given SHERPA ntuples, we test appl_grid LO and NLO convolute
+ * Authors: Dr. Carli
+ * Helpers: Mark Sutton, Cameron Embree
+ */
+
+//general
 #include <iostream>
 #include <string>
 #include <vector>
@@ -10,24 +18,25 @@
 #include "appl_grid/appl_grid.h"
 #include "fjClustering.h"
 
+//Dr. Carli's My* classes
 #include "MyEvent.h"
 #include "MyData.h"
 #include "MyFrameData.h"
 #include "MyGrid.h"
 
+//root
 #include <TCanvas.h>
 #include <TH1D.h>
 #include <TFile.h>
 #include <TPad.h>
 
-
-
-//#include "LHAPDF.h"                 //added for convolute
+//extra
 #include "LHAPDF/LHAPDF.h"
-//#include <LHAPDF/LHAPDF.h>
 #include "VariableDefinitions.h"    //added for convolute
 
+
 #define PI 3.141592653589793238462
+
 
 /*
  * EXAMPLE Execution:
@@ -36,12 +45,14 @@
  *                   ./makegridfromsherpa steering/atlas2012_top-config.txt 1000000
  */
 
-//enum ntup_types {i_R=0,i_B,i_RB};           //indexes for different histograms depending on "NTuple_*-like" in htest1
-//string ntup_names[]= {"_R","_B","_RthenB"}; //names of each htest1 index type, which comes from the NTuples they run over
 
-//changed to do B-like Ntups first
+
+//Constructs for more easily running over NTuples.
+//Using B-like Ntup first
 enum ntup_types {i_B=0,i_R,i_RB};           //indexes for different histograms depending on "NTuple_*-like" in htest1
 string ntup_names[]= {"_B","_R","_RthenB"}; //names of each htest1 index type, which comes from the NTuples they run over
+
+
 
 long int nevmax=LONG_MAX; //allow for halt of execution when a user defined maximum number of events is reached
 bool debug=false;
@@ -51,6 +62,330 @@ extern "C" void evolvepdf_(const double& , const double& , double* );
 extern "C" double alphaspdf_(const double& Q);
 
 
+//calculates the NLO weight based on partons id1 and id2
+double GetWeightNLO(int id1, int id2, t3 t) {
+
+    //current particle numering convention:
+    //0-tbar, 1-bbar, 2-cbar, 3-sbar, 4-ubar, 5-dbar, 6-glu, 7-d, 8-u, 9-s, 10-c, 11-b, 12-t
+    //hardcoded temp val in case numbering convention changes
+    static const int    GLUON       = 6;
+    static const int    BOTTOM_BAR  = 1;
+    static const int    BOTTOM      = 11;
+
+    double wgt = 0; //wgt that will be returned by end of NLO weight calc
+
+
+
+    //stefan's code convereted
+    //LHAPDF::initPDFSet(pdfSetFile.c_str(), 0); //need this? Assuming it is already init???
+
+
+    //setup xf1 and xf2 to be filled from evolvepdf
+    int nWgts=13;
+    double xf1[nWgts];
+    double xf2[nWgts];
+    double xf1p[nWgts];
+    double xf2p[nWgts];
+    for( int iproc=0 ; iproc<nWgts ; iproc++ ) {
+        xf1[iproc] = 0.0; //emptied
+        xf2[iproc] = 0.0; //emptied
+    }
+
+    //evolve to get weights in xf1, xf2
+    evolvepdf_(t.x1,t.fac_scale,xf1);
+    evolvepdf_(t.x2,t.fac_scale,xf2);
+
+
+    //computing f1 from xf1 and f2 from xf2 for later usage (and readability) conveyance
+    double f1[nWgts];
+    double f2[nWgts];
+    double f1p[nWgts];
+    double f2p[nWgts];
+    for( int iproc=0 ; iproc<nWgts ; iproc++ ) {
+        f1[iproc] = xf1[iproc] / t.x1;
+        f2[iproc] = xf2[iproc] / t.x2;
+    }
+
+
+
+    double asf=1;
+    //double lr=log(mur2/sqr(p_vars->m_mur));
+    //double lf=log(muf2/sqr(p_vars->m_muf));
+    double lr=0;
+    double lf=0;
+
+    if(debug) {
+        for(int i=0; i<nWgts; i++) std::cout<<"xf1["<<i<<"]: "<<xf1[i]<<std::endl; //show all
+        for(int i=0; i<nWgts; i++) std::cout<<"xf2["<<i<<"]: "<<xf2[i]<<std::endl; //show all
+    }
+
+
+    //get weights from f1(xf1/x1) of partion id1 and id2 for later usage conveyance
+    double fa = f1[id1]; // (xf1/x1)[id1]
+    double fb = f2[id2]; // (xf2/x2)[id2]
+
+
+
+    //get information needed to compute weight
+    double w[9];
+    w[0] = t.me_wgt + t.usr_wgts[0] * lr + t.usr_wgts[1] * lr * lr / 2.0;
+
+    bool wnz=false;
+    for ( int i=1 ; i<9 ; ++i ) {
+        w[i] = t.usr_wgts[i+1] + t.usr_wgts[i+9] * lf;
+        if (w[i]==0) wnz=true;
+    }
+
+    wgt = w[0] * fa * fb;
+    //wgt=t.me_wgt2+t.usr_wgts[0]*lr+t.usr_wgts[1]*lr*lr/2.0;
+
+    if (wnz==true) {
+        double faq = 0.;
+        double faqx = 0.0;
+
+        double fag = 0.0;
+        double fagx = 0.0;
+
+        double fbq = 0.0;
+        double fbqx = 0.0;
+
+        double fbg = 0.0;
+        double fbgx = 0.0;
+
+        if ( id1 != GLUON ) {
+            //GLU-GLU
+            faq = fa;
+            fag = f1[6];
+
+            evolvepdf_( t.x1/t.x1p, t.fac_scale, xf1p );
+
+            faqx = xf1p[id1] / t.x1;
+            fagx = xf1p[6]   / t.x1;
+        }
+        else {
+            //QUARK-GLU
+            fag=fa;
+            for ( int i=1 ; i<nWgts-1 ; ++i)
+                if( i!=GLUON ) faq += f1[i];
+
+            evolvepdf_( t.x1/t.x1p, t.fac_scale , xf1p );
+
+            fagx = (xf1p[id1] / t.x1);
+            for ( int i=1 ; i<nWgts-1 ; ++i )
+                if( i != GLUON ) faqx += (xf1p[i]/t.x1);
+        }
+        if ( id2 != GLUON ) {
+            //GLU-QUARK
+            fbq = fb;
+            fbg = f2[GLUON];
+
+            evolvepdf_( t.x2/t.x2p, t.fac_scale, xf2p );
+
+            fbqx = xf2p[id2] / t.x2;
+            fbgx = xf2p[GLUON] / t.x2;
+        }
+        else {
+            //QUARK-QUARK
+            fbg = fb;
+            for ( int i = 1 ; i<nWgts-1 ; ++i)
+                if( i != GLUON ) fbq += f2[i];
+
+            evolvepdf_( t.x2/t.x2p , t.fac_scale , xf2p);
+
+            fbgx = (xf2p[id2] / t.x2);
+            for ( int i=1 ; i<nWgts-1 ; ++i )
+                if( i != GLUON ) fbqx += (xf2p[i] / t.x2);
+        }
+
+        //compute weight
+        wgt+=(faq*w[1]+faqx*w[2]+fag*w[3]+fagx*w[4])*fb;
+        wgt+=(fbq*w[5]+fbqx*w[6]+fbg*w[7]+fbgx*w[8])*fa;
+
+    }
+    else {
+        std::cout<<" makrgridfromsherpa::GetWeightNLO: ERROR: wnz invalid? wnz:"<<wnz<<std::endl;
+        exit(0);
+    }
+
+
+    wgt=wgt*asf;
+    std::cout<<" makrgridfromsherpa::GetWeightNLO: RESULT: "<<wgt<<std::endl;
+
+
+
+
+    //reference prints
+    std::cout<<"\tid1: "<<id1<<", id2: "<<id2<<std::endl;
+    std::cout<<"\txf1["<<id1<<"]: "<<xf1[id1]<<std::endl;
+    std::cout<<"\txf2["<<id2<<"]: "<<xf2[id2]<<std::endl;
+    std::cout<<"\tt.weight: "<<t.weight<<std::endl;
+    std::cout<<"\tt.weight2: "<<t.weight2<<std::endl;
+    std::cout<<"\tt.me_wgt: "<<t.me_wgt<<std::endl;
+    std::cout<<"\tt.me_wgt2: "<<t.me_wgt2<<std::endl;
+    double myweight=(xf1[id1]*xf2[id2]*t.me_wgt)/(t.x1*t.x2);
+    std::cout<<"\t(xf1["<<id1<<"]*xf2["<<id2<<"]*t.me_wgt)/(t.x1*t.x2)= "<<myweight<<std::endl;
+
+    //****END -- TEST TO CHECK CORRECT WEIGHT - NEW
+
+
+
+
+
+
+
+
+
+
+    /*
+    //retreive values for x# and x#prime from tree for later usage (and readability) conveyance
+    double x1  = t.x1;
+    double x2  = t.x2;
+    double x1p = t.x1p;
+    double x2p = t.x2p;
+    double fac_scale = t.fac_scale;
+
+    //containers for weights from evolvepdf_ calls
+    double xf1[nWgts];
+    double xf2[nWgts];
+    double f1 [nWgts];
+    double f2 [nWgts];
+
+    //sum over all f1 and f2
+    double sf1;
+    double sf2;
+
+
+
+    //get information needed to compute weight
+    double w[9];
+    w[0] = t.me_wgt + t.usr_wgts[0] * lr + t.usr_wgts[1] * lr * lr / 2.0;
+
+    bool wnz=false;
+    for ( int i=1 ; i<9 ; ++i ) {
+        w[i] = t.usr_wgts[i+1] + t.usr_wgts[i+9] * lf;
+        if (w[i]==0) wnz=true;
+    }
+
+    if(wnz)
+        //Implimenting Mark's suggestions
+        if( id1 != GLUON )
+        {
+            if( id2 != GLUON ) {
+                //QUARK-QUARK
+                //needed: fa, fb, fap, fbp, fag, fbg, fagp, fbgp 
+                //using : xf1, xf2, x1, x2, xf1p, xf2p, x1p, x2p
+                
+                evolvepdf_( x1, fac_scale, xf1 );
+                evolvepdf_( x2, fac_scale, xf2 );
+                fa  = xf1[id1]   / x1;
+                fb  = xf2[id2]   / x2;
+                fag = xf1[GLUON] / x1;
+                fbg = xf2[GLUON] / x2;
+                
+                evolvepdf_( x1/x1p, fac_scale, xf1p );
+                evolvepdf_( x2/x2p, fac_scale, xf2p );
+                fap  = xf1p[id1]   / x1; 
+                fbp  = xf2p[id2]   / x2;
+                fagp = xf1p[GLUON] / x1;
+                fbgp = xf2p[GLUON] / x2;
+                
+                
+                1  fa   * fb   *w[1];
+                2  fap  * fb   *w[2] * (1/x1p);
+                3  fag  * fb   *w[3];
+                4  fagp * fb   *w[4] * (1/x1p);
+                5  fa   * fb   *w[5];
+                6  fa   * fbp  *w[6] * (1/x2p);
+                7  fa   * fbg  *w[7];
+                8  fa   * fbgp *w[8] * (1/x2p);
+                
+            }
+            else {
+                //QUARK-GLUON
+            }
+        }
+        else {
+            if( id2 != GLUON ) {
+                //GLUON-QUARK
+                //needed: sf1, sf1p, fg1, fg1p, fb, fbp, fg2, fg2p
+                //using : xf1, xf2, x1, x2, xf1p, xf2p, x1p, x2p
+                
+                evolvepdf_( x1, fac_scale, xf1 );
+                evolvepdf_( x2, fac_scale, xf2 );
+                fb  = xf2[id2]   / x2;
+                fg1 = xf1[GLUON] / x1;
+                fg2 = xf2[GLUON] / x2;
+                for( int i=1; i<nWgts-1; i++ ) {
+                    sf1 = xf1[i] / x1;
+                }
+                
+                evolvepdf_( x1/x1p, fac_scale, xf1p );
+                evolvepdf_( x2/x2p, fac_scale, xf2p );
+                fbp  = xf2p[id2]   / x2;
+                fg1p = xf1p[GLUON] / x1;
+                fg2p = xf2p[GLUON] / x2;
+                for( int i=1; i<nWgts-1; i++ ) {
+                    sf1p = xf1p[i] / x1;
+                }
+                
+                
+                1  sf1  * fb   * w[1];
+                2  sf1p * fb   * w[2] * (1/x1p);
+                3  fg1  * fb   * w[3];
+                4  fg1p * fb   * w[4] * (1/x1p);
+                5  f1g  * fb   * w[5];
+                6  f1g  * fbp  * w[6] * (1/x2p);
+                7  f1g  * f2g  * w[7];
+                8  f1g  * f2gp * w[8] * (1/w2p);
+                
+            }
+            else {
+                //GLUON-GLUON
+                //needed: fg1, fg2, sf1, sf2, fg1p, fg2p, sf1p, sf2p
+                //using : xf1, xf2, x1, x2, xf1p, xf2p, x1p, x2p
+
+                evolvepdf_( x1, fac_scale, xf1 );
+                evolvepdf_( x2, fac_scale, xf2 );
+                fg1 = xf1[GLUON] / x1;
+                fg2 = xf2[GLUON] / x2;
+                for( int i=1; i<nWgts-1; i++ ) {
+                    sf1 = xf1[i] / x1;
+                    sf2 = xf2[i] / x2;
+                }
+
+
+                evolvepdf_( x1/x1p, fac_scale, xf1p );
+                evolvepdf_( x2/x2p, fac_scale, xf2p );
+                fg1p = xf1p[GLUON] / x1;
+                fg2p = xf2p[GLUON] / x2;
+                for( int i=1; i<nWgts-1; i++ ) {
+                    sf1p = xf1p[i] / x1;
+                    sf2p = xf2p[i] / x2;
+                }
+
+
+                1   sf1  * fg2  * w[1];
+                2   sf1p * fg2  * w[2] * (1/x1);
+                3   fg1  * fg2  * w[3];
+                4   fg1p * fg2  * w[3] * (1/x1); //Should this be w[4]???
+                5   fg1  * sf2  * w[5];
+                6   fg1  * sf2p * w[6] * (1/x2);
+                7   fg1  * fg2  * w[7];
+                8   fg1  * fg2p * w[8] * (1/x2);
+            }
+        }
+    else {
+        std::cout<<" makrgridfromsherpa::GetWeightNLO: ERROR: wnz invalid? wnz:"<<wnz<<std::endl;
+        exit(0);
+    }
+    */
+
+    std::cout<<" makrgridfromsherpa::GetWeightNLO: NLO weight is: "<<wgt<<std::endl;
+    return wgt;
+}
+
+
+//calculates mins & maxs of ren & fac scales to get the correct Q2
 void GetRenAndFacMaxAndMins(string NtupName, double *facMin, double *facMax, double *renMin, double *renMax) {
 
     TChain *fChaintmp= new TChain("t3");
@@ -98,7 +433,7 @@ string GetEnv( const string & var ) {
     return s;
 }
 
-
+//method from Mark to divide two histograms nicely for ratio comparisons between two histos
 TH1D* divide( const TH1D* h1, const TH1D* h2 ) {
 
     bool DBG=true;
@@ -148,6 +483,8 @@ TH1D* divide( const TH1D* h1, const TH1D* h2 ) {
 
 
 
+
+
 int main(int argc, char** argv) {
 
     // use a default atlas inclusive grid
@@ -189,20 +526,18 @@ int main(int argc, char** argv) {
         steeringFile = string(argv[1]);
         if (debug) std::cout << " makegridfromsherpa::main: Reading steering file " << steeringFile << std::endl;
     }
-
-    //long int nevmax=LONG_MAX; //allow for halt of execution when a user defined maximum number of events is reached
     if ( argc>2 ) {
         nevmax = atoi(argv[2]);
         if (debug) std::cout << " makegridfromsherpa::main: Reading Number of events " << nevmax << std::endl;
     }
 
 
-    //starting and ending indexes for histogram loop
+    //**starting and ending indexes for histogram looping over ntuples B and R
     const int startIndex = 0;
     const int endIndex   = 1; //change to choose ntups to go over
 
 
-    //Create a uniquely named grids for each Type: 0-R, 1-B, 2-RthenB
+    //Create uniquely named grids for each Type: 0-B, 1-R, 2-RthenB
     MyGrid *mygrid[endIndex];
     for(int i=0; i<endIndex; i++) {
         string version=ntup_names[i];
@@ -395,18 +730,18 @@ int main(int argc, char** argv) {
 
             //pepare LO weight
             int Wsize=13;
-            double f1[Wsize];
-            double f2[Wsize];
+            double xf1[Wsize];
+            double xf2[Wsize];
 
             for(int i=0; i<Wsize; i++) {
-                f1[i]=0.0; //reset
-                f2[i]=0.0; //reset
+                xf1[i]=0.0; //reset
+                xf2[i]=0.0; //reset
             }
 
 
             //evolve to get weights in f1, f2
-            evolvepdf_(t.x1,t.fac_scale,f1);
-            evolvepdf_(t.x2,t.fac_scale,f2);
+            evolvepdf_(t.x1,t.fac_scale,xf1);
+            evolvepdf_(t.x2,t.fac_scale,xf2);
 
             //particle num convention conversion
             int id1 = t.id1;
@@ -421,12 +756,10 @@ int main(int argc, char** argv) {
             //only fill the order and types you want
             if(iorder>2) continue;
             //if(!(id1==-6 && id2==6)) continue;
-            //if(!(t.id1==-2 && t.id2==2)) continue;
-            //std::cout<<"TEST: t.id1: "<<t.id1<<", t.id2: "<<t.id2<<std::endl;
-            
 
-            double fa = f1[id1]/t.x1;
-            double fb = f2[id2]/t.x2;
+
+            double fa = xf1[id1]/t.x1;
+            double fb = xf2[id2]/t.x2;
 
 
             double wgt=t.me_wgt2*fa*fb;
@@ -454,8 +787,15 @@ int main(int argc, char** argv) {
                          <<"  t.me_wgt2*wgt2_fac: "<<t.me_wgt2*wgt2_fac<<std::endl;
                 std::cout<<"  (fa["<<id1<<"]*fb["<<id2<<"]*t.me_wgt2)/(t.x1*t.x2)= "<<wgt<<" xsec= "<<t.weight2<<std::endl;
             }
-            
-            myevent->SetWeight(t.me_wgt2*wgt2_fac); //dealing entirely with weight2
+
+            if(iorder==2) {
+                wgt = t.me_wgt2 * wgt2_fac;
+            } else { //iorder==3
+                //wgt = GetWeightNLO(id1, id2, t);
+                wgt = 0; //TEST
+            }
+
+            myevent->SetWeight(wgt); //dealing entirely with weight2
             myevent->SetXSection(t.weight2);
 
             myevent->SetOrder(iorder);
@@ -545,8 +885,8 @@ int main(int argc, char** argv) {
                 LHAPDF::initPDFSet(pdfSetFile.c_str(), 0);
 
                 int Wsize=13;
-                double *f1 = new double[Wsize];
-                double *f2 = new double[Wsize];
+                double f1[Wsize];
+                double f2[Wsize];
                 for(int i=0; i<Wsize; i++) {
                     f1[i]=0.0;
                     f2[i]=0.0; //reset
@@ -554,15 +894,15 @@ int main(int argc, char** argv) {
 
                 //evolve to get weights in f1, f2
 
-                evolvepdf_(t.x1,t.fac_scale,f1);
-                evolvepdf_(t.x2,t.fac_scale,f2);
+                evolvepdf_(t.x1,t.fac_scale,xf1);
+                evolvepdf_(t.x2,t.fac_scale,xf2);
                 double asf=1;
                 //double lr=log(mur2/sqr(p_vars->m_mur));
                 //double lf=log(muf2/sqr(p_vars->m_muf));
                 double lr=0;
                 double lf=0;
-                for(int i=0; i<Wsize; i++) std::cout<<"f1["<<i<<"]: "<<f1[i]<<std::endl; //show all
-                for(int i=0; i<Wsize; i++) std::cout<<"f2["<<i<<"]: "<<f2[i]<<std::endl; //show all
+                for(int i=0; i<Wsize; i++) std::cout<<"xf1["<<i<<"]: "<<xf1[i]<<std::endl; //show all
+                for(int i=0; i<Wsize; i++) std::cout<<"xf2["<<i<<"]: "<<xf2[i]<<std::endl; //show all
 
 
                 //num convention conversion
@@ -574,8 +914,8 @@ int main(int argc, char** argv) {
                 id2 = id2+6;
 
 
-                double fa = f1[id1]/t.x1;
-                double fb = f2[id2]/t.x2;
+                double fa = xf1[id1]/t.x1;
+                double fb = xf2[id2]/t.x2;
                 double w[9];
 
                 double wgt = t.me_wgt * fa * fb;
@@ -598,42 +938,44 @@ int main(int argc, char** argv) {
                         double faq = 0.0, faqx = 0.0, fag = 0.0, fagx = 0.0;
                         double fbq = 0.0, fbqx = 0.0, fbg = 0.0, fbgx = 0.0;
                         if (id1!=6) { //not a glu
-                            faq=fa;
-                            fag=f1[6]/t.x1;
-                            evolvepdf_(t.x1/t.x1p,t.fac_scale,f1);
-                            faqx=f1[id1]/t.x1;
-                            fagx=f1[6]/t.x1;
+                            faq = fa;
+                            fag = xf1[6] / t.x1;
+
+                            evolvepdf_( t.x1/t.x1p, t.fac_scale, xf1 );
+
+                            faqx = xf1[id1] / t.x1;
+                            fagx = xf1[6] / t.x1;
                         }
                         else {
                             fag=fa;
                             for ( int i=1 ; i<Wsize-1 ; ++i)
-                                if(i!=6) faq+=f1[i]/t.x1;
+                                if( i!=6 ) faq += (xf1[i] / t.x1);
 
-                            evolvepdf_( t.x1 / t.x1p, t.fac_scale , f1 );
+                            evolvepdf_( t.x1/t.x1p, t.fac_scale , xf1 );
 
-                            fagx=f1[id1]/t.x1;
-                            for (int i=1; i<Wsize-1; ++i)
-                                if( i != 6 ) faqx += f1[i]/t.x1;
+                            fagx = (xf1[id1] / t.x1);
+                            for ( int i=1 ; i<Wsize-1 ; ++i )
+                                if( i != 6 ) faqx += xf1[i]/t.x1;
                         }
                         if ( id2 != 6 ) { //not a glu
                             fbq = fb;
-                            fbg = f2[6]/t.x2;
+                            fbg = xf2[6]/t.x2;
 
-                            evolvepdf_(t.x2/t.x2p,t.fac_scale,f2);
+                            evolvepdf_(t.x2/t.x2p,t.fac_scale,xf2);
 
-                            fbqx = f2[id2] / t.x2;
-                            fbgx = f2[6] / t.x2;
+                            fbqx = xf2[id2] / t.x2;
+                            fbgx = xf2[6] / t.x2;
                         }
                         else {
                             fbg = fb;
                             for ( int i = 1 ; i < Wsize-1 ; ++i)
-                                if( i != 6 ) fbq += f2[i] / t.x2;
+                                if( i != 6 ) fbq += xf2[i] / t.x2;
 
-                            evolvepdf_( t.x2/t.x2p , t.fac_scale , f2);
+                            evolvepdf_( t.x2/t.x2p , t.fac_scale , xf2);
 
-                            fbgx = f2[id2] / t.x2;
+                            fbgx = xf2[id2] / t.x2;
                             for ( int i=1 ; i < Wsize-1 ; ++i )
-                                if( i != 6 ) fbqx+=f2[i] / t.x2;
+                                if( i != 6 ) fbqx+=xf2[i] / t.x2;
                         }
                         wgt+=(faq*w[1]+faqx*w[2]+fag*w[3]+fagx*w[4])*fb;
                         wgt+=(fbq*w[5]+fbqx*w[6]+fbg*w[7]+fbgx*w[8])*fa;
@@ -644,14 +986,14 @@ int main(int argc, char** argv) {
 
                 //reference prints
                 std::cout<<"  id1: "<<id1<<", id2: "<<id2<<std::endl;
-                std::cout<<"  f1["<<id1<<"]: "<<f1[id1]<<std::endl;
-                std::cout<<"  f2["<<id2<<"]: "<<f2[id2]<<std::endl;
+                std::cout<<"  xf1["<<id1<<"]: "<<xf1[id1]<<std::endl;
+                std::cout<<"  xf2["<<id2<<"]: "<<xf2[id2]<<std::endl;
                 std::cout<<"  t.weight: "<<t.weight<<std::endl;
                 std::cout<<"  t.weight2: "<<t.weight2<<std::endl;
                 std::cout<<"  t.me_wgt: "<<t.me_wgt<<std::endl;
                 std::cout<<"  t.me_wgt2: "<<t.me_wgt2<<std::endl;
-                double myweight=(f1[id1]*f2[id2]*t.me_wgt)/(t.x1*t.x2);
-                std::cout<<"  (f1["<<id1<<"]*f2["<<id2<<"]*t.me_wgt)/(t.x1*t.x2)= "<<myweight<<std::endl;
+                double myweight=(xf1[id1]*xf2[id2]*t.me_wgt)/(t.x1*t.x2);
+                std::cout<<"  (xf1["<<id1<<"]*xf2["<<id2<<"]*t.me_wgt)/(t.x1*t.x2)= "<<myweight<<std::endl;
 
                 //****END -- TEST TO CHECK CORRECT WEIGHT - NEW
                 */
@@ -929,7 +1271,7 @@ int main(int argc, char** argv) {
                 subProcConvGridHistos[histoIndex][igrid][isubproc]->Write();
                 string sub_proc_hist_name="subProc-"+to_string(isubproc)+"-convolute_for"+ntup_names[histoIndex];
                 //mygrid[histoIndex]->Normalise(subProcConvGridHistos[histoIndex][igrid][isubproc],yfac,xfac,true);
-                
+
                 mygrid[histoIndex]->DivideByBinWidth(subProcConvGridHistos[histoIndex][igrid][isubproc]);
                 subProcConvGridHistos[histoIndex][igrid][isubproc]->SetName((TString) (sub_proc_hist_name+"-norm"));
                 subProcConvGridHistos[histoIndex][igrid][isubproc]->SetTitle((TString) (sub_proc_hist_name+"-norm"));
@@ -941,7 +1283,7 @@ int main(int argc, char** argv) {
                 //LOsubProcConvGridHistos[histoIndex][igrid][isubproc]->Scale(1.0/htestEventCount[histoIndex]);
                 LOsubProcConvGridHistos[histoIndex][igrid][isubproc]->Write();
                 sub_proc_hist_name="LOsubProc-"+to_string(isubproc)+"-convolute_for"+ntup_names[histoIndex];
-                
+
                 //mygrid[histoIndex]->Normalise(LOsubProcConvGridHistos[histoIndex][igrid][isubproc],yfac,xfac,true);
                 mygrid[histoIndex]->DivideByBinWidth(LOsubProcConvGridHistos[histoIndex][igrid][isubproc]);
                 LOsubProcConvGridHistos[histoIndex][igrid][isubproc]->SetName((TString) (sub_proc_hist_name+"-norm"));
@@ -965,14 +1307,14 @@ int main(int argc, char** argv) {
                   htest1[histoIndex][igrid]->SetName(string("htest1"+ntup_names[histoIndex]+"-norm").c_str());
                   htest1[histoIndex][igrid]->Write();
             */
-                  //save a scaled and normalised version
-                  href[histoIndex][igrid]->Write();
-                  //mygrid[histoIndex]->Normalise(href[histoIndex][igrid],yfac,xfac,true);     //normalise hrefB, hrefR, and hrefRthenB
-                  mygrid[histoIndex]->DivideByBinWidth(href[histoIndex][igrid]);
-                  href[histoIndex][igrid]->SetTitle(string("internal_href"+ntup_names[histoIndex]+"-norm").c_str());
-                  href[histoIndex][igrid]->SetName(string("internal_href"+ntup_names[histoIndex]+"-norm").c_str());
-                  href[histoIndex][igrid]->Write();
-            
+            //save a scaled and normalised version
+            href[histoIndex][igrid]->Write();
+            //mygrid[histoIndex]->Normalise(href[histoIndex][igrid],yfac,xfac,true);     //normalise hrefB, hrefR, and hrefRthenB
+            mygrid[histoIndex]->DivideByBinWidth(href[histoIndex][igrid]);
+            href[histoIndex][igrid]->SetTitle(string("internal_href"+ntup_names[histoIndex]+"-norm").c_str());
+            href[histoIndex][igrid]->SetName(string("internal_href"+ntup_names[histoIndex]+"-norm").c_str());
+            href[histoIndex][igrid]->Write();
+
             std::cout<<" makegridfromsherpa::main: Printing LO convolute histo..."<<std::endl;
             LOconvGridHistos[histoIndex][igrid]->Print("all");
 
@@ -1039,17 +1381,17 @@ int main(int argc, char** argv) {
         }
 
     */
-        if (debug) cout<<" makegridfromsherpa::main: Normalising Internal Reference histograms "<<endl;
-        for(int histoIndex=startIndex; histoIndex<endIndex; histoIndex++)
-        {
-            for (int igrid=0; igrid<mygrid[histoIndex]->GetNGrid(); igrid++) {
-                mygrid[histoIndex]->NormaliseInternalRefHistos(igrid);
+    if (debug) cout<<" makegridfromsherpa::main: Normalising Internal Reference histograms "<<endl;
+    for(int histoIndex=startIndex; histoIndex<endIndex; histoIndex++)
+    {
+        for (int igrid=0; igrid<mygrid[histoIndex]->GetNGrid(); igrid++) {
+            mygrid[histoIndex]->NormaliseInternalRefHistos(igrid);
 
-                mygrid[histoIndex]->SetGridVersionName(ntup_names[histoIndex]+"_norm");
-                mygrid[histoIndex]->write_grid();
-            }
+            mygrid[histoIndex]->SetGridVersionName(ntup_names[histoIndex]+"_norm");
+            mygrid[histoIndex]->write_grid();
         }
-        if (debug) cout<<" makegridfromsherpa::main: Internal Reference histograms normalised!"<<endl;
+    }
+    if (debug) cout<<" makegridfromsherpa::main: Internal Reference histograms normalised!"<<endl;
 
     /*
         //Add R and B grids together whenall needed grid spaces exist
@@ -1211,8 +1553,8 @@ int main(int argc, char** argv) {
 
     for( int histoIndex=0 ; histoIndex<endIndex ; histoIndex++)
         std::cout<<"Events for "<<ntup_names[histoIndex]<<": "<<htestEventCount[histoIndex]<<std::endl;
-        
+
     //system("root -l test.C");
-    
+
     return 0;
 }
