@@ -595,6 +595,7 @@ int main(int argc, char** argv) {
 
     //create histograms to store tests:
     TH1D *htest1[endIndex][NGrid];  //htest1[0][]==R-Type, htest1[1][]==B-Type, htest1[2][]==RB-Type
+    TH1D *htest2[endIndex][NGrid];  //htest1[0][]==R-Type, htest1[1][]==B-Type, htest1[2][]==RB-Type
     TH1D *htestRB[NGrid];           //holds the results of all htest1[i_R] + htest1[i_B]
     TH1D *href[endIndex][NGrid];    //holds histogram references from mygrid[x] to ensure they are equal to htest1[x]
 
@@ -651,6 +652,8 @@ int main(int argc, char** argv) {
             htest1[histoIndex][igrid]->SetTitle(string("htest1"+ntup_names[histoIndex]).c_str());
             htest1[histoIndex][igrid]->SetName(string("htest1"+ntup_names[histoIndex]).c_str());
             htest1[histoIndex][igrid]->SetLineColor(histoIndex+1); //1-black(B), 2-red(R), 3-green(RthenB)
+            
+            htest2[histoIndex][igrid] = (TH1D*)htest1[histoIndex][igrid]->Clone("htest2_uncor");
 
             if(debug) cout<<" makegridfromsherpa::main: Got histogram: "<<string("htest1_"+histoIndex)<<", with line color: "<<histoIndex+1<<endl;
         }
@@ -833,12 +836,12 @@ int main(int argc, char** argv) {
 
             if(pid==21) pid=0; //conversion from sherpa gluon to appl_grid convention
             myevent->push_back(pxin,pyin, t.x1*ep,t.x1*ep,pid);
-            if (debug) cout<<" makegridfromsherpa::main: pid1: "<<pid<<endl;
+            cout<<" makegridfromsherpa::main: pid1: "<<pid<<endl;
 
             pid=t.id2;
             if(pid==21) pid=0; //conversion from sherpa gluon to appl_grid convention
             myevent->push_back(pxin,pyin,-t.x2*ep,t.x2*ep,pid);
-            if (debug) cout<<" makegridfromsherpa::main: pid2: "<<pid<<endl;
+            cout<<" makegridfromsherpa::main: pid2: "<<pid<<endl;
 
 
 
@@ -936,13 +939,20 @@ int main(int argc, char** argv) {
                 double lr=0;
                 double lf=0;
 
-                //special case for w[0]??
+                
                 double w[9];
-                w[0] = t.me_wgt + t.usr_wgts[0] * lr + t.usr_wgts[1] * lr * lr / 2.0;
+                w[0] = t.me_wgt + t.usr_wgts[0] * lr + t.usr_wgts[1] * lr * lr / 2.0; //special case for w[0]??
 
                 bool wnz=false;
                 for ( int i=1 ; i<9 ; ++i ) {
+                  
                     w[i] = t.usr_wgts[i+1] + t.usr_wgts[i+9] * lf;
+                    std::cout<<"TEST: i: "<<i
+                            <<"\tw[i]: "<<w[i]
+                            <<"\tt.usr_wgts[i+1]: "<<t.usr_wgts[i+1]
+                            <<"\tt.usr_wgts[i+9]: "<<t.usr_wgts[i+9]
+                            <<"\tlf: "<<lf<<std::endl;
+                    
                     if (w[i]==0) wnz=true;
                 }
 
@@ -966,16 +976,11 @@ int main(int argc, char** argv) {
                         //parton 1 = QUARK
                         faq = fa;
                         fag = f1[6];
+                        
                         myevent->SetWeight(w[1]+w[3]);
                         myevent->SetX1(t.x1);
                         mygrid[histoIndex]->fill(myevent);
                         
-                        
-                        evolvepdf_( t.x1/t.x1p, t.fac_scale, xf1p );
-
-
-                        faqx = xf1p[id1] / t.x1;
-                        fagx = xf1p[6]   / t.x1;
                         myevent->SetWeight( (w[2]+w[4]) * (1/t.x1p));
                         myevent->SetX1(t.x1/t.x1p);
                         mygrid[histoIndex]->fill(myevent);
@@ -985,18 +990,12 @@ int main(int argc, char** argv) {
                         fag=fa;
                         for ( int i=1 ; i<nWgts-1 ; ++i)
                             if( i!=6 ) faq += f1[i];
+                        
                         myevent->SetWeight(w[1]+w[3]);
                         myevent->SetX1(t.x1);
                         mygrid[histoIndex]->fill(myevent);
                         
-                        
-                        evolvepdf_( t.x1/t.x1p, t.fac_scale , xf1p );
-
-
-                        fagx = (xf1p[id1] / t.x1);
-                        for ( int i=1 ; i<nWgts-1 ; ++i )
-                            if( i != 6 ) faqx += (xf1p[i]/t.x1);
-                        myevent->SetWeight( (w[2]+w[4]) * (1/t.x1) );
+                        myevent->SetWeight( (w[2]+w[4]) * (1/t.x1p) );
                         myevent->SetX1(t.x1/t.x1p);
                         mygrid[histoIndex]->fill(myevent);
                     }
@@ -1004,16 +1003,11 @@ int main(int argc, char** argv) {
                         //parton 2 = QUARK
                         fbq = fb;
                         fbg = f2[6];
+                        
                         myevent->SetWeight(w[5]+w[7]);
                         myevent->SetX2(t.x2);
                         mygrid[histoIndex]->fill(myevent);
                         
-                        
-                        evolvepdf_( t.x2/t.x2p, t.fac_scale, xf2p );
-
-
-                        fbqx = xf2p[id2] / t.x2;
-                        fbgx = xf2p[6] / t.x2;
                         myevent->SetWeight( (w[6]+w[8]) * (1/t.x2p));
                         myevent->SetX2(t.x2/t.x2p);
                         mygrid[histoIndex]->fill(myevent);
@@ -1023,24 +1017,22 @@ int main(int argc, char** argv) {
                         fbg = fb;
                         for ( int i = 1 ; i<nWgts-1 ; ++i)
                             if( i != 6 ) fbq += f2[i];
+                        
                         myevent->SetWeight( w[5]+w[7] );
                         myevent->SetX2(t.x2);
                         mygrid[histoIndex]->fill(myevent);
                         
-                        
-                        evolvepdf_( t.x2/t.x2p , t.fac_scale , xf2p);
-
-
-                        fbgx = (xf2p[id2] / t.x2);
-                        for ( int i=1 ; i<nWgts-1 ; ++i )
-                            if( i != 6 ) fbqx += (xf2p[i] / t.x2);
-                        myevent->SetWeight( (w[6]+w[8]) * (1/t.x1) );
+                        myevent->SetWeight( (w[6]+w[8]) * (1/t.x2p) );
                         myevent->SetX2(t.x2/t.x2p);
                         mygrid[histoIndex]->fill(myevent);
                     }
                     //compute weight
                     //wgt+=(faq*w[1]+faqx*w[2]+fag*w[3]+fagx*w[4])*fb;
                     //wgt+=(fbq*w[5]+fbqx*w[6]+fbg*w[7]+fbgx*w[8])*fa;
+                }
+                else {
+                    std::cout<<" makegridfromsherpa::main: wnz was false?"<<std::endl;
+                    exit(0);
                 }
             }
 
@@ -1062,6 +1054,7 @@ int main(int argc, char** argv) {
                 if (mygrid[histoIndex]->eventcuts(myevent,igrid)==false) continue;
 
                 htest1[histoIndex][igrid]->Fill(obs,t.weight2);
+                htest2[histoIndex][igrid]->Fill(obs,t.weight2);
             } //end loop over grid
 
             htestEventCount[histoIndex]++; //keep count of event for each type, 0-B, 1-R, 2-RthenB
@@ -1131,16 +1124,19 @@ int main(int argc, char** argv) {
         for(int igrid=0; igrid<NGrid; igrid++) {
 
             //scale each histograms by one devided by number of events depending on type
-            htest1[histoIndex][igrid]->Scale(1.0/htestEventCount[histoIndex]); //hR/nR, hB/nB, hBR/nBR, etc
-            href[histoIndex][igrid]->Scale(1.0/htestEventCount[histoIndex]); //hrefR/nR, hrefB/nB,hrefRB/nRB, etc
+            htest1[histoIndex][igrid]->Scale( 1.0/htestEventCount[histoIndex] ); //hR/nR, hB/nB, hBR/nBR, etc
+            htest2[histoIndex][igrid]->Scale( 1.0/mygrid[histoIndex]->GetUncorrellatedEventNumber(igrid) );
+            
+            href[histoIndex][igrid]->Scale( 1.0/htestEventCount[histoIndex] ); //hrefR/nR, hrefB/nB,hrefRB/nRB, etc
 
             cout<<" makegridfromsherpa::main: htest1 printing..."<<endl;
             htest1[histoIndex][igrid]->Print("all");
+            htest2[histoIndex][igrid]->Print("all");
 
             cout<<" makegridfromsherpa::main: hnorm printing (htest1/binswidth)... "<<endl;
-            TH1D *hnorm=(TH1D*)htest1[histoIndex][igrid]->Clone("hnorm");
-            mygrid[histoIndex]->DivideByBinWidth(hnorm);
-            hnorm->Print("all");
+            TH1D *hnorm1=(TH1D*)htest1[histoIndex][igrid]->Clone("hnorm");
+            mygrid[histoIndex]->DivideByBinWidth(hnorm1);
+            hnorm1->Print("all");
 
 
 
