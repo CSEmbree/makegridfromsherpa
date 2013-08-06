@@ -421,8 +421,9 @@ int main(int argc, char** argv) {
             //only fill the order and types you want
             if(iorder>2) continue;
             //if(!(id1==-6 && id2==6)) continue;
-            //if(!(t.id1==-4 && t.id2==4)) continue;
+            //if(!(t.id1==-2 && t.id2==2)) continue;
             //std::cout<<"TEST: t.id1: "<<t.id1<<", t.id2: "<<t.id2<<std::endl;
+            
 
             double fa = f1[id1]/t.x1;
             double fb = f2[id2]/t.x2;
@@ -453,6 +454,7 @@ int main(int argc, char** argv) {
                          <<"  t.me_wgt2*wgt2_fac: "<<t.me_wgt2*wgt2_fac<<std::endl;
                 std::cout<<"  (fa["<<id1<<"]*fb["<<id2<<"]*t.me_wgt2)/(t.x1*t.x2)= "<<wgt<<" xsec= "<<t.weight2<<std::endl;
             }
+            
             myevent->SetWeight(t.me_wgt2*wgt2_fac); //dealing entirely with weight2
             myevent->SetXSection(t.weight2);
 
@@ -659,6 +661,7 @@ int main(int argc, char** argv) {
 
             // fill the grid with the event for this histogram
             //
+            if(debug) std::cout<<" makegridfromsherpa::main: Filling with t.id1: "<<t.id1<<", t.id2: "<<t.id2<<std::endl;
             mygrid[histoIndex]->fill(myevent);
 
 
@@ -857,7 +860,7 @@ int main(int argc, char** argv) {
             string filename=mygrid[histoIndex]->GetGridName(igrid);
             filename+=ntup_names[histoIndex]+"_histos.root";
             fout= new TFile(filename.c_str(),"recreate");
-            //////////mygrid[histoIndex]->GetGrid(igrid)->setckm(ckm2);
+            mygrid[histoIndex]->GetGrid(igrid)->setckm(ckm2);
 
             ////perform convolute and set names, titles, colors
             cout<<" calling convolute: "<<endl;

@@ -292,7 +292,7 @@ void MyGrid::Initialize() {
 
     //nsub=mypdf->GetSubProcessNumber(); //TEST-basic,generic
     nsub=mypdf->size(); //TEST-lumi
-    
+    std::cout<<" MyGrid::Initialize: nsub: "<<nsub<<std::endl;
     
     //nsub=mygrid.back()->subProcesses(0);//<--**appl_grid method. What was does parameter mean? The 0, 1, ...
     if(nsub<1)
@@ -738,7 +738,8 @@ void MyGrid::book_grid(int igrid)  // inital grid booking
                                               nXbins,   xLow,  xUp, xorder,         // x bins and interpolation order
                                               pdf_function, lowest_order, nloops );  //TEST-lumi
         
-
+        //exit(-1); //TEST
+        
         mygrid.push_back(tmpgrid);
 
         //cout<<"Mygrid::book_grid: printing appl_grid..."<<endl;
@@ -892,10 +893,33 @@ void  MyGrid::fill(MyEvent *myevent )
     if (debug) cout<<" MyGrid::fill valid iproc: "<<iproc<<endl;
 
     this->ResetWeight();
+    
+
+    double npairs = (*mypdf)[iproc].size();
+    if(debug) std::cout<<" MyGrid::fill: iproc: "<<iproc<<", weight before: "<<mewgt<<", pairs: "<<npairs<<std::endl;
+    
+    //hardcoded SHERPA solution. Consider adding flag for sherpa event data???
+    if(iproc>=0) {
+        if(npairs!=0) {
+            mewgt /= npairs; //SPECIAL SHERPA WEIGHT CONVERSION!
+        } else {
+            std::cout<<" MyGrid::fill: ERROR: no pairs for this process were found!"<<std::endl;
+            exit(0); //TEST
+        }
+    }else {
+        std::cout<<" MyGrid::fill: ERROR: no iproc was found for id1: "<<id1<<", id2: "<<id2<<std::endl;
+        exit(0); //TEST
+    }
+    
+    if(debug) std::cout<<" MyGrid::fill: weight after:"<<mewgt<<std::endl;
+        
+    
     this->SetWeight(iproc,mewgt);
     if (debug)  this->PrintWeight();
 
     double *weight=this->GetWeight();
+    
+    
 
     for(int igrid = 0; igrid < Ngrids; igrid++) {
 
