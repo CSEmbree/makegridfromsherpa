@@ -112,7 +112,7 @@ class MyGrid {
  //basic_pdf *mypdf; //TEST-basic
  //generic_pdf *mypdf; //TEST-generic
   
-  int decideSubProcess(int iflav1,int iflav2);
+ 
 
  public:
  //MyGrid(char name[100]);
@@ -126,6 +126,25 @@ class MyGrid {
   //void SetSubProcess(basic_pdf *subpro) { mypdf=subpro; return;}; //TEST-basic
   void SetSubProcess(lumi_pdf *subpro) { mypdf=subpro; return;}; //TEST-lumi
   int GetNSubProcess(int igrid){ return mygrid[igrid]->subProcesses(); };
+  int GetNSubProcessPairs(int iproc){ 
+    //std::cout<<"MyGrid::GetNSubProcessPairs: Getting with iproc: "<<iproc<<std::endl;
+    
+    if(mypdf)
+        return (*mypdf)[iproc].size();
+    else {
+        std::cout<<"MyGrid::GetNSubProcessPairs: ERROR: mypdf not set-up yet!"<<std::endl;
+        exit(0);
+    } };
+    
+  int GetDecideSubProcess(int iflav1, int iflav2) {
+    //std::cout<<"MyGrid::GetDecideSubProcess: deciding with: iflav1: "<<iflav1<<", iflav2: "<<iflav2<<std::endl;
+    
+    if(mypdf)
+        return mypdf->decideSubProcess( iflav1, iflav2 );
+    else {
+        std::cout<<"MyGrid::GetDecideSubProcess: ERROR: mypdf not set-up yet!"<<std::endl;
+        exit(0);
+    } };
   
 
   void Initialize();

@@ -831,7 +831,7 @@ void  MyGrid::fill(MyEvent *myevent )
     if (debug) cout<<" MyGrid::fill Ngrids= "<<Ngrids<<endl;
     int id1=myevent->GetID(0);
     int id2=myevent->GetID(1);
-    if (debug) cout<<" MyGrid::fill incoming partons id1= "<<id1<<" id2= "<<id2<<endl;
+    if(debug) cout<<" MyGrid::fill incoming partons id1= "<<id1<<" id2= "<<id2<<endl;
 
 //
 // Need to prepare weight vector in subprocesses
@@ -893,26 +893,6 @@ void  MyGrid::fill(MyEvent *myevent )
     if (debug) cout<<" MyGrid::fill valid iproc: "<<iproc<<endl;
 
     this->ResetWeight();
-    
-
-    double npairs = (*mypdf)[iproc].size();
-    if(debug) std::cout<<" MyGrid::fill: iproc: "<<iproc<<", weight before: "<<mewgt<<", pairs: "<<npairs<<std::endl;
-    
-    //hardcoded SHERPA solution. Consider adding flag for sherpa event data???
-    if(iproc>=0) {
-        if(npairs!=0) {
-            mewgt /= npairs; //SPECIAL SHERPA WEIGHT CONVERSION!
-        } else {
-            std::cout<<" MyGrid::fill: ERROR: no pairs for this process were found!"<<std::endl;
-            exit(0); //TEST
-        }
-    }else {
-        std::cout<<" MyGrid::fill: ERROR: no iproc was found for id1: "<<id1<<", id2: "<<id2<<std::endl;
-        exit(0); //TEST
-    }
-    
-    if(debug) std::cout<<" MyGrid::fill: weight after:"<<mewgt<<std::endl;
-        
     
     this->SetWeight(iproc,mewgt);
     if (debug)  this->PrintWeight();
