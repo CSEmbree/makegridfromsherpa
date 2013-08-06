@@ -405,23 +405,23 @@ void MyGrid::ScaleInternalRefHistos(int igrid) {
 
         if(!hreference[igrid])
             cout<<" MyGrid::ScaleInternalRefHistos: WARNING: Reference histogram 'hreference' for igird: "<<igrid<<" not found!"<<endl;
-        else hreference[igrid]->Scale(1.0/events[igrid]); //href/nhref
+        else hreference[igrid]->Scale(1.0/uncorrevents[igrid]); //href/nhref alluncorrevents
 
         if(!hreferencefine[igrid])
             cout<<" MyGrid::ScaleInternalRefHistos: WARNING: Reference histogram 'hreferencefine' for igird: "<<igrid<<" not found!"<<endl;
-        else hreferencefine[igrid]->Scale(1.0/events[igrid]); //hrefFine/nhrefFine
+        else hreferencefine[igrid]->Scale(1.0/uncorrevents[igrid]); //hrefFine/nhrefFine
 
 
         for (int iproc=0; iproc<nsub; iproc++) {
             if (!hrefsubprocesseshistos[igrid][iproc])
                 cout<<" MyGrid::ScaleInternalRefHistos: WARNING: Reference histogram 'hrefsubprocesseshistos' for igrid: "<<igrid<<", iproc: "<<iproc<<" not found!"<<endl;
             else
-                hrefsubprocesseshistos[igrid][iproc]->Scale(1.0/events[igrid]); //hrefsubprocesseshistos/nhrefsubprocesseshistos
+                hrefsubprocesseshistos[igrid][iproc]->Scale(1.0/uncorrevents[igrid]); //hrefsubprocesseshistos/nhrefsubprocesseshistos
 
             if (!hrefLOsubprocesseshistos[igrid][iproc])
                 cout<<" MyGrid::ScaleInternalRefHistos: WARNING: Reference histogram 'hrefLOsubprocesseshistos' for igrid: "<<igrid<<", iproc: "<<iproc<<" not found!"<<endl;
             else
-                hrefLOsubprocesseshistos[igrid][iproc]->Scale(1.0/events[igrid]); //hrefLOsubprocesseshistos/nhrefLOsubprocesseshistos
+                hrefLOsubprocesseshistos[igrid][iproc]->Scale(1.0/uncorrevents[igrid]); //hrefLOsubprocesseshistos/nhrefLOsubprocesseshistos
         }
 }
 
@@ -912,7 +912,10 @@ void  MyGrid::fill(MyEvent *myevent )
         if (mycut==false) continue;
         //
         if (debug) cout<<" MyGrid::fill event accepted "<<endl;
-        if (newevent) uncorrevents[igrid]++;
+        if (newevent) {
+            uncorrevents[igrid]++;
+            if(debug) std::cout<<" MyGrid::fill: new event encountered: updating uncorrevents!"<<std::endl;
+        }
         events[igrid]++;
 
         if (debug) {
