@@ -76,7 +76,7 @@ double GetWeightNLO(int id1, int id2, t3 t) {
 
 
 
-    //stefan's code convereted
+    //****END -- TEST TO CHECK CORRECT WEIGHT - STEFAN's code
     //LHAPDF::initPDFSet(pdfSetFile.c_str(), 0); //need this? Assuming it is already init???
 
 
@@ -372,6 +372,7 @@ double GetWeightNLO(int id1, int id2, t3 t) {
                 6   fg1  * sf2p * w[6] * (1/x2);
                 7   fg1  * fg2  * w[7];
                 8   fg1  * fg2p * w[8] * (1/x2);
+            
             }
         }
     else {
@@ -789,11 +790,23 @@ int main(int argc, char** argv) {
             }
 
             if(iorder==2) {
-                wgt = t.me_wgt2 * wgt2_fac;
-            } else { //iorder==3
+                std::cout<<" makegridfromsherpa::main: order: LO"<<std::endl;
+                int subProcID = mygrid[histoIndex]->GetDecideSubProcess( t.id1==21? 0:t.id1, t.id2==21? 0:t.id2 );
+                double npairs = mygrid[histoIndex]->GetNSubProcessPairs( subProcID );
+                if(debug){ 
+                    std::cout<<" makegridfromsherpa::main: subProcID: "<<subProcID<<" has '"<<npairs<<"' pairs."<<std::endl;
+                    std::cout<<" makegridfromsherpa::main: weight before: "<<(t.me_wgt2*wgt2_fac)<<", weight after: "<<(t.me_wgt2*wgt2_fac)/npairs<<std::endl;
+                }
+                                
+                wgt = (t.me_wgt2 * wgt2_fac) / npairs;
+            } 
+            else { //iorder==3
+                std::cout<<" makegridfromsherpa::main: order: NLO"<<std::endl;
                 //wgt = GetWeightNLO(id1, id2, t);
                 wgt = 0; //TEST
             }
+            
+            std::cout<<" makegridfromsherpa::main: Weight set to: "<<wgt<<std::endl;
 
             myevent->SetWeight(wgt); //dealing entirely with weight2
             myevent->SetXSection(t.weight2);
