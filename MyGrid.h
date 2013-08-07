@@ -302,6 +302,7 @@ class MyGrid {
    return htest;
   }; 
 
+
   void SetEventId(int evid){
    newevent=false;
    //cout<<" MyGrid::SetEventId: previous eventid= "<<eventid<<", new evid= "<<evid<<endl;
