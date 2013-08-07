@@ -908,19 +908,19 @@ int main(int argc, char** argv) {
             */
 
 
-//fill weight depending on LO or NLO
+
+            int subProcID = mygrid[histoIndex]->GetDecideSubProcess( t.id1==21? 0:t.id1, t.id2==21? 0:t.id2 );
+            double npairs = mygrid[histoIndex]->GetNSubProcessPairs( subProcID );
+            if(debug) std::cout<<" makegridfromsherpa::main: subProcID: "<<subProcID<<" has '"<<npairs<<"' pairs."<<std::endl;
+
+
+
+            //fill weight depending on LO or NLO
             if(iorder==2) {
                 //if(debug) std::cout<<" makegridfromsherpa::main: order: LO"<<std::endl;
+                
 
-                int subProcID = mygrid[histoIndex]->GetDecideSubProcess( t.id1==21? 0:t.id1, t.id2==21? 0:t.id2 );
-                double npairs = mygrid[histoIndex]->GetNSubProcessPairs( subProcID );
-
-                if(debug) {
-                    std::cout<<" makegridfromsherpa::main: subProcID: "<<subProcID<<" has '"<<npairs<<"' pairs."<<std::endl;
-                    std::cout<<" makegridfromsherpa::main: weight before: "<<(t.me_wgt2*wgt2_fac)<<", weight after: "<<(t.me_wgt2*wgt2_fac)/npairs<<std::endl;
-                }
-
-
+                //compute weight to fill my event with when LO
                 wgt = (t.me_wgt2 * wgt2_fac) / npairs;
 
 
@@ -938,12 +938,17 @@ int main(int argc, char** argv) {
                 //if(debug) std::cout<<" makegridfromsherpa::main: order: NLO"<<std::endl;
 
 
+                static const int GLUON = 6;
+
+
                 //setup xf1 and xf2 to be filled from evolvepdf
                 int nWgts=13;
-                double f1[nWgts];
-                double f2[nWgts];
-                double xf1[nWgts];
-                double xf2[nWgts];
+                double f1  [nWgts];
+                double f2  [nWgts];
+                double xf1 [nWgts];
+                double xf2 [nWgts];
+                double xf1p[nWgts];
+                double xf2p[nWgts];
                 for( int iproc=0 ; iproc<nWgts ; iproc++ ) {
                     xf1[iproc] = 0.0; //emptied
                     xf2[iproc] = 0.0; //emptied
@@ -968,124 +973,171 @@ int main(int argc, char** argv) {
                 for ( int i=1 ; i<9 ; ++i ) {
 
                     w[i] = t.usr_wgts[i+1] + t.usr_wgts[i+9] * lf;
-                    
-                    /*
-                    std::cout<<"TEST: i: "<<i
-                            <<"\tw[i]: "<<w[i]
-                            <<"\tt.usr_wgts[i+1]: "<<t.usr_wgts[i+1]
-                            <<"\tt.usr_wgts[i+9]: "<<t.usr_wgts[i+9]
-                            <<"\tlf: "<<lf<<std::endl;
-                    */
 
                     if (w[i]==0) wnz=true;
                 }
 
-                //wgt = w[0] * fa * fb;
-                //wgt=t.me_wgt2+t.usr_wgts[0]*lr+t.usr_wgts[1]*lr*lr/2.0;
 
                 if (wnz==true) {
 
-                    /*
-                    if ( id1 != 6 ) {
-                        //parton 1 = QUARK
-                        myevent->SetWeight(w[1]+w[3]);
-                        myevent->SetX1(t.x1);
-                        mygrid[histoIndex]->fill(myevent);
-                        for(int igrid=0; igrid<NGrid; igrid++) htest3[histoIndex][igrid]->Fill(myevent->GetInvariantMass12(),t.weight2);
+                    double  obs          = 0.;
+                    double  htestFillWgt = 0.;
+
+                    double  faq  = 0.0;
+                    double  faqx = 0.0;
+
+                    double  fag  = 0.0;
+                    double  fagx = 0.0;
+
+                    double  fbq  = 0.0;
+                    double  fbqx = 0.0;
+
+                    double  fbg  = 0.0;
+                    double  fbgx = 0.0;
+
+
+                    if ( id1 != GLUON ) {
+                        //
+                        // parton 1 = QUARK
+                        //
+                        faq = fa;
+                        fag = f1[GLUON];
+
+                        htestFillWgt    = ( faq * w[1] + fag * w[3] ) * fb;
+                        wgt             = ( ( w[1] + w[3] ) * wgt2_fac ) / npairs;
+
+                        myevent->SetWeight( wgt );
+                        myevent->SetX1( t.x1 );
+                        mygrid[histoIndex]->fill( myevent );
+                        obs = myevent->GetInvariantMass12();
+                        for( int igrid=0 ; igrid<NGrid ; igrid++ ) htest3[histoIndex][igrid]->Fill( obs, htestFillWgt );
                         eventCount[histoIndex]++;
 
-                        myevent->SetWeight( (w[2]+w[4]) * (1/t.x1p) );
-                        myevent->SetX1( t.x1/t.x1p );
+
+
+                        evolvepdf_( t.x1 / t.x1p, t.fac_scale, xf1p );
+                        faqx = xf1p[id1]   / t.x1;
+                        fagx = xf1p[GLUON] / t.x1;
+
+                        htestFillWgt    = ( faqx * w[2] + fagx * w[4] ) * fb;
+                        wgt             = ( ( w[2] + w[4] ) * wgt2_fac * ( 1 / t.x1p ) ) / npairs;
+
+                        myevent->SetWeight( wgt );
+                        myevent->SetX1( t.x1 / t.x1p );
                         mygrid[histoIndex]->fill( myevent );
-                        for(int igrid=0; igrid<NGrid; igrid++) htest3[histoIndex][igrid]->Fill(myevent->GetInvariantMass12(),t.weight2);
+                        obs = myevent->GetInvariantMass12();
+                        for( int igrid=0 ; igrid<NGrid ; igrid++ ) htest3[histoIndex][igrid]->Fill( obs, htestFillWgt );
                         eventCount[histoIndex]++;
                     }
                     else {
-                        //parton 1 = GLU
-                        myevent->SetWeight(w[1]+w[3]);
-                        myevent->SetX1(t.x1);
-                        mygrid[histoIndex]->fill(myevent);
-                        for(int igrid=0; igrid<NGrid; igrid++) htest3[histoIndex][igrid]->Fill(myevent->GetInvariantMass12(),t.weight2);
+                        //
+                        // parton 1 = GLU
+                        //
+                        fag=fa;
+                        for ( int i=1 ; i<nWgts-1 ; ++i )
+                            if( i!=GLUON ) faq += f1[i];
+
+                        htestFillWgt    = ( faq * w[1] + fag * w[3] ) * fb;
+                        wgt             = ( ( w[1] + w[3] ) * wgt2_fac ) / npairs;
+
+                        myevent->SetWeight( wgt );
+                        myevent->SetX1( t.x1 );
+                        mygrid[histoIndex]->fill( myevent );
+                        obs = myevent->GetInvariantMass12();
+                        for( int igrid=0 ; igrid<NGrid ; igrid++ ) htest3[histoIndex][igrid]->Fill( obs, htestFillWgt );
                         eventCount[histoIndex]++;
 
-                        myevent->SetWeight( (w[2]+w[4]) * (1/t.x1p) );
-                        myevent->SetX1( t.x1/t.x1p );
+
+
+                        evolvepdf_( t.x1 / t.x1p, t.fac_scale , xf1p );
+                        fagx = ( xf1p[id1] / t.x1);
+                        for ( int i=1 ; i<nWgts-1 ; ++i )
+                            if( i != GLUON ) faqx += ( xf1p[i] / t.x1 );
+
+                        htestFillWgt    = ( faqx * w[2] + fagx * w[4] ) * fb;
+                        wgt             = ( ( w[2] + w[4] ) * wgt2_fac * ( 1 / t.x1p ) ) / npairs;
+
+                        myevent->SetWeight( wgt );
+                        myevent->SetX1( t.x1 / t.x1p );
                         mygrid[histoIndex]->fill( myevent );
-                        for(int igrid=0; igrid<NGrid; igrid++) htest3[histoIndex][igrid]->Fill(myevent->GetInvariantMass12(),t.weight2);
+                        obs = myevent->GetInvariantMass12();
+                        for( int igrid=0 ; igrid<NGrid ; igrid++ ) htest3[histoIndex][igrid]->Fill( obs, htestFillWgt );
                         eventCount[histoIndex]++;
                     }
-                    if ( id2 != 6 ) {
-                        //parton 2 = QUARK
-                        myevent->SetWeight( w[5]+w[7] );
-                        myevent->SetX2(t.x2);
-                        mygrid[histoIndex]->fill(myevent);
-                        for(int igrid=0; igrid<NGrid; igrid++) htest3[histoIndex][igrid]->Fill(myevent->GetInvariantMass12(),t.weight2);
+                    if ( id2 != GLUON ) {
+                        //
+                        // parton 2 = QUARK
+                        //
+                        fbq = fb;
+                        fbg = f2[GLUON];
+
+                        htestFillWgt    = ( fbq * w[5] + fbg * w[7] ) * fa;
+                        wgt             = ( ( w[5] + w[7] ) * wgt2_fac ) / npairs;
+
+                        myevent->SetWeight( wgt );
+                        myevent->SetX2( t.x2 );
+                        mygrid[histoIndex]->fill( myevent );
+                        obs = myevent->GetInvariantMass12();
+                        for( int igrid=0 ; igrid<NGrid ; igrid++ ) htest3[histoIndex][igrid]->Fill( obs, htestFillWgt );
                         eventCount[histoIndex]++;
 
-                        myevent->SetWeight( (w[6]+w[8]) * (1/t.x2p) );
-                        myevent->SetX2(t.x2/t.x2p);
-                        mygrid[histoIndex]->fill(myevent);
-                        for(int igrid=0; igrid<NGrid; igrid++) htest3[histoIndex][igrid]->Fill(myevent->GetInvariantMass12(),t.weight2);
+
+
+                        evolvepdf_( t.x2 / t.x2p, t.fac_scale, xf2p );
+                        fbqx = xf2p[id2]   / t.x2;
+                        fbgx = xf2p[GLUON] / t.x2;
+
+                        htestFillWgt    = ( fbqx * w[6] + fbgx * w[8] ) * fa;
+                        wgt             = ( ( w[6] + w[8] ) * wgt2_fac * ( 1 / t.x2p ) ) / npairs;
+
+                        myevent->SetWeight( wgt );
+                        myevent->SetX2( t.x2 / t.x2p );
+                        mygrid[histoIndex]->fill( myevent );
+                        obs = myevent->GetInvariantMass12();
+                        for( int igrid=0 ; igrid<NGrid ; igrid++ ) htest3[histoIndex][igrid]->Fill( obs, htestFillWgt );
                         eventCount[histoIndex]++;
                     }
                     else {
-                        //parton 2 = GLU
-                        myevent->SetWeight( w[5]+w[7] );
-                        myevent->SetX2(t.x2);
-                        mygrid[histoIndex]->fill(myevent);
-                        for(int igrid=0; igrid<NGrid; igrid++) htest3[histoIndex][igrid]->Fill(myevent->GetInvariantMass12(),t.weight2);
+                        //
+                        // parton 2 = GLU
+                        //
+                        fbg = fb;
+                        for ( int i = 1 ; i<nWgts-1 ; ++i )
+                            if( i != GLUON ) fbq += f2[i];
+
+                        htestFillWgt    = ( fbq * w[5] + fbg * w[7] ) * fa;
+                        wgt             = ( ( w[5] + w[7] ) * wgt2_fac ) / npairs;
+
+                        myevent->SetWeight( wgt );
+                        myevent->SetX2( t.x2 );
+                        mygrid[histoIndex]->fill( myevent );
+                        obs = myevent->GetInvariantMass12();
+                        for( int igrid=0 ; igrid<NGrid ; igrid++ ) htest3[histoIndex][igrid]->Fill( obs, htestFillWgt );
                         eventCount[histoIndex]++;
 
-                        myevent->SetWeight( (w[6]+w[8]) * (1/t.x2p) );
-                        myevent->SetX2(t.x2/t.x2p);
-                        mygrid[histoIndex]->fill(myevent);
-                        for(int igrid=0; igrid<NGrid; igrid++) htest3[histoIndex][igrid]->Fill(myevent->GetInvariantMass12(),t.weight2);
+
+                        evolvepdf_( t.x2 / t.x2p , t.fac_scale , xf2p );
+                        fbgx = ( xf2p[id2] / t.x2 );
+                        for ( int i=1 ; i<nWgts-1 ; ++i )
+                            if( i != GLUON ) fbqx += ( xf2p[i] / t.x2 );
+
+                        htestFillWgt    = ( fbqx * w[6] + fbgx * w[8] ) * fa;
+                        wgt             = ( ( w[6] + w[8] ) * wgt2_fac * (1 / t.x2p) ) / npairs;
+
+                        myevent->SetWeight( wgt );
+                        myevent->SetX2( t.x2 / t.x2p );
+                        mygrid[histoIndex]->fill( myevent );
+                        obs = myevent->GetInvariantMass12();
+                        for( int igrid=0 ; igrid<NGrid ; igrid++ ) htest3[histoIndex][igrid]->Fill( obs, htestFillWgt );
                         eventCount[histoIndex]++;
                     }
-                    */
 
-                    int subProcID = mygrid[histoIndex]->GetDecideSubProcess( t.id1==21? 0:t.id1, t.id2==21? 0:t.id2 );
-                    double npairs = mygrid[histoIndex]->GetNSubProcessPairs( subProcID );
-
-                    //parton 1
-                    wgt = ( (w[1]+w[3]) * wgt2_fac ) / npairs;
-                    myevent->SetWeight( wgt );
-                    myevent->SetX1( t.x1 );
-                    mygrid[histoIndex]->fill(myevent);
-                    for(int igrid=0; igrid<NGrid; igrid++) htest3[histoIndex][igrid]->Fill(myevent->GetInvariantMass12(),t.weight2);
-                    eventCount[histoIndex]++;
-
-
-                    wgt = ( (w[2]+w[4]) * (1/t.x1p) * wgt2_fac ) / npairs;
-                    myevent->SetWeight( wgt );
-                    myevent->SetX1( t.x1/t.x1p );
-                    mygrid[histoIndex]->fill( myevent );
-                    for(int igrid=0; igrid<NGrid; igrid++) htest3[histoIndex][igrid]->Fill(myevent->GetInvariantMass12(),t.weight2);
-                    eventCount[histoIndex]++;
-
-
-
-                    //parton 2
-                    wgt = ( (w[5]+w[7]) * wgt2_fac ) / npairs;
-                    myevent->SetWeight( wgt );
-                    myevent->SetX2( t.x2 );
-                    mygrid[histoIndex]->fill( myevent );
-                    for(int igrid=0; igrid<NGrid; igrid++) htest3[histoIndex][igrid]->Fill(myevent->GetInvariantMass12(),t.weight2);
-                    eventCount[histoIndex]++;
-
-                    wgt = ( (w[2]+w[4]) * (1/t.x2p) * wgt2_fac ) / npairs;
-                    myevent->SetWeight( wgt );
-                    myevent->SetX2( t.x2/t.x2p );
-                    mygrid[histoIndex]->fill( myevent );
-                    for(int igrid=0; igrid<NGrid; igrid++) htest3[histoIndex][igrid]->Fill(myevent->GetInvariantMass12(),t.weight2);
-                    eventCount[histoIndex]++;
-
-
-
-                    //compute weight
+                    //FOR REFERENCE FOR FILLING htest
                     //wgt+=(faq*w[1]+faqx*w[2]+fag*w[3]+fagx*w[4])*fb;
                     //wgt+=(fbq*w[5]+fbqx*w[6]+fbg*w[7]+fbgx*w[8])*fa;
                 }
+
+
                 else {
                     std::cout<<" makegridfromsherpa::main: wnz was false?"<<std::endl;
                     exit(0);
