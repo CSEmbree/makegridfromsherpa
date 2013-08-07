@@ -658,7 +658,7 @@ int main(int argc, char** argv) {
         for (int igrid=0; igrid<NGrid; igrid++)
         {
             string htest1name = "htest1"+ntup_names[histoIndex];
-            htest1[histoIndex][igrid]=mygrid[histoIndex]->GetHisto( igrid, htest1name );
+            htest1[histoIndex][igrid] = mygrid[histoIndex]->GetHisto( igrid, htest1name );
             htest1[histoIndex][igrid]->SetTitle( htest1name.c_str() );
             htest1[histoIndex][igrid]->SetName ( htest1name.c_str() );
             htest1[histoIndex][igrid]->SetLineColor(histoIndex+1);
@@ -670,8 +670,8 @@ int main(int argc, char** argv) {
             htest2[histoIndex][igrid]->SetName ( htest2name.c_str() );
 
 
-            string htest3name = "htest3"+ntup_names[histoIndex]+"_NLO_tot_events";
-            htest3[histoIndex][igrid]=mygrid[histoIndex]->GetHisto( igrid, htest3name );
+            string htest3name = "htest3"+ntup_names[histoIndex]+"_NLO";
+            htest3[histoIndex][igrid] = mygrid[histoIndex]->GetHisto( igrid, htest3name );
             htest3[histoIndex][igrid]->SetTitle( htest3name.c_str() );
             htest3[histoIndex][igrid]->SetName ( htest3name.c_str() );
             htest3[histoIndex][igrid]->SetLineColor(histoIndex+1);
@@ -770,7 +770,8 @@ int main(int argc, char** argv) {
             evolvepdf_(t.x1,t.fac_scale,xf1);
             evolvepdf_(t.x2,t.fac_scale,xf2);
 
-            //particle num convention conversion
+
+            //particle num convention conversion from SHERPA
             int id1 = t.id1;
             int id2 = t.id2;
             if(t.id1==21) id1=0;
@@ -780,57 +781,34 @@ int main(int argc, char** argv) {
 
             if(debug) std::cout<<" makegridfromsherpa::main: iorder: "<<iorder<<std::endl;
 
-            //only fill the order and types you want
 
-
-            //**FORCING REJECTION FOR TESTING
+            //******FORCING REJECTION FOR TESTING
             if(iorder<=2) continue; //Accepting only NLO
             //if(iorder>2) continue; //Accepting only LO
-            //**
-
-            //if(!(id1==-6 && id2==6)) continue;
-
-
-            double fa = xf1[id1]/t.x1;
-            double fb = xf2[id2]/t.x2;
+            //if(!(id1==-6 && id2==6)) continue; //Accepting only certain particles
+            //******
 
 
-            double wgt=t.me_wgt2*fa*fb;
-            double wgt2_fac = pow((2.0*PI)/t.alphas,iorder);
+            //double fa = xf1[id1]/t.x1;
+            //double fb = xf2[id2]/t.x2;
+            //double wgt=t.me_wgt2*fa*fb;
+            //double wgt2_fac = pow((2.0*PI)/t.alphas,iorder);
 
-            if (debug) {
-                std::cout<<" makegridfromsherpa::main: iorder= "<<iorder<<std::endl;
-                std::cout<<" makegridfromsherpa::main: wgt2_fac: "<<wgt2_fac<<std::endl;
-                std::cout<<" makegridfromsherpa::main: me_wgt: "<<t.me_wgt<<std::endl;
-                std::cout<<" makegridfromsherpa::main: me_wgt2: "<<t.me_wgt2<<std::endl;
-                std::cout<<" makegridfromsherpa::main: wgt: "<<wgt<<std::endl;
-                std::cout<<" makegridfromsherpa::main: wgt*wgt2_fac: "<<wgt*wgt2_fac<<std::endl;
-                std::cout<<" makegridfromsherpa::main: t.weight2: "<<t.weight2<<std::endl;
-                std::cout<<" makegridfromsherpa::main: t.weight2(Xsec): "<<t.weight2<<std::endl;
-                std::cout<<" makegridfromsherpa::main: Event weight set to: "<<wgt<<std::endl;
-            }
-            if (debug2) {
-                std::cout<<"  x1: "<<t.x1<<"  x2: "<<t.x2<<"  fac_scale: "<<t.fac_scale<<std::endl;
-                std::cout<<"  fa(x1): "<<fa<<"  fb(x2): "<<fb<<" alphas= "<<t.alphas
-                         <<" alphas^n= "<<pow(t.alphas,iorder)
-                         <<" alphas= "<<t.alphas/(2.0*PI)
-                         <<" alphas^n/2PI= "<<pow(t.alphas,iorder)/pow((2.0*PI),iorder)
-                         <<std::endl;
-                std::cout<<"  t.me_wgt2: "<<t.me_wgt2
-                         <<"  t.me_wgt2*wgt2_fac: "<<t.me_wgt2*wgt2_fac<<std::endl;
-                std::cout<<"  (fa["<<id1<<"]*fb["<<id2<<"]*t.me_wgt2)/(t.x1*t.x2)= "<<wgt<<" xsec= "<<t.weight2<<std::endl;
-            }
+            
 
+            //weights are now set explicitly bellow depending on event order being LO or NLO
+            //myevent->SetWeight(wgt); 
+            myevent->SetXSection( t.weight2 );
 
-            //myevent->SetWeight(wgt); //dealing entirely with weight2
-            myevent->SetXSection(t.weight2);
-
-            myevent->SetOrder(iorder);
-            myevent->SetType (itype);
-            myevent->SetEventId(t.id);
+            myevent->SetOrder( iorder );
+            myevent->SetType( itype );
+            myevent->SetEventId( t.id );
+            //Setting x1 and x2 change depending on order being LO or NLO, so they are set explicitly bellow
             //myevent->SetX1(t.x1);
             //myevent->SetX2(t.x2);
-            myevent->SetQ2(t.fac_scale*t.fac_scale); // applgrid takes sqrt(fac_scale) when evaluating pdf and alphas
+            
+            myevent->SetQ2( t.fac_scale * t.fac_scale ); // applgrid takes sqrt(fac_scale) when evaluating pdf and alphas
+
 
             //
             // fill incoming partons
@@ -839,29 +817,39 @@ int main(int argc, char** argv) {
             double pyin=0.;
             double pzin=0.;
             double Ein=0.;
-            for (int ip=0; ip<np; ip++) {
-                pxin+=t.px[ip];
-                pyin+=t.py[ip];
-                pzin+=t.pz[ip];
-                Ein+=t.E[ip];
+            
+            for ( int ip=0 ; ip<np ; ip++ ) {
+                pxin += t.px[ip];
+                pyin += t.py[ip];
+                pzin += t.pz[ip];
+                Ein  += t.E[ip];
             }
 
-            double shat=Ein*Ein-(pxin*pxin+pyin*pyin+pzin*pzin);
-            double s=shat/(t.x1*t.x2);
+            double shat = Ein*Ein-(pxin*pxin+pyin*pyin+pzin*pzin);
+            double s    = shat/(t.x1*t.x2);
             myevent->SetCMS(sqrt(s));
-            if (debug) cout<<" makegridfromsherpa::main: px: "<<pxin<<", py: "<<pyin<<", pz: "<<pzin<<", E: "<<Ein<<", shat: "<<shat<<", sqrt(s): "<<sqrt(s)<<endl;
+            
+            if (debug) 
+                cout<<" makegridfromsherpa::main: px: "<<pxin
+                    <<", py: "<<pyin
+                    <<", pz: "<<pzin
+                    <<", E: "<<Ein
+                    <<", shat: "<<shat
+                    <<", sqrt(s): "<<sqrt(s)<<endl;
 
-            int pid=t.id1;
-            double ep = (sqrt(s)/2.0);
+
+
+            int pid = t.id1;
+            double ep = ( sqrt(s) / 2.0 );
             if (debug) cout<<" makegridfromsherpa::main: ep: "<<ep<<endl;
 
-            if(pid==21) pid=0; //conversion from sherpa gluon to appl_grid convention
-            myevent->push_back(pxin,pyin, t.x1*ep,t.x1*ep,pid);
+            if( pid == 21 ) pid = 0; //conversion from sherpa gluon to appl_grid convention
+            myevent->push_back( pxin, pyin, t.x1 * ep, t.x1 * ep, pid);
             //cout<<" makegridfromsherpa::main: pid1: "<<pid<<endl;
 
             pid=t.id2;
-            if(pid==21) pid=0; //conversion from sherpa gluon to appl_grid convention
-            myevent->push_back(pxin,pyin,-t.x2*ep,t.x2*ep,pid);
+            if( pid == 21 ) pid = 0; //conversion from sherpa gluon to appl_grid convention
+            myevent->push_back( pxin, pyin, -t.x2 * ep, t.x2 * ep, pid );
             //cout<<" makegridfromsherpa::main: pid2: "<<pid<<endl;
 
 
@@ -913,15 +901,19 @@ int main(int argc, char** argv) {
             double npairs = mygrid[histoIndex]->GetNSubProcessPairs( subProcID );
             if(debug) std::cout<<" makegridfromsherpa::main: subProcID: "<<subProcID<<" has '"<<npairs<<"' pairs."<<std::endl;
 
+            double wgt2_fac = pow( ( 2.0 * PI ) / t.alphas, iorder );
 
 
             //fill weight depending on LO or NLO
             if(iorder==2) {
+                //
+                // iorder = 2 = LO
+                //
                 //if(debug) std::cout<<" makegridfromsherpa::main: order: LO"<<std::endl;
                 
 
                 //compute weight to fill my event with when LO
-                wgt = (t.me_wgt2 * wgt2_fac) / npairs;
+                double wgt = (t.me_wgt2 * wgt2_fac) / npairs;
 
 
                 //set event based on LO
@@ -933,15 +925,18 @@ int main(int argc, char** argv) {
                 eventCount[histoIndex]++;
                 //if(debug) std::cout<<" makegridfromsherpa::main: LO Weight set to: "<<wgt<<std::endl;
             }
-            else //iorder==3
+            else
             {
+                //
+                // iorder = 3 = NLO
+                //
                 //if(debug) std::cout<<" makegridfromsherpa::main: order: NLO"<<std::endl;
 
 
                 static const int GLUON = 6;
 
 
-                //setup xf1 and xf2 to be filled from evolvepdf
+                //setup arrays to be filled from evolvepdf for individual weight calcs
                 int nWgts=13;
                 double f1  [nWgts];
                 double f2  [nWgts];
@@ -959,11 +954,12 @@ int main(int argc, char** argv) {
                 evolvepdf_(t.x1,t.fac_scale,xf1);
                 evolvepdf_(t.x2,t.fac_scale,xf2);
 
+
                 //computing f1 from xf1 and f2 from xf2 for later usage (and readability) conveyance
                 double fa = f1[id1]; // (xf1/x1)[id1]
                 double fb = f2[id2]; // (xf2/x2)[id2]
-                double lr=0;
-                double lf=0;
+                double lr = 0.0;
+                double lf = 0.0;
 
 
                 double w[9];
@@ -979,9 +975,10 @@ int main(int argc, char** argv) {
 
 
                 if (wnz==true) {
-
-                    double  obs          = 0.;
-                    double  htestFillWgt = 0.;
+                    
+                    double  wgt      = 0.0; //weight for event
+                    double  htestWgt = 0.0; //weight for htest histo
+                    double  obs      = 0.0; //obs for htest histo
 
                     double  faq  = 0.0;
                     double  faqx = 0.0;
@@ -1003,30 +1000,30 @@ int main(int argc, char** argv) {
                         faq = fa;
                         fag = f1[GLUON];
 
-                        htestFillWgt    = ( faq * w[1] + fag * w[3] ) * fb;
-                        wgt             = ( ( w[1] + w[3] ) * wgt2_fac ) / npairs;
+                        htestWgt = ( faq * w[1] + fag * w[3] ) * fb;
+                        wgt      = ( ( w[1] + w[3] ) * wgt2_fac ) / npairs;
 
                         myevent->SetWeight( wgt );
                         myevent->SetX1( t.x1 );
                         mygrid[histoIndex]->fill( myevent );
                         obs = myevent->GetInvariantMass12();
-                        for( int igrid=0 ; igrid<NGrid ; igrid++ ) htest3[histoIndex][igrid]->Fill( obs, htestFillWgt );
+                        for( int igrid=0 ; igrid<NGrid ; igrid++ ) htest3[histoIndex][igrid]->Fill( obs, htestWgt );
                         eventCount[histoIndex]++;
 
 
-
+                        //evolvepdf to get primes xfp
                         evolvepdf_( t.x1 / t.x1p, t.fac_scale, xf1p );
                         faqx = xf1p[id1]   / t.x1;
                         fagx = xf1p[GLUON] / t.x1;
 
-                        htestFillWgt    = ( faqx * w[2] + fagx * w[4] ) * fb;
-                        wgt             = ( ( w[2] + w[4] ) * wgt2_fac * ( 1 / t.x1p ) ) / npairs;
+                        htestWgt = ( faqx * w[2] + fagx * w[4] ) * fb;
+                        wgt      = ( ( w[2] + w[4] ) * wgt2_fac * ( 1 / t.x1p ) ) / npairs;
 
                         myevent->SetWeight( wgt );
                         myevent->SetX1( t.x1 / t.x1p );
                         mygrid[histoIndex]->fill( myevent );
                         obs = myevent->GetInvariantMass12();
-                        for( int igrid=0 ; igrid<NGrid ; igrid++ ) htest3[histoIndex][igrid]->Fill( obs, htestFillWgt );
+                        for( int igrid=0 ; igrid<NGrid ; igrid++ ) htest3[histoIndex][igrid]->Fill( obs, htestWgt );
                         eventCount[histoIndex]++;
                     }
                     else {
@@ -1037,31 +1034,31 @@ int main(int argc, char** argv) {
                         for ( int i=1 ; i<nWgts-1 ; ++i )
                             if( i!=GLUON ) faq += f1[i];
 
-                        htestFillWgt    = ( faq * w[1] + fag * w[3] ) * fb;
-                        wgt             = ( ( w[1] + w[3] ) * wgt2_fac ) / npairs;
+                        htestWgt = ( faq * w[1] + fag * w[3] ) * fb;
+                        wgt      = ( ( w[1] + w[3] ) * wgt2_fac ) / npairs;
 
                         myevent->SetWeight( wgt );
                         myevent->SetX1( t.x1 );
                         mygrid[histoIndex]->fill( myevent );
                         obs = myevent->GetInvariantMass12();
-                        for( int igrid=0 ; igrid<NGrid ; igrid++ ) htest3[histoIndex][igrid]->Fill( obs, htestFillWgt );
+                        for( int igrid=0 ; igrid<NGrid ; igrid++ ) htest3[histoIndex][igrid]->Fill( obs, htestWgt );
                         eventCount[histoIndex]++;
 
 
-
+                        //evolvepdf to get primes xfp
                         evolvepdf_( t.x1 / t.x1p, t.fac_scale , xf1p );
-                        fagx = ( xf1p[id1] / t.x1);
+                        fagx = ( xf1p[id1] / t.x1 );
                         for ( int i=1 ; i<nWgts-1 ; ++i )
                             if( i != GLUON ) faqx += ( xf1p[i] / t.x1 );
 
-                        htestFillWgt    = ( faqx * w[2] + fagx * w[4] ) * fb;
-                        wgt             = ( ( w[2] + w[4] ) * wgt2_fac * ( 1 / t.x1p ) ) / npairs;
+                        htestWgt = ( faqx * w[2] + fagx * w[4] ) * fb;
+                        wgt      = ( ( w[2] + w[4] ) * wgt2_fac * ( 1 / t.x1p ) ) / npairs;
 
                         myevent->SetWeight( wgt );
                         myevent->SetX1( t.x1 / t.x1p );
                         mygrid[histoIndex]->fill( myevent );
                         obs = myevent->GetInvariantMass12();
-                        for( int igrid=0 ; igrid<NGrid ; igrid++ ) htest3[histoIndex][igrid]->Fill( obs, htestFillWgt );
+                        for( int igrid=0 ; igrid<NGrid ; igrid++ ) htest3[histoIndex][igrid]->Fill( obs, htestWgt );
                         eventCount[histoIndex]++;
                     }
                     if ( id2 != GLUON ) {
@@ -1071,30 +1068,30 @@ int main(int argc, char** argv) {
                         fbq = fb;
                         fbg = f2[GLUON];
 
-                        htestFillWgt    = ( fbq * w[5] + fbg * w[7] ) * fa;
-                        wgt             = ( ( w[5] + w[7] ) * wgt2_fac ) / npairs;
+                        htestWgt = ( fbq * w[5] + fbg * w[7] ) * fa;
+                        wgt      = ( ( w[5] + w[7] ) * wgt2_fac ) / npairs;
 
                         myevent->SetWeight( wgt );
                         myevent->SetX2( t.x2 );
                         mygrid[histoIndex]->fill( myevent );
                         obs = myevent->GetInvariantMass12();
-                        for( int igrid=0 ; igrid<NGrid ; igrid++ ) htest3[histoIndex][igrid]->Fill( obs, htestFillWgt );
+                        for( int igrid=0 ; igrid<NGrid ; igrid++ ) htest3[histoIndex][igrid]->Fill( obs, htestWgt );
                         eventCount[histoIndex]++;
 
 
-
+                        //evolvepdf to get primes xfp
                         evolvepdf_( t.x2 / t.x2p, t.fac_scale, xf2p );
                         fbqx = xf2p[id2]   / t.x2;
                         fbgx = xf2p[GLUON] / t.x2;
 
-                        htestFillWgt    = ( fbqx * w[6] + fbgx * w[8] ) * fa;
-                        wgt             = ( ( w[6] + w[8] ) * wgt2_fac * ( 1 / t.x2p ) ) / npairs;
+                        htestWgt = ( fbqx * w[6] + fbgx * w[8] ) * fa;
+                        wgt      = ( ( w[6] + w[8] ) * wgt2_fac * ( 1 / t.x2p ) ) / npairs;
 
                         myevent->SetWeight( wgt );
                         myevent->SetX2( t.x2 / t.x2p );
                         mygrid[histoIndex]->fill( myevent );
                         obs = myevent->GetInvariantMass12();
-                        for( int igrid=0 ; igrid<NGrid ; igrid++ ) htest3[histoIndex][igrid]->Fill( obs, htestFillWgt );
+                        for( int igrid=0 ; igrid<NGrid ; igrid++ ) htest3[histoIndex][igrid]->Fill( obs, htestWgt );
                         eventCount[histoIndex]++;
                     }
                     else {
@@ -1105,49 +1102,50 @@ int main(int argc, char** argv) {
                         for ( int i = 1 ; i<nWgts-1 ; ++i )
                             if( i != GLUON ) fbq += f2[i];
 
-                        htestFillWgt    = ( fbq * w[5] + fbg * w[7] ) * fa;
-                        wgt             = ( ( w[5] + w[7] ) * wgt2_fac ) / npairs;
+                        htestWgt = ( fbq * w[5] + fbg * w[7] ) * fa;
+                        wgt      = ( ( w[5] + w[7] ) * wgt2_fac ) / npairs;
 
                         myevent->SetWeight( wgt );
                         myevent->SetX2( t.x2 );
                         mygrid[histoIndex]->fill( myevent );
                         obs = myevent->GetInvariantMass12();
-                        for( int igrid=0 ; igrid<NGrid ; igrid++ ) htest3[histoIndex][igrid]->Fill( obs, htestFillWgt );
+                        for( int igrid=0 ; igrid<NGrid ; igrid++ ) htest3[histoIndex][igrid]->Fill( obs, htestWgt );
                         eventCount[histoIndex]++;
 
-
+                        
+                        //evolvepdf to get primes xfp 
                         evolvepdf_( t.x2 / t.x2p , t.fac_scale , xf2p );
                         fbgx = ( xf2p[id2] / t.x2 );
                         for ( int i=1 ; i<nWgts-1 ; ++i )
                             if( i != GLUON ) fbqx += ( xf2p[i] / t.x2 );
 
-                        htestFillWgt    = ( fbqx * w[6] + fbgx * w[8] ) * fa;
-                        wgt             = ( ( w[6] + w[8] ) * wgt2_fac * (1 / t.x2p) ) / npairs;
+                        htestWgt = ( fbqx * w[6] + fbgx * w[8] ) * fa;
+                        wgt      = ( ( w[6] + w[8] ) * wgt2_fac * (1 / t.x2p) ) / npairs;
 
                         myevent->SetWeight( wgt );
                         myevent->SetX2( t.x2 / t.x2p );
                         mygrid[histoIndex]->fill( myevent );
                         obs = myevent->GetInvariantMass12();
-                        for( int igrid=0 ; igrid<NGrid ; igrid++ ) htest3[histoIndex][igrid]->Fill( obs, htestFillWgt );
+                        for( int igrid=0 ; igrid<NGrid ; igrid++ ) htest3[histoIndex][igrid]->Fill( obs, htestWgt );
                         eventCount[histoIndex]++;
                     }
 
-                    //FOR REFERENCE FOR FILLING htest
+                    //PERSONAL REFERENCE FOR PICKING WHAT TO FILL EACH htest at what time (from stefan's code)
                     //wgt+=(faq*w[1]+faqx*w[2]+fag*w[3]+fagx*w[4])*fb;
                     //wgt+=(fbq*w[5]+fbqx*w[6]+fbg*w[7]+fbgx*w[8])*fa;
                 }
-
-
                 else {
-                    std::cout<<" makegridfromsherpa::main: wnz was false?"<<std::endl;
+                    std::cout<<" makegridfromsherpa::main: ERROR: wnz was false?"<<std::endl;
                     exit(0);
                 }
             }
 
 
+
             // fill the grid with the event for this histogram
             //
-            if(debug) std::cout<<" makegridfromsherpa::main: Filling with t.id1: "<<t.id1<<", t.id2: "<<t.id2<<std::endl;
+            //NOTE: this step is now done explicitly above depening on or order is LO or NLO
+            //if(debug) std::cout<<" makegridfromsherpa::main: Filling with t.id1: "<<t.id1<<", t.id2: "<<t.id2<<std::endl;
             //mygrid[histoIndex]->fill(myevent);
 
 
@@ -1156,7 +1154,7 @@ int main(int argc, char** argv) {
             //
             // fill each test histogram
             //
-            double obs=myevent->GetInvariantMass12(); // to be replaced by GetObservable from steering
+            double obs = myevent->GetInvariantMass12(); // to be replaced by GetObservable from steering
             for (int igrid=0; igrid<mygrid[histoIndex]->GetNGrid(); igrid++)
             {
                 if (mygrid[histoIndex]->eventcuts(myevent,igrid)==false) continue;
@@ -1177,51 +1175,49 @@ int main(int argc, char** argv) {
         for (int igrid=0; igrid<mygrid[histoIndex]->GetNGrid(); igrid++)
         {
             href[histoIndex][igrid]=(TH1D*)mygrid[histoIndex]->GetReference(igrid);
-            if (!href[histoIndex][igrid]) cout<<" makegridfromsherpa::main: Reference from grid not found ! "<<endl;
+            if (!href[histoIndex][igrid]) {
+                cout<<" makegridfromsherpa::main: Reference from grid not found ! "<<endl;
+                exit(0);
+            }
             else {
-                if (debug) std::cout<<" makegridfromsherpa::main: Reference from grid found ! "<<std::endl;
 
-                //Normalise(href[igrid],evuncorr*yfac,xfac,true);
                 TString nameTitle="internal_href"+ntup_names[histoIndex];
                 href[histoIndex][igrid]->SetTitle(nameTitle);
                 href[histoIndex][igrid]->SetName(nameTitle);
                 href[histoIndex][igrid]->SetLineColor(7); //SKY BLUE
-                if (debug) cout<<" makegridfromsherpa::main: Reference grid line color set to: 7"<<endl;
+                
             }
-            if (!href[histoIndex][igrid]) cout<<" makegridfromsherpa::main: href not found after norm ! "<<endl;
-            else if (debug) cout<<" makegridfromsherpa::main: Reference found after norm ! "<<endl;
-
-            //cout<<" Print SubprocessRefHistos(igrid)"<<endl;
-            //mygrid->PrintSubprocessRefHistos(igrid);
-            //mygrid->PrintRefHistos(igrid);
+            
         }
 
 
-        if (debug) cout<<" makegridfromsherpa::main: End histIndex loop: "<<histoIndex<<" of "<<(endIndex-1)<<", events this loop: "<<uncorrEventCount[histoIndex]<<endl;
+        if (debug) {
+            cout<<" makegridfromsherpa::main: End histIndex loop: "
+                <<histoIndex<<" of "<<(endIndex-1)
+                <<", events this loop: "<<uncorrEventCount[histoIndex]<<endl;
+                
     } //end of loop over all htest1 histograms
 
 
+
     //write grid to scale the internal reference histos and save them to *.root files
-    if (debug) cout<<" makegridfromsherpa::main: Printing and writing grid "<<endl;
+    if (debug) cout<<" makegridfromsherpa::main: Scaling and writing mygrid "<<endl;
     for(int histoIndex=startIndex; histoIndex<endIndex; histoIndex++)
     {
-        //if (debug) cout<< " printing and writing grid "<<endl;
-        //if (debug) mygrid[histoIndex]->Print();
 
         for (int igrid=0; igrid<mygrid[histoIndex]->GetNGrid(); igrid++)
             mygrid[histoIndex]->ScaleInternalRefHistos(igrid);
 
         mygrid[histoIndex]->write_grid();
 
-
     }
-    if (debug) cout<<" makegridfromsherpa::main: Grid written "<<endl;
+    if (debug) cout<<" makegridfromsherpa::main: Grids written "<<endl;
 
 
 
 
     //
-    // Scale htest1
+    // Scale htest histos
     // Add histograms of MyGrid for R-Like(i_R) to B-Like(i_B). Should be equal to both combined(i_RB)
     //
     if (debug) cout<<" makegridfromsherpa::main: Adding R-Type and B-Type"<<endl;
@@ -1232,16 +1228,18 @@ int main(int argc, char** argv) {
         for(int igrid=0; igrid<NGrid; igrid++) {
 
             //scale each histograms by one devided by number of events depending on type
-            htest1[histoIndex][igrid]->Scale( 1.0/uncorrEventCount[histoIndex] ); //hR/nR, hB/nB, hBR/nBR, etc
-            htest2[histoIndex][igrid]->Scale( 1.0/eventCount[histoIndex] );
-            htest3[histoIndex][igrid]->Scale( 1.0/eventCount[histoIndex] );
+            htest1[histoIndex][igrid]->Scale( 1.0 / uncorrEventCount[histoIndex] ); //hR/nR, hB/nB, hBR/nBR, etc
+            htest2[histoIndex][igrid]->Scale( 1.0 / eventCount[histoIndex] );
+            htest3[histoIndex][igrid]->Scale( 1.0 / uncorrEventCount[histoIndex] );
 
-            href[histoIndex][igrid]->Scale( 1.0/uncorrEventCount[histoIndex] ); //hrefR/nR, hrefB/nB,hrefRB/nRB, etc
+            href[histoIndex][igrid]->Scale(   1.0 / uncorrEventCount[histoIndex] ); //hrefR/nR, hrefB/nB,hrefRB/nRB, etc
+
 
             cout<<" makegridfromsherpa::main: htest1 printing..."<<endl;
             htest1[histoIndex][igrid]->Print("all");
             htest2[histoIndex][igrid]->Print("all");
             htest3[histoIndex][igrid]->Print("all");
+
 
             cout<<" makegridfromsherpa::main: hnorm printing (htest1/binswidth)... "<<endl;
             TH1D *hnorm1=(TH1D*)htest1[histoIndex][igrid]->Clone("hnorm");
@@ -1249,19 +1247,15 @@ int main(int argc, char** argv) {
             hnorm1->Print("all");
 
 
-
             //sum the scaled R and B-type together, "should" be the same as htest[i_RB] where R and B are done together
             if(histoIndex==i_RB)
             {
                 if(startIndex<=i_B && endIndex>=i_R) //make sure that R and B exist before adding them!
                 {
-                    htestRB[igrid]=mygrid[0]->GetHisto(igrid,string("htestRplusB_")); //mygrid index=0 is arbitrary, chosen to use GetHisto func
+                    htestRB[igrid] = mygrid[0]->GetHisto(igrid,string("htestRplusB_")); //mygrid index=0 is arbitrary, chosen to use GetHisto func
                     htestRB[igrid]->Add(htest1[i_R][igrid]);
                     htestRB[igrid]->Add(htest1[i_B][igrid]);
-
-                    //htestRB[igrid]->Scale(1.0/uncorrEventCount[i_RB]); //doesnt need scaling because peices added together are already???
                     htestRB[igrid]->SetLineColor(4); //blue
-
                 }
             }
         }
@@ -1319,6 +1313,8 @@ int main(int argc, char** argv) {
 
         } //end of loop over all htest1 histograms
     */
+
+
 
     //
     // Convolute and print all external histograms
@@ -1396,7 +1392,7 @@ int main(int argc, char** argv) {
 
 
 
-
+            //get information needed to perform mygrid normalisation calls
             MyData *mydata=mygrid[histoIndex]->GetMyData(igrid);
             if (!mydata) cout<<" makegridfromsherpa::main: mydata["<<igrid<<"] not found "<<endl;
             double yfac=mydata->GetUnitfbFactor();
@@ -1445,13 +1441,14 @@ int main(int argc, char** argv) {
 
 
 
-            //save a scaled and normalised version
-            href[histoIndex][igrid]->Write();
-            //mygrid[histoIndex]->Normalise(href[histoIndex][igrid],yfac,xfac,true);     //normalise hrefB, hrefR, and hrefRthenB
+            //save a scaled and DivideByBinWidth version
+            href[histoIndex][igrid]->Write(); //scaled version
+            
             mygrid[histoIndex]->DivideByBinWidth(href[histoIndex][igrid]);
-            href[histoIndex][igrid]->SetTitle(string("internal_href"+ntup_names[histoIndex]+"-norm").c_str());
-            href[histoIndex][igrid]->SetName(string("internal_href"+ntup_names[histoIndex]+"-norm").c_str());
-            href[histoIndex][igrid]->Write();
+            string hrefName = "internal_href"+ntup_names[histoIndex]+"-norm";
+            href[histoIndex][igrid]->SetTitle( hrefName.c_str() );
+            href[histoIndex][igrid]->SetName(  hrefName.c_str() );
+            href[histoIndex][igrid]->Write(); //DivideByBinWidth version
 
             std::cout<<" makegridfromsherpa::main: Printing LO convolute histo..."<<std::endl;
             LOconvGridHistos[histoIndex][igrid]->Print("all");
@@ -1460,74 +1457,77 @@ int main(int argc, char** argv) {
 
 
 
-            //print origional htest1 (uncorr events events) & a "normalised" version
+            //output origional htest1 (uncorr events events) & a DivideByBinWidth version
             htest1[histoIndex][igrid]->Print("all");
             htest1[histoIndex][igrid]->Write();
 
             string name1 = "hnorm1"+ntup_names[histoIndex]+"_uncorr_Div";
-            TH1D *htest1norm=(TH1D*)htest1[histoIndex][igrid]->Clone( name1.c_str() );
+            TH1D *htest1norm = (TH1D*)htest1[histoIndex][igrid]->Clone( name1.c_str() );
             htest1norm->SetTitle( name1.c_str() );
-            htest1norm->SetName( name1.c_str() );
+            htest1norm->SetName(  name1.c_str() );
 
-            mygrid[histoIndex]->DivideByBinWidth(htest1norm);
+            mygrid[histoIndex]->DivideByBinWidth(htest1norm); //DivideByBinWidth version
             std::cout<<" makegridfromsherpa::main: Printing htest1 normalised..."<<std::endl;
             htest1norm->Print("all");
 
             TH1D* ratioLO = divide( LOconvGridHistos[histoIndex][igrid], htest1norm ); //LOconvolute/htestnorm
             if ( ratioLO ) {
-                ratioLO->SetTitle(string("ratio_LO_conv/htest1norm"+ntup_names[histoIndex]).c_str());
-                ratioLO->SetName(string("ratio_LO_conv/htest1norm"+ntup_names[histoIndex]).c_str());
+                string ratioName = "ratio_LO-conv/htest1norm"+ntup_names[histoIndex];
+                ratioLO->SetTitle( ratioName.c_str() );
+                ratioLO->SetName(  ratioName.c_str() );
                 ratioLO->Print("all");
-                //ratioLO->Write();
             }
 
 
 
 
-            //print htest2 filled the same as htest1 but scaled to by tot events & a "normalised" version
+            //output htest2 filled the same as htest1 but scaled to by tot events & a DivideByBinWidth version
             htest2[histoIndex][igrid]->Print("all");
-            htest2[histoIndex][igrid]->Write();
+            htest2[histoIndex][igrid]->Write(); //scaled version
 
             string name2 = "hnorm"+ntup_names[histoIndex]+"_LO_totev_Div";
-            TH1D *htest2norm=(TH1D*)htest2[histoIndex][igrid]->Clone( name2.c_str() );
+            TH1D *htest2norm = (TH1D*)htest2[histoIndex][igrid]->Clone( name2.c_str() );
             htest2norm->SetTitle( name2.c_str() );
-            htest2norm->SetName( name2.c_str() );
+            htest2norm->SetName(  name2.c_str() );
 
-            mygrid[histoIndex]->DivideByBinWidth(htest2norm);
+            mygrid[histoIndex]->DivideByBinWidth(htest2norm); //DivideByBinWidth version
             std::cout<<" makegridfromsherpa::main: Printing htest2 normalised..."<<std::endl;
             htest2norm->Print("all");
+            
+            //Note: no ratio here for htest2
 
 
 
 
-
-            //print htest3 & a "normalised" version
+            //output htest3 & a DivideByBinWidth version
             htest3[histoIndex][igrid]->Print("all");
-            htest3[histoIndex][igrid]->Write();
+            htest3[histoIndex][igrid]->Write(); //scaled version
 
-            string name3 = "hnorm3"+ntup_names[histoIndex]+"_NLO_totev_Div";
-            TH1D *htest3norm=(TH1D*)htest1[histoIndex][igrid]->Clone( name3.c_str() );
+            string name3 = "hnorm3"+ntup_names[histoIndex]+"_NLO_Div";
+            TH1D *htest3norm = (TH1D*)htest3[histoIndex][igrid]->Clone( name3.c_str() );
             htest3norm->SetTitle( name3.c_str() );
-            htest3norm->SetName( name3.c_str() );
+            htest3norm->SetName(  name3.c_str() );
 
-            mygrid[histoIndex]->DivideByBinWidth(htest3norm);
+            mygrid[histoIndex]->DivideByBinWidth(htest3norm); //DivideByBinWidth version
             std::cout<<" makegridfromsherpa::main: Printing htest3 normalised..."<<std::endl;
             htest3norm->Print("all");
 
             TH1D* ratioNLO = divide( convGridHistos[histoIndex][igrid], htest3norm ); //NLOconvolute/htestnorm
             if ( ratioNLO ) {
-                ratioNLO->SetTitle(string("ratio_NLO_conv/htest3norm"+ntup_names[histoIndex]).c_str());
-                ratioNLO->SetName(string("ratio_NLO_conv/htest3norm"+ntup_names[histoIndex]).c_str());
+                string ratioName = "ratio_NLO-conv/htest3norm"+ntup_names[histoIndex];
+                ratioNLO->SetTitle( ratioName.c_str() );
+                ratioNLO->SetName(  ratioName.c_str());
                 ratioNLO->Print("all");
-                //ratioNLO->Write();
             }
-
 
         }
 
-        fout->Write();
+        fout->Write(); //writing root file
         fout->Close();
     }
+
+
+
 
 
     /*
