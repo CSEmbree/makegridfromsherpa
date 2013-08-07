@@ -954,6 +954,10 @@ int main(int argc, char** argv) {
                 evolvepdf_(t.x1,t.fac_scale,xf1);
                 evolvepdf_(t.x2,t.fac_scale,xf2);
 
+                for( int iproc=0 ; iproc<nWgts ; iproc++ ) {
+                    f1[iproc] = xf1[iproc] / t.x1; 
+                    f2[iproc] = xf2[iproc] / t.x2; 
+                }
 
                 //computing f1 from xf1 and f2 from xf2 for later usage (and readability) conveyance
                 double fa = f1[id1]; // (xf1/x1)[id1]
@@ -973,7 +977,11 @@ int main(int argc, char** argv) {
                     if (w[i]==0) wnz=true;
                 }
 
-
+                double wgt=w[0]*fa*fb; //<--Currently being excluded???
+                
+                //std::cout<<"TEST: id1: "<<id1<<", id2: "<<id2<<std::endl;
+                
+                
                 if (wnz==true) {
 
                     double  wgt      = 0.0; //weight for event
@@ -1005,8 +1013,10 @@ int main(int argc, char** argv) {
 
                         myevent->SetWeight( wgt );
                         myevent->SetX1( t.x1 );
+                        myevent->SetX2( t.x2 );
                         mygrid[histoIndex]->fill( myevent );
                         obs = myevent->GetInvariantMass12();
+                        //std::cout<<"TEST: P1-11: htestWgt: "<<htestWgt<<std::endl;
                         for( int igrid=0 ; igrid<NGrid ; igrid++ ) htest3[histoIndex][igrid]->Fill( obs, htestWgt );
                         eventCount[histoIndex]++;
 
@@ -1021,8 +1031,10 @@ int main(int argc, char** argv) {
 
                         myevent->SetWeight( wgt );
                         myevent->SetX1( t.x1 / t.x1p );
+                        myevent->SetX2( t.x2 );
                         mygrid[histoIndex]->fill( myevent );
                         obs = myevent->GetInvariantMass12();
+                        //std::cout<<"TEST: P1-12: htestWgt: "<<htestWgt<<std::endl;
                         for( int igrid=0 ; igrid<NGrid ; igrid++ ) htest3[histoIndex][igrid]->Fill( obs, htestWgt );
                         eventCount[histoIndex]++;
                     }
@@ -1039,8 +1051,10 @@ int main(int argc, char** argv) {
 
                         myevent->SetWeight( wgt );
                         myevent->SetX1( t.x1 );
+                        myevent->SetX2( t.x2 );
                         mygrid[histoIndex]->fill( myevent );
                         obs = myevent->GetInvariantMass12();
+                        //std::cout<<"TEST: P1-21: htestWgt: "<<htestWgt<<std::endl;
                         for( int igrid=0 ; igrid<NGrid ; igrid++ ) htest3[histoIndex][igrid]->Fill( obs, htestWgt );
                         eventCount[histoIndex]++;
 
@@ -1056,8 +1070,10 @@ int main(int argc, char** argv) {
 
                         myevent->SetWeight( wgt );
                         myevent->SetX1( t.x1 / t.x1p );
+                        myevent->SetX2( t.x2 );
                         mygrid[histoIndex]->fill( myevent );
                         obs = myevent->GetInvariantMass12();
+                        //std::cout<<"TEST: P1-22: htestWgt: "<<htestWgt<<std::endl;
                         for( int igrid=0 ; igrid<NGrid ; igrid++ ) htest3[histoIndex][igrid]->Fill( obs, htestWgt );
                         eventCount[histoIndex]++;
                     }
@@ -1072,9 +1088,11 @@ int main(int argc, char** argv) {
                         wgt      = ( ( w[5] + w[7] ) * wgt2_fac ) / npairs;
 
                         myevent->SetWeight( wgt );
+                        myevent->SetX1( t.x1 );
                         myevent->SetX2( t.x2 );
                         mygrid[histoIndex]->fill( myevent );
                         obs = myevent->GetInvariantMass12();
+                        //std::cout<<"TEST: P2-11: htestWgt: "<<htestWgt<<std::endl;
                         for( int igrid=0 ; igrid<NGrid ; igrid++ ) htest3[histoIndex][igrid]->Fill( obs, htestWgt );
                         eventCount[histoIndex]++;
 
@@ -1085,12 +1103,15 @@ int main(int argc, char** argv) {
                         fbgx = xf2p[GLUON] / t.x2;
 
                         htestWgt = ( fbqx * w[6] + fbgx * w[8] ) * fa;
+                        //std::cout<<"TEST: P1-2: htestWgt: "<<htestWgt<<std::endl;
                         wgt      = ( ( w[6] + w[8] ) * wgt2_fac * ( 1 / t.x2p ) ) / npairs;
 
                         myevent->SetWeight( wgt );
+                        myevent->SetX1( t.x1 );
                         myevent->SetX2( t.x2 / t.x2p );
                         mygrid[histoIndex]->fill( myevent );
                         obs = myevent->GetInvariantMass12();
+                        //std::cout<<"TEST: P2-12: htestWgt: "<<htestWgt<<std::endl;
                         for( int igrid=0 ; igrid<NGrid ; igrid++ ) htest3[histoIndex][igrid]->Fill( obs, htestWgt );
                         eventCount[histoIndex]++;
                     }
@@ -1106,9 +1127,11 @@ int main(int argc, char** argv) {
                         wgt      = ( ( w[5] + w[7] ) * wgt2_fac ) / npairs;
 
                         myevent->SetWeight( wgt );
+                        myevent->SetX1( t.x1 );
                         myevent->SetX2( t.x2 );
                         mygrid[histoIndex]->fill( myevent );
                         obs = myevent->GetInvariantMass12();
+                        //std::cout<<"TEST: P2-21: htestWgt: "<<htestWgt<<std::endl;
                         for( int igrid=0 ; igrid<NGrid ; igrid++ ) htest3[histoIndex][igrid]->Fill( obs, htestWgt );
                         eventCount[histoIndex]++;
 
@@ -1123,9 +1146,11 @@ int main(int argc, char** argv) {
                         wgt      = ( ( w[6] + w[8] ) * wgt2_fac * (1 / t.x2p) ) / npairs;
 
                         myevent->SetWeight( wgt );
+                        myevent->SetX1( t.x1 );
                         myevent->SetX2( t.x2 / t.x2p );
                         mygrid[histoIndex]->fill( myevent );
                         obs = myevent->GetInvariantMass12();
+                        //std::cout<<"TEST: P2-22: htestWgt: "<<htestWgt<<std::endl;
                         for( int igrid=0 ; igrid<NGrid ; igrid++ ) htest3[histoIndex][igrid]->Fill( obs, htestWgt );
                         eventCount[histoIndex]++;
                     }
@@ -1136,7 +1161,8 @@ int main(int argc, char** argv) {
                 }
                 else {
                     std::cout<<" makegridfromsherpa::main: ERROR: wnz was false?"<<std::endl;
-                    exit(0);
+                    
+                    //exit(0);
                 }
             }
 
