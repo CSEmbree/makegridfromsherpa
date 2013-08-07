@@ -658,7 +658,7 @@ int main(int argc, char** argv) {
         for (int igrid=0; igrid<NGrid; igrid++)
         {
             string htest1name = "htest1"+ntup_names[histoIndex];
-            htest1[histoIndex][igrid] = mygrid[histoIndex]->GetHisto( igrid, htest1name );
+            htest1[histoIndex][igrid]=mygrid[histoIndex]->GetHisto( igrid, htest1name );
             htest1[histoIndex][igrid]->SetTitle( htest1name.c_str() );
             htest1[histoIndex][igrid]->SetName ( htest1name.c_str() );
             htest1[histoIndex][igrid]->SetLineColor(histoIndex+1);
@@ -671,7 +671,7 @@ int main(int argc, char** argv) {
 
 
             string htest3name = "htest3"+ntup_names[histoIndex]+"_NLO";
-            htest3[histoIndex][igrid] = mygrid[histoIndex]->GetHisto( igrid, htest3name );
+            htest3[histoIndex][igrid]=mygrid[histoIndex]->GetHisto( igrid, htest3name );
             htest3[histoIndex][igrid]->SetTitle( htest3name.c_str() );
             htest3[histoIndex][igrid]->SetName ( htest3name.c_str() );
             htest3[histoIndex][igrid]->SetLineColor(histoIndex+1);
@@ -794,10 +794,10 @@ int main(int argc, char** argv) {
             //double wgt=t.me_wgt2*fa*fb;
             //double wgt2_fac = pow((2.0*PI)/t.alphas,iorder);
 
-            
+
 
             //weights are now set explicitly bellow depending on event order being LO or NLO
-            //myevent->SetWeight(wgt); 
+            //myevent->SetWeight(wgt);
             myevent->SetXSection( t.weight2 );
 
             myevent->SetOrder( iorder );
@@ -806,7 +806,7 @@ int main(int argc, char** argv) {
             //Setting x1 and x2 change depending on order being LO or NLO, so they are set explicitly bellow
             //myevent->SetX1(t.x1);
             //myevent->SetX2(t.x2);
-            
+
             myevent->SetQ2( t.fac_scale * t.fac_scale ); // applgrid takes sqrt(fac_scale) when evaluating pdf and alphas
 
 
@@ -817,7 +817,7 @@ int main(int argc, char** argv) {
             double pyin=0.;
             double pzin=0.;
             double Ein=0.;
-            
+
             for ( int ip=0 ; ip<np ; ip++ ) {
                 pxin += t.px[ip];
                 pyin += t.py[ip];
@@ -828,8 +828,8 @@ int main(int argc, char** argv) {
             double shat = Ein*Ein-(pxin*pxin+pyin*pyin+pzin*pzin);
             double s    = shat/(t.x1*t.x2);
             myevent->SetCMS(sqrt(s));
-            
-            if (debug) 
+
+            if (debug)
                 cout<<" makegridfromsherpa::main: px: "<<pxin
                     <<", py: "<<pyin
                     <<", pz: "<<pzin
@@ -910,7 +910,7 @@ int main(int argc, char** argv) {
                 // iorder = 2 = LO
                 //
                 //if(debug) std::cout<<" makegridfromsherpa::main: order: LO"<<std::endl;
-                
+
 
                 //compute weight to fill my event with when LO
                 double wgt = (t.me_wgt2 * wgt2_fac) / npairs;
@@ -975,7 +975,7 @@ int main(int argc, char** argv) {
 
 
                 if (wnz==true) {
-                    
+
                     double  wgt      = 0.0; //weight for event
                     double  htestWgt = 0.0; //weight for htest histo
                     double  obs      = 0.0; //obs for htest histo
@@ -1112,8 +1112,8 @@ int main(int argc, char** argv) {
                         for( int igrid=0 ; igrid<NGrid ; igrid++ ) htest3[histoIndex][igrid]->Fill( obs, htestWgt );
                         eventCount[histoIndex]++;
 
-                        
-                        //evolvepdf to get primes xfp 
+
+                        //evolvepdf to get primes xfp
                         evolvepdf_( t.x2 / t.x2p , t.fac_scale , xf2p );
                         fbgx = ( xf2p[id2] / t.x2 );
                         for ( int i=1 ; i<nWgts-1 ; ++i )
@@ -1185,9 +1185,9 @@ int main(int argc, char** argv) {
                 href[histoIndex][igrid]->SetTitle(nameTitle);
                 href[histoIndex][igrid]->SetName(nameTitle);
                 href[histoIndex][igrid]->SetLineColor(7); //SKY BLUE
-                
+
             }
-            
+
         }
 
 
@@ -1195,7 +1195,8 @@ int main(int argc, char** argv) {
             cout<<" makegridfromsherpa::main: End histIndex loop: "
                 <<histoIndex<<" of "<<(endIndex-1)
                 <<", events this loop: "<<uncorrEventCount[histoIndex]<<endl;
-                
+        }
+
     } //end of loop over all htest1 histograms
 
 
@@ -1443,7 +1444,7 @@ int main(int argc, char** argv) {
 
             //save a scaled and DivideByBinWidth version
             href[histoIndex][igrid]->Write(); //scaled version
-            
+
             mygrid[histoIndex]->DivideByBinWidth(href[histoIndex][igrid]);
             string hrefName = "internal_href"+ntup_names[histoIndex]+"-norm";
             href[histoIndex][igrid]->SetTitle( hrefName.c_str() );
@@ -1462,7 +1463,7 @@ int main(int argc, char** argv) {
             htest1[histoIndex][igrid]->Write();
 
             string name1 = "hnorm1"+ntup_names[histoIndex]+"_uncorr_Div";
-            TH1D *htest1norm = (TH1D*)htest1[histoIndex][igrid]->Clone( name1.c_str() );
+            TH1D *htest1norm=(TH1D*)htest1[histoIndex][igrid]->Clone( name1.c_str() );
             htest1norm->SetTitle( name1.c_str() );
             htest1norm->SetName(  name1.c_str() );
 
@@ -1486,14 +1487,14 @@ int main(int argc, char** argv) {
             htest2[histoIndex][igrid]->Write(); //scaled version
 
             string name2 = "hnorm"+ntup_names[histoIndex]+"_LO_totev_Div";
-            TH1D *htest2norm = (TH1D*)htest2[histoIndex][igrid]->Clone( name2.c_str() );
+            TH1D *htest2norm=(TH1D*)htest2[histoIndex][igrid]->Clone( name2.c_str() );
             htest2norm->SetTitle( name2.c_str() );
             htest2norm->SetName(  name2.c_str() );
 
             mygrid[histoIndex]->DivideByBinWidth(htest2norm); //DivideByBinWidth version
             std::cout<<" makegridfromsherpa::main: Printing htest2 normalised..."<<std::endl;
             htest2norm->Print("all");
-            
+
             //Note: no ratio here for htest2
 
 
@@ -1504,7 +1505,7 @@ int main(int argc, char** argv) {
             htest3[histoIndex][igrid]->Write(); //scaled version
 
             string name3 = "hnorm3"+ntup_names[histoIndex]+"_NLO_Div";
-            TH1D *htest3norm = (TH1D*)htest3[histoIndex][igrid]->Clone( name3.c_str() );
+            TH1D *htest3norm=(TH1D*)htest3[histoIndex][igrid]->Clone( name3.c_str() );
             htest3norm->SetTitle( name3.c_str() );
             htest3norm->SetName(  name3.c_str() );
 
