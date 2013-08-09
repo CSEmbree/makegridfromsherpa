@@ -32,7 +32,7 @@ MyGrid::MyGrid(string name, string version)
     nQ2bins = 2; 
     q2Low   = 30624.; // this should be automated for the moment mtop=175*175
     q2Up    = 30628.; //
-    qorder  = 2;      // there seems to be a bug, if only one bins is used
+    qorder  = 1;      // there seems to be a bug, if only one bins is used
 
     iorder  = 0;
 
@@ -693,6 +693,9 @@ void MyGrid::book_grid(int igrid)  // inital grid booking
 
 
     if (debug) std::cout<<" MyGrid::book_grid: TEST: final create_new is: "<<create_new<<" for file: "<<filename<<std::endl;
+
+
+    Print();
 
 
     //mydata[igrid]->Print();

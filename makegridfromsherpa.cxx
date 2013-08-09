@@ -55,8 +55,13 @@ string ntup_names[]= {"_B","_R","_RthenB"}; //names of each htest1 index type, w
 
 
 long int nevmax=LONG_MAX; //allow for halt of execution when a user defined maximum number of events is reached
+double wgt_fac=-1; //factor needed for conversion from SHERPA to ApplGrid when setting the weight 
+static const int GLUON = 6; //used for more readable code
+
+
 bool debug=false;
 bool debug2=false;
+
 
 extern "C" void evolvepdf_(const double& , const double& , double* );
 extern "C" double alphaspdf_(const double& Q);
@@ -93,8 +98,8 @@ double GetWeightNLO(int id1, int id2, t3 t) {
     }
 
     //evolve to get weights in xf1, xf2
-    evolvepdf_(t.x1,t.fac_scale,xf1);
-    evolvepdf_(t.x2,t.fac_scale,xf2);
+    getPDF(t.x1,t.fac_scale,xf1);
+    getPDF(t.x2,t.fac_scale,xf2);
 
 
     //computing f1 from xf1 and f2 from xf2 for later usage (and readability) conveyance
@@ -160,7 +165,7 @@ double GetWeightNLO(int id1, int id2, t3 t) {
             faq = fa;
             fag = f1[6];
 
-            evolvepdf_( t.x1/t.x1p, t.fac_scale, xf1p );
+            getPDF( t.x1/t.x1p, t.fac_scale, xf1p );
 
             faqx = xf1p[id1] / t.x1;
             fagx = xf1p[6]   / t.x1;
@@ -171,7 +176,7 @@ double GetWeightNLO(int id1, int id2, t3 t) {
             for ( int i=1 ; i<nWgts-1 ; ++i)
                 if( i!=GLUON ) faq += f1[i];
 
-            evolvepdf_( t.x1/t.x1p, t.fac_scale , xf1p );
+            getPDF( t.x1/t.x1p, t.fac_scale , xf1p );
 
             fagx = (xf1p[id1] / t.x1);
             for ( int i=1 ; i<nWgts-1 ; ++i )
@@ -182,7 +187,7 @@ double GetWeightNLO(int id1, int id2, t3 t) {
             fbq = fb;
             fbg = f2[GLUON];
 
-            evolvepdf_( t.x2/t.x2p, t.fac_scale, xf2p );
+            getPDF( t.x2/t.x2p, t.fac_scale, xf2p );
 
             fbqx = xf2p[id2] / t.x2;
             fbgx = xf2p[GLUON] / t.x2;
@@ -193,7 +198,7 @@ double GetWeightNLO(int id1, int id2, t3 t) {
             for ( int i = 1 ; i<nWgts-1 ; ++i)
                 if( i != GLUON ) fbq += f2[i];
 
-            evolvepdf_( t.x2/t.x2p , t.fac_scale , xf2p);
+            getPDF( t.x2/t.x2p , t.fac_scale , xf2p);
 
             fbgx = (xf2p[id2] / t.x2);
             for ( int i=1 ; i<nWgts-1 ; ++i )
@@ -264,7 +269,7 @@ double GetWeightNLO(int id1, int id2, t3 t) {
     w[0] = t.me_wgt + t.usr_wgts[0] * lr + t.usr_wgts[1] * lr * lr / 2.0;
 
 
-    wgt = ( w[0] * wgt2_fac ) / npairs;
+    wgt = ( w[0] * wgt_fac ) / npairs;
     htestWgt = ??
 
     myevent->SetWeight( wgt );
@@ -290,15 +295,15 @@ double GetWeightNLO(int id1, int id2, t3 t) {
                 //needed: fa, fb, fap, fbp, fag, fbg, fagp, fbgp
                 //using : xf1, xf2, x1, x2, xf1p, xf2p, x1p, x2p
 
-                evolvepdf_( x1, fac_scale, xf1 );
-                evolvepdf_( x2, fac_scale, xf2 );
+                getPDF( x1, fac_scale, xf1 );
+                getPDF( x2, fac_scale, xf2 );
                 fa  = xf1[id1]   / x1;
                 fb  = xf2[id2]   / x2;
                 fag = xf1[GLUON] / x1;
                 fbg = xf2[GLUON] / x2;
 
-                evolvepdf_( x1/x1p, fac_scale, xf1p );
-                evolvepdf_( x2/x2p, fac_scale, xf2p );
+                getPDF( x1/x1p, fac_scale, xf1p );
+                getPDF( x2/x2p, fac_scale, xf2p );
                 fap  = xf1p[id1]   / x1;
                 fbp  = xf2p[id2]   / x2;
                 fagp = xf1p[GLUON] / x1;
@@ -318,25 +323,25 @@ double GetWeightNLO(int id1, int id2, t3 t) {
                 myevent->SetX1( t.x1p );
                 myevent->SetX2( t.x2 );
 
-                wgt  = w[1] * wgt2_fac * (1.0/npairs);
+                wgt  = w[1] * wgt_fac * (1.0/npairs);
                 hwgt = fa*w[1] * fb;
                 myevent->setWeight( wgt );
                 mygrid[histoIndex]->fill( myevent );
                 htest3->fill( obs, hwgt );
 
-                wgt  = w[2] * (1/x1p) * wgt2_fac * (1.0/npairs);
+                wgt  = w[2] * (1/x1p) * wgt_fac * (1.0/npairs);
                 hwgt = fap*w[2]  * fb;
                 myevent->setWeight( wgt );
                 mygrid[histoIndex]->fill( myevent );
                 htest3->fill( obs, hwgt );
 
-                wgt  = w[3] * wgt2_fac * (1.0/npairs);
+                wgt  = w[3] * wgt_fac * (1.0/npairs);
                 hwgt = fag*w[3]  * fb;
                 myevent->setWeight( wgt );
                 mygrid[histoIndex]->fill( myevent );
                 htest3->fill( obs, hwgt );
 
-                wgt  = w[4] * (1/x1p) * wgt2_fac * (1.0/npairs);
+                wgt  = w[4] * (1/x1p) * wgt_fac * (1.0/npairs);
                 hwgt = fagp*w[4] * fb;
                 myevent->setWeight( wgt );
                 mygrid[histoIndex]->fill( myevent );
@@ -346,25 +351,25 @@ double GetWeightNLO(int id1, int id2, t3 t) {
                 myevent->SetX1( t.x1 );
                 myevent->SetX2( t.x2p );
 
-                wgt  = w[5] * wgt2_fac * (1.0/npairs);
+                wgt  = w[5] * wgt_fac * (1.0/npairs);
                 hwgt = fa * fb*w[5];
                 myevent->setWeight( wgt );
                 mygrid[histoIndex]->fill( myevent );
                 htest3->fill( obs, hwgt );
 
-                wgt  = w[6] * (1/x2p) * wgt2_fac * (1.0/npairs);
+                wgt  = w[6] * (1/x2p) * wgt_fac * (1.0/npairs);
                 hwgt = fa * fbp*w[6];
                 myevent->setWeight( wgt );
                 mygrid[histoIndex]->fill( myevent );
                 htest3->fill( obs, hwgt );
 
-                wgt  = w[7] * wgt2_fac * (1.0/npairs);
+                wgt  = w[7] * wgt_fac * (1.0/npairs);
                 hwgt = fa * fbg*w[7];
                 myevent->setWeight( wgt );
                 mygrid[histoIndex]->fill( myevent );
                 htest3->fill( obs, hwgt );
 
-                wgt  = w[8] * (1/x2p) * wgt2_fac * (1.0/npairs);
+                wgt  = w[8] * (1/x2p) * wgt_fac * (1.0/npairs);
                 hwgt = fa * fbgp*w[8];
                 myevent->setWeight( wgt );
                 mygrid[histoIndex]->fill( myevent );
@@ -380,8 +385,8 @@ double GetWeightNLO(int id1, int id2, t3 t) {
                 //needed: sf1, sf1p, fg1, fg1p, fb, fbp, fg2, fg2p
                 //using : xf1, xf2, x1, x2, xf1p, xf2p, x1p, x2p
 
-                evolvepdf_( x1, fac_scale, xf1 );
-                evolvepdf_( x2, fac_scale, xf2 );
+                getPDF( x1, fac_scale, xf1 );
+                getPDF( x2, fac_scale, xf2 );
                 fb  = xf2[id2]   / x2;
                 fg1 = xf1[GLUON] / x1;
                 fg2 = xf2[GLUON] / x2;
@@ -389,8 +394,8 @@ double GetWeightNLO(int id1, int id2, t3 t) {
                     sf1 += xf1[i] / x1;
                 }
 
-                evolvepdf_( x1/x1p, fac_scale, xf1p );
-                evolvepdf_( x2/x2p, fac_scale, xf2p );
+                getPDF( x1/x1p, fac_scale, xf1p );
+                getPDF( x2/x2p, fac_scale, xf2p );
                 fbp  = xf2p[id2]   / x2;
                 fg1p = xf1p[GLUON] / x1;
                 fg2p = xf2p[GLUON] / x2;
@@ -414,8 +419,8 @@ double GetWeightNLO(int id1, int id2, t3 t) {
                 //needed: fg1, fg2, sf1, sf2, fg1p, fg2p, sf1p, sf2p
                 //using : xf1, xf2, x1, x2, xf1p, xf2p, x1p, x2p
 
-                evolvepdf_( x1, fac_scale, xf1 );
-                evolvepdf_( x2, fac_scale, xf2 );
+                getPDF( x1, fac_scale, xf1 );
+                getPDF( x2, fac_scale, xf2 );
                 fg1 = xf1[GLUON] / x1;
                 fg2 = xf2[GLUON] / x2;
                 for( int i=1; i<nWgts-1; i++ ) {
@@ -424,8 +429,8 @@ double GetWeightNLO(int id1, int id2, t3 t) {
                 }
 
 
-                evolvepdf_( x1/x1p, fac_scale, xf1p );
-                evolvepdf_( x2/x2p, fac_scale, xf2p );
+                getPDF( x1/x1p, fac_scale, xf1p );
+                getPDF( x2/x2p, fac_scale, xf2p );
                 fg1p = xf1p[GLUON] / x1;
                 fg2p = xf2p[GLUON] / x2;
                 for( int i=1; i<nWgts-1; i++ ) {
@@ -442,9 +447,6 @@ double GetWeightNLO(int id1, int id2, t3 t) {
                 6   fg1  * sf2p * w[6] * (1/x2);
                 7   fg1  * fg2  * w[7];
                 8   fg1  * fg2p * w[8] * (1/x2);
-
-
-
             }
         }
     else {
@@ -457,6 +459,29 @@ double GetWeightNLO(int id1, int id2, t3 t) {
     return wgt;
 }
 */
+
+//skeleton to replace hard coded and repetative NLO fillings
+double PrepAndFillEvent(MyEvent *myevent, MyGrid *mygrid, double w, double x1, double x2, double x1p, double x2p, double id1, double id2, double xsec=0) {
+
+    myevent->SetX1( x1 );
+    myevent->SetX2( x2 );
+
+    myevent->SetID( 0, id1 );   //setting parton A's ID
+    myevent->SetID( 1, id2 );   //setting parton B's ID
+
+    myevent->SetXSection( 0 ); //hack for not filling ref histos
+
+
+    //determine subprocess that may be needed to divide by
+    int currentSubProc = mygrid->GetDecideSubProcess( id1, id2 );
+    int npairs         = mygrid->GetNSubProcessPairs( currentSubProc );
+
+    //general weight calculation
+    double wgt = ( w * wgt_fac ) / npairs;
+
+    return wgt;
+}
+
 
 
 //calculates mins & maxs of ren & fac scales to get the correct Q2
@@ -495,7 +520,7 @@ void getPDF(const double& x, const double& Q2, double* f) {
 
     evolvepdf_(x, Q2, f);
 
-    //for(int id=0; id<13; id++) f[id]=1;
+    for(int id=0; id<13; id++) f[id]=x;
 }
 
 //allows for getting value of environment variables
@@ -668,9 +693,7 @@ int main(int argc, char** argv) {
     //create histograms to store tests:
     TH1D *htest1[endIndex][NGrid];  //htest1[0][]==R-Type, htest1[1][]==B-Type, htest1[2][]==RB-Type, scaled by uncorr events
 
-    //TH1D *htest2[endIndex][NGrid];  //just a copy of htest1 but scaled by tot events instead of uncorr events
-
-    TH1D *htest3[endIndex][NGrid];  //filled same as htest 1 but will be scale by total events
+    TH1D *htest3[endIndex][NGrid];  //filled in NLO, reference for htest1 to make sure NLO is filled correctly
 
     TH1D *htestRB[NGrid];           //holds the results of all htest1[i_R] + htest1[i_B]
 
@@ -681,7 +704,7 @@ int main(int argc, char** argv) {
     //maintain a count of the number of events run over for each histogram type we are testing
     int eventCount[endIndex];
     int uncorrEventCount[endIndex];
-    for(int i=0; i<endIndex; i++) {
+    for( int i=0 ; i<endIndex ; i++ ) {
         uncorrEventCount[i]=0;
         eventCount[i]=0;
     }
@@ -690,13 +713,14 @@ int main(int argc, char** argv) {
     //
     //Loop over different histograms to test different *-like* approaches
     //
-    for(int histoIndex=startIndex; histoIndex<endIndex; histoIndex++)
+    for( int histoIndex=startIndex ; histoIndex<endIndex ; histoIndex++ )
     {
         if (debug) cout<<" makegridfromsherpa::main: Starting histoIndex loop: "<<histoIndex<<endl;
         TChain *fChain= new TChain("t3");
+        
+        
+        
         //read in each NTuple for each test histogram
-
-
         string NtupName=mygrid[histoIndex]->GetInputNtupDir();
 
         if ( histoIndex==i_R || histoIndex==i_B )
@@ -708,16 +732,19 @@ int main(int argc, char** argv) {
         if (debug) cout<<" makegridfromsherpa::main: Opening "<<NtupName<<endl;
 
 
-        fChain->Add(TString(NtupName));
+        
+        fChain->Add( TString( NtupName ) );
         if (debug) fChain->Print();
 
         t3 t(fChain);
 
 
+        
         // set-up jet algorithm via fastjet wrapper class
         if (debug) cout<<" makegridfromsherpa::main: Set up jet algorithm:"<<endl;
         fjClustering* jetclus = new fjClustering( fastjet::antikt_algorithm, 0.4, fastjet::E_scheme, fastjet::Best );
 
+        //create a new event for each event. This could be done better no?
         MyEvent* myevent = new MyEvent();
 
 
@@ -730,7 +757,7 @@ int main(int argc, char** argv) {
         //
         const int NGrid=mygrid[histoIndex]->GetNGrid();
 
-        for (int igrid=0; igrid<NGrid; igrid++)
+        for ( int igrid=0 ; igrid<NGrid ; igrid++ )
         {
             string htest1name = "htest1" + ntup_names[histoIndex];
             htest1[histoIndex][igrid] = mygrid[histoIndex]->GetHisto( igrid, htest1name );
@@ -738,13 +765,7 @@ int main(int argc, char** argv) {
             htest1[histoIndex][igrid]->SetName ( htest1name.c_str() );
             htest1[histoIndex][igrid]->SetLineColor(histoIndex+1);
 
-            /*
-                        string htest2name = "htest2"+ntup_names[histoIndex]+"_tot_events";
-                        htest2[histoIndex][igrid] = (TH1D*)htest1[histoIndex][igrid]->Clone( htest2name.c_str() );
-                        htest2[histoIndex][igrid]->SetTitle( htest2name.c_str() );
-                        htest2[histoIndex][igrid]->SetName ( htest2name.c_str() );
-            */
-
+            
             string htest3name = "htest3" + ntup_names[histoIndex] + "_NLO";
             htest3[histoIndex][igrid] = mygrid[histoIndex]->GetHisto( igrid, htest3name );
             htest3[histoIndex][igrid]->SetTitle( htest3name.c_str() );
@@ -756,20 +777,22 @@ int main(int argc, char** argv) {
 
         if (debug) cout<<" makegridfromsherpa::main: Loop over events for: "<<ntup_names[histoIndex]<<endl;
 
+
+
         //
-        // Event loop
+        // Event loop over all events
         //
         Long64_t nbytes = 0, nb = 0;
-        LHAPDF::initPDFSet(pdfSetFile.c_str(), 0);
+        LHAPDF::initPDFSet( pdfSetFile.c_str(), 0 );
 
-        for (Long64_t jentry=0; jentry<nentries && jentry<nevmax; jentry++)
+        for ( Long64_t jentry=0 ; jentry<nentries && jentry<nevmax; jentry++ )
         {
             t.GetEntry(jentry);
             nbytes += nb;
             //t.Show();
 
             Int_t np=(Int_t)t.nparticle;
-            //inform user every NUMBER of events completed to illustrate progress
+            //inform user every NUMBER of events completed to illustrate progress. May need to be adjusted depending on code exeuction speed
             if (jentry%1000==0 && jentry>0) {
                 cout<<" Type: "<<ntup_names[histoIndex]<<"(histoIndex:"<<histoIndex<<")"<<", events processed "<<jentry<<"  of  ";
                 if(argc>2) cout<<nevmax<<". ";
@@ -818,9 +841,6 @@ int main(int argc, char** argv) {
 
 
 
-
-
-
             int iorder=int(t.alphasPower);
             int itype =int(t.part[0]);
 
@@ -830,7 +850,7 @@ int main(int argc, char** argv) {
 
 
 
-            //pepare LO weight
+            //pepare coeficients
             int Wsize=13;
             double xf1[Wsize];
             double xf2[Wsize];
@@ -841,12 +861,9 @@ int main(int argc, char** argv) {
             }
 
 
-            //evolve to get weights in f1, f2
-            //evolvepdf_(t.x1,t.fac_scale,xf1);
-            getPDF(t.x1,t.fac_scale,xf1);
-            
-            //evolvepdf_(t.x2,t.fac_scale,xf2);
-            getPDF(t.x2,t.fac_scale,xf2);
+            //use evolvepdf_ to get weights in f1, f2
+            getPDF( t.x1, t.fac_scale, xf1 );
+            getPDF( t.x2, t.fac_scale, xf2 );
 
 
             //particle num convention conversion from SHERPA
@@ -862,11 +879,13 @@ int main(int argc, char** argv) {
 
             //******FORCING REJECTION FOR TESTING
             if(iorder<=2) continue; //Accepting only NLO
-            //if(iorder>2) continue; //Accepting only LO
+            //if(iorder!=2) continue; //Accepting only LO
 
-            if(!(id1==6 && id2==6)) continue; //Accepting only certain particles
+            //if(!(id1==6 && id2==6)) continue; //Accepting only certain particles
             //if(id1==6 || id2==6) continue;
-            //******
+            //******FORCING REJECTION FOR TESTING
+
+
 
 
             //weights are now set explicitly bellow depending on event order being LO or NLO
@@ -896,13 +915,13 @@ int main(int argc, char** argv) {
                 Ein  += t.E[ip];
             }
 
-            double shat = Ein*Ein-(pxin*pxin+pyin*pyin+pzin*pzin);
-            double s    = shat/(t.x1*t.x2);
-            myevent->SetCMS(sqrt(s));
+            double shat = Ein*Ein - ( pxin*pxin + pyin*pyin + pzin*pzin );
+            double s    = shat / ( t.x1*t.x2 );
+            myevent->SetCMS( sqrt(s) );
 
 
 
-            int pid = t.id1;
+            int pid   = t.id1;
             double ep = ( sqrt(s) / 2.0 );
 
             if( pid == 21 ) pid = 0; //conversion from sherpa gluon to appl_grid convention
@@ -937,33 +956,58 @@ int main(int argc, char** argv) {
             }
 
 
-            //
-            // run jet algorithm
-            //
-            //filling partons not jets
-            /*
-              jetclus->doClustering();
-              if (debug) {
-              cout<<" makegridfromsherpa::main: After jet clustering... "<<endl;
-              jetclus->PrintJets();
-              }
-
-              myevent->push_back(jetclus->GetJets());
-
-              if (debug) {
-              cout<<" makegridfromsherpa::main: After pushing back jets, printing my event..."<<endl;
-              myevent->Print2();
-              }
-            */
+            
 
 
-
+            //Need subprocess ID to compute the number of pairs as part of a combo. Refer to Lumi_pdf implimentation
             int subProcID = mygrid[histoIndex]->GetDecideSubProcess( t.id1==21? 0:t.id1, t.id2==21? 0:t.id2 );
             double npairs = mygrid[histoIndex]->GetNSubProcessPairs( subProcID );
 
-            double wgt2_fac = pow( ( 2.0 * PI ) / t.alphas, iorder );
 
+            //weight multiplication factor needed by ApplGrid when setting Grid weights when filling mygrid
+            wgt_fac = pow( ( 2.0 * PI ) / t.alphas, iorder );
+
+
+            //needed for filling reference histos htest1 and htest2
             double obs = myevent->GetInvariantMass12(); //only needs to be computed once per events with the same id
+
+
+
+
+            int nWgts=13;   //number of flavors tBar(0)...gluon(6)...t(13)
+            
+            
+            //coefficients used in Stefan's code.
+            double f1  [nWgts];
+            double f2  [nWgts];
+            double xf1p[nWgts];
+            double xf2p[nWgts];
+            for( int iproc=0 ; iproc<nWgts ; iproc++ ) {
+                xf1[iproc] = 0.0; //emptied
+                xf2[iproc] = 0.0; //emptied
+            }
+
+
+            //evolve to get weights in xf1, xf2
+            getPDF( t.x1, t.fac_scale, xf1 );
+            getPDF( t.x2, t.fac_scale, xf2 );
+
+
+            //Filling f1 and f2 now for easy access in Stefan's code
+            for( int iproc=0 ; iproc<nWgts ; iproc++ ) {
+                f1[iproc] = xf1[iproc] / t.x1;
+                f2[iproc] = xf2[iproc] / t.x2;
+            }
+
+
+            //computing f1 from xf1 and f2 from xf2 for later usage (and readability) conveyance
+            double fa = f1[id1]; // (xf1/x1)[id1]
+            double fb = f2[id2]; // (xf2/x2)[id2]
+            double lr = 0.0;     //NOTE: NOT SET CURRENTLY!
+            double lf = 0.0;     //NOTE: NOT SET CURRENTLY!
+
+
+            double wgtCheck = 0;
 
 
             //fill weight depending on LO or NLO
@@ -973,7 +1017,11 @@ int main(int argc, char** argv) {
                 //
 
                 //compute weight to fill my event with when LO
-                double wgt = (t.me_wgt2 * wgt2_fac) / npairs;
+                double wgt = (t.me_wgt2 * wgt_fac) / npairs;
+
+                wgtCheck = t.me_wgt2 * fa * fb;
+
+                std::cout<<" wgtCheck: "<<wgtCheck<<", t.weight2: "<<t.weight<<", iorder: "<<iorder<<std::endl;
 
 
                 //set event based on LO
@@ -990,44 +1038,11 @@ int main(int argc, char** argv) {
                 //
                 // iorder = 3 = NLO
                 //
-                bool NLOdebug = false;
+                bool NLOdebug = false;   //for activating NLO debug statements
+                int currentSubProc = -1; //holder for result of deciding the sub process of two partons
 
-                static const int GLUON = 6;
-
-
-                //setup arrays to be filled from evolvepdf for individual weight calcs
-                int nWgts=13;
-                double f1  [nWgts];
-                double f2  [nWgts];
-                double xf1 [nWgts];
-                double xf2 [nWgts];
-                double xf1p[nWgts];
-                double xf2p[nWgts];
-                for( int iproc=0 ; iproc<nWgts ; iproc++ ) {
-                    xf1[iproc] = 0.0; //emptied
-                    xf2[iproc] = 0.0; //emptied
-                }
-
-
-                //evolve to get weights in xf1, xf2
-                //evolvepdf_(t.x1,t.fac_scale,xf1);
-                getPDF(t.x1,t.fac_scale,xf1);
-                //evolvepdf_(t.x2,t.fac_scale,xf2);
-                getPDF(t.x2,t.fac_scale,xf2);
-
-                for( int iproc=0 ; iproc<nWgts ; iproc++ ) {
-                    f1[iproc] = xf1[iproc] / t.x1;
-                    f2[iproc] = xf2[iproc] / t.x2;
-                }
-
-
-                //computing f1 from xf1 and f2 from xf2 for later usage (and readability) conveyance
-                double fa = f1[id1]; // (xf1/x1)[id1]
-                double fb = f2[id2]; // (xf2/x2)[id2]
-                double lr = 0.0;
-                double lf = 0.0;
-
-
+                
+                //w used for setting weights
                 double w[9];
                 w[0] = t.me_wgt + t.usr_wgts[0] * lr + t.usr_wgts[1] * lr * lr / 2.0; //special case for w[0]??
 
@@ -1036,7 +1051,6 @@ int main(int argc, char** argv) {
                 for ( int i=1 ; i<9 ; ++i )
                 {
                     w[i] = t.usr_wgts[i+1] + t.usr_wgts[i+9] * lf;
-                    //std::cout<<" makegridfromsherpa::main: NLO setting w["<<i<<"] = "<<w[i]<<std::endl;
                     if (w[i]==0) wnz=true;
                 }
 
@@ -1050,9 +1064,9 @@ int main(int argc, char** argv) {
                 //always fill w[0].
                 //Note this will be the first fill for B-like but the only fill for R-like
                 htestWgt = ( w[0] * fa * fb );
-                wgt      = ( w[0] * wgt2_fac ) / npairs; //<--
+                wgt      = ( w[0] * wgt_fac ) / npairs;
                 double wgtTest  = ( w[0] * fa * fb );
-                double wgtTest3 = 0.0;
+
 
                 myevent->SetWeight( wgt );
                 myevent->SetX1( t.x1 );
@@ -1060,8 +1074,7 @@ int main(int argc, char** argv) {
                 mygrid[histoIndex]->fill( myevent );
                 //std::cout<<"TEST: P0: htestWgt: "<<htestWgt<<std::endl;
                 for( int igrid=0 ; igrid<NGrid ; igrid++ ) htest3[histoIndex][igrid]->Fill( obs, htestWgt );
-                wgtTest3 += htestWgt;
-                
+
                 eventCount[histoIndex]++;
 
 
@@ -1084,26 +1097,26 @@ int main(int argc, char** argv) {
                     double  fbg  = 0.0;
                     double  fbgx = 0.0;
 
-
-                    //calculating coeficients to fill ref histos
+                    //
+                    //calculating coeficients to fill ref histos before filling/setting up mygrid
+                    // literally a copy of Stefan's code.
+                    //
                     if ( id1 != GLUON ) {
-                        //QUARK
+                        //Parton 1 - QUARK
                         faq = fa;
                         fag = f1[6];
 
-                        //evolvepdf_( t.x1/t.x1p, t.fac_scale, xf1p );
                         getPDF( t.x1/t.x1p, t.fac_scale, xf1p );
 
                         faqx = xf1p[id1] / t.x1;
                         fagx = xf1p[6]   / t.x1;
                     }
                     else {
-                        //GLU
+                        //Parton 1 - GLU
                         fag=fa;
                         for ( int i=1 ; i<nWgts-1 ; ++i)
                             if( i!=GLUON ) faq += f1[i];
 
-                        //evolvepdf_( t.x1/t.x1p, t.fac_scale , xf1p );
                         getPDF( t.x1/t.x1p, t.fac_scale, xf1p );
 
                         fagx = (xf1p[id1] / t.x1);
@@ -1111,24 +1124,22 @@ int main(int argc, char** argv) {
                             if( i != GLUON ) faqx += (xf1p[i]/t.x1);
                     }
                     if ( id2 != GLUON ) {
-                        //QUARK
+                        //Parton 2 - QUARK
                         fbq = fb;
                         fbg = f2[GLUON];
 
-                        //evolvepdf_( t.x2/t.x2p, t.fac_scale, xf2p );
                         getPDF( t.x2/t.x2p, t.fac_scale, xf2p );
 
                         fbqx = xf2p[id2] / t.x2;
                         fbgx = xf2p[GLUON] / t.x2;
                     }
                     else {
-                        //GLU
+                        //Parton 2 - GLU
                         fbg = fb;
                         for ( int i = 1 ; i<nWgts-1 ; ++i)
                             if( i != GLUON ) fbq += f2[i];
 
-                        //evolvepdf_( t.x2/t.x2p , t.fac_scale , xf2p);
-                        getPDF( t.x2/t.x2p , t.fac_scale , xf2p);
+                        getPDF( t.x2/t.x2p, t.fac_scale , xf2p);
 
                         fbgx = (xf2p[id2] / t.x2);
                         for ( int i=1 ; i<nWgts-1 ; ++i )
@@ -1136,39 +1147,25 @@ int main(int argc, char** argv) {
                     }
 
 
+                    //wgtCheck += ( faq*w[1] + faqx*w[2] + fag*w[3] + fagx*w[4] ) * fb;
+                    //wgtCheck += ( fbq*w[5] + fbqx*w[6] + fbg*w[7] + fbgx*w[8] ) * fa;
+                    //std::cout<<"wgtCheck: "<<wgtCheck<<" t.weight: "<<t.weight<<std::endl;
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-                    int currentSubProc = -1;
-                    
-                     
 
 
                     if(NLOdebug) std::cout<<"TEST: jentry: "<<jentry<<", id1: "<<id1<<" , id2: "<<id2<<std::endl;
 
-
-
-
-                    //Filling grid and ref histos
+                    //
+                    //Filling grid and ref histos from coeficients and 'w' just generated
+                    //
                     if ( id1 != GLUON ) {
                         //
                         // parton 1 = QUARK
                         //
-                        
+
                         myevent->SetX1( t.x1 );
                         myevent->SetX2( t.x2 );
                         myevent->SetID( 0, (t.id1==21? 0:t.id1) );
@@ -1176,15 +1173,16 @@ int main(int argc, char** argv) {
                         myevent->SetXSection( 0 ); //hack for not filling ref histos
                         currentSubProc = mygrid[histoIndex]->GetDecideSubProcess( (t.id1==21? 0:t.id1), (t.id2==21? 0:t.id2) );
                         npairs = mygrid[histoIndex]->GetNSubProcessPairs( currentSubProc );
-                        
-                        wgt = ( w[1] * wgt2_fac ) / npairs;
+
+                        wgt = ( w[1] * wgt_fac ) / npairs; //<--weights determined
                         myevent->SetWeight( wgt );
-                        
+
                         mygrid[histoIndex]->fill( myevent );
                         for( int igrid=0 ; igrid<NGrid ; igrid++ ) htest3[histoIndex][igrid]->Fill( obs, fb*faq*w[1] );
-                        
 
-                        
+
+
+
                         myevent->SetX1( t.x1 / t.x1p );
                         myevent->SetX2( t.x2 );
                         myevent->SetID( 0, (t.id1==21? 0:t.id1) );
@@ -1192,16 +1190,16 @@ int main(int argc, char** argv) {
                         myevent->SetXSection( 0 ); //hack for not filling ref histos
                         currentSubProc = mygrid[histoIndex]->GetDecideSubProcess( (t.id1==21? 0:t.id1), (t.id2==21? 0:t.id2) );
                         npairs = mygrid[histoIndex]->GetNSubProcessPairs( currentSubProc );
-                        
-                        wgt = ( w[2] * ( 1.0 / t.x1p ) * wgt2_fac ) / npairs;
+
+                        wgt = ( w[2] * ( 1.0 / t.x1p ) * wgt_fac ) / npairs; //<--weights determined
                         myevent->SetWeight( wgt );
-                        
+
                         mygrid[histoIndex]->fill( myevent );
                         for( int igrid=0 ; igrid<NGrid ; igrid++ ) htest3[histoIndex][igrid]->Fill( obs, fb*faqx*w[2] );
-                        
-                        
-                        
-                        
+
+
+
+
                         myevent->SetX1( t.x1 );
                         myevent->SetX2( t.x2 );
                         myevent->SetID( 0, 0 );
@@ -1209,16 +1207,16 @@ int main(int argc, char** argv) {
                         myevent->SetXSection( 0 ); //hack for not filling ref histos
                         currentSubProc = mygrid[histoIndex]->GetDecideSubProcess( 0, (t.id2==21? 0:t.id2) );
                         npairs = mygrid[histoIndex]->GetNSubProcessPairs( currentSubProc );
-                        
-                        wgt = ( w[3]  * wgt2_fac ) / npairs;
+
+                        wgt = ( w[3]  * wgt_fac ) / npairs; //<--weights determined
                         myevent->SetWeight( wgt );
-                        
+
                         mygrid[histoIndex]->fill( myevent );
                         for( int igrid=0 ; igrid<NGrid ; igrid++ ) htest3[histoIndex][igrid]->Fill( obs, fb*fag*w[3] );
-                        
 
 
-                        
+
+
                         myevent->SetX1( t.x1 / t.x1p );
                         myevent->SetX2( t.x2 );
                         myevent->SetID( 0, 0 );
@@ -1226,14 +1224,14 @@ int main(int argc, char** argv) {
                         myevent->SetXSection( 0 ); //hack for not filling ref histos
                         currentSubProc = mygrid[histoIndex]->GetDecideSubProcess( 0, (t.id2==21? 0:t.id2) );
                         npairs = mygrid[histoIndex]->GetNSubProcessPairs( currentSubProc );
-                        
-                        wgt = ( w[4] * ( 1.0 / t.x1p ) * wgt2_fac ) / npairs;
+
+                        wgt = ( w[4] * ( 1.0 / t.x1p ) * wgt_fac ) / npairs; //<--weights determined
                         myevent->SetWeight( wgt );
-                        
+
                         mygrid[histoIndex]->fill( myevent );
                         for( int igrid=0 ; igrid<NGrid ; igrid++ ) htest3[histoIndex][igrid]->Fill( obs, fb*fagx*w[4] );
 
-                        
+
                     }
                     else {
                         //
@@ -1255,7 +1253,7 @@ int main(int argc, char** argv) {
                                     nSubCount[currentSubProc]++; //count the number of occurences of that particular subproc
                             }
                         }
-                        
+
                         //filling grids for all subprocs
                         for ( int iflav=1 ; iflav<nWgts-1 ; ++iflav )
                         {
@@ -1266,9 +1264,9 @@ int main(int argc, char** argv) {
                                 if( currentSubProc != -1 )
                                 {
                                     npairs = mygrid[histoIndex]->GetNSubProcessPairs( currentSubProc );
-                                    wgt = w[1] * wgt2_fac * ( 1.0 / npairs ) *( 1.0 / nSubCount[currentSubProc] );
-                                    
-                                    
+                                    wgt = w[1] * wgt_fac * ( 1.0 / npairs ) * ( 1.0 / nSubCount[currentSubProc] ); //<--weights determined
+
+
                                     myevent->SetID( 0, (iflav-6) );
                                     myevent->SetID( 1, (t.id2==21? 0:t.id2) );
                                     myevent->SetWeight( wgt );
@@ -1280,7 +1278,7 @@ int main(int argc, char** argv) {
                         }
 
                         for( int igrid=0 ; igrid<NGrid ; igrid++ ) htest3[histoIndex][igrid]->Fill( obs, fb*faq*w[1]  );
-                        
+
                         for ( int i=0 ; i<nSubCount.size(); ++i ) nSubCount[i] = 0;//empty for next use
 
 
@@ -1298,7 +1296,7 @@ int main(int argc, char** argv) {
                                     nSubCount[currentSubProc]++;
                             }
                         }
-                        
+
                         //filling grids for all subprocs
                         for ( int iflav=1 ; iflav<nWgts-1 ; ++iflav ) {
                             if( iflav != GLUON ) {
@@ -1307,8 +1305,8 @@ int main(int argc, char** argv) {
 
                                 if( currentSubProc != -1 ) {
                                     npairs = mygrid[histoIndex]->GetNSubProcessPairs( currentSubProc );
-                                    wgt = w[2] * wgt2_fac * ( 1 / t.x1p ) * ( 1.0 / npairs) * ( 1.0 / nSubCount[currentSubProc] ) ;
-                                    
+                                    wgt = w[2] * wgt_fac * ( 1 / t.x1p ) * ( 1.0 / npairs) * ( 1.0 / nSubCount[currentSubProc] ); //<--weight determined
+
                                     myevent->SetID( 0, (iflav-6) );
                                     myevent->SetID( 1, (t.id2==21? 0:t.id2) );
                                     myevent->SetWeight( wgt );
@@ -1318,29 +1316,28 @@ int main(int argc, char** argv) {
                                 }
                             }
                         }
-                        
+
                         for( int igrid=0 ; igrid<NGrid ; igrid++ ) htest3[histoIndex][igrid]->Fill( obs, fb*faqx*w[2] );
-                        
+
                         for ( int i=0 ; i<nSubCount.size(); ++i ) nSubCount[i] = 0;//empty for next use
+
+
                         
-                        
-                        
-                        //glu component
+                        //glu components 
                         myevent->SetX1( t.x1 );
                         myevent->SetX2( t.x2 );
                         myevent->SetID( 0, 0 ); //glu
                         myevent->SetID( 1, (t.id2==21? 0:t.id2) );
                         currentSubProc = mygrid[histoIndex]->GetDecideSubProcess( 0, (t.id2==21? 0:t.id2) );
                         npairs = mygrid[histoIndex]->GetNSubProcessPairs( currentSubProc );
-                        
-                        wgt = w[3] * wgt2_fac * ( 1.0 / npairs) ;
+
+                        wgt = w[3] * wgt_fac * ( 1.0 / npairs);//<--weight determined
                         myevent->SetWeight( wgt );
                         mygrid[histoIndex]->fill( myevent );
-                        
+
                         for( int igrid=0 ; igrid<NGrid ; igrid++ ) htest3[histoIndex][igrid]->Fill( obs, fb*fag*w[3] );
-                        
-                        
-                        
+
+
                         
                         myevent->SetX1( t.x1 / t.x1p );
                         myevent->SetX2( t.x2 );
@@ -1348,24 +1345,19 @@ int main(int argc, char** argv) {
                         myevent->SetID( 1, (t.id2==21? 0:t.id2) );
                         currentSubProc = mygrid[histoIndex]->GetDecideSubProcess( 0, (t.id2==21? 0:t.id2) );
                         npairs = mygrid[histoIndex]->GetNSubProcessPairs( currentSubProc );
-                        
-                        wgt = w[4] * wgt2_fac * ( 1.0 / t.x1p ) *( 1.0 / npairs) ;
+
+                        wgt = w[4] * wgt_fac * ( 1.0 / t.x1p ) * ( 1.0 / npairs);//<--weight determined
                         myevent->SetWeight( wgt );
                         mygrid[histoIndex]->fill( myevent );
-                        
+
                         for( int igrid=0 ; igrid<NGrid ; igrid++ ) htest3[histoIndex][igrid]->Fill( obs, fb*fagx*w[4] );
-             
+
                     }
                     if ( id2 != GLUON ) {
                         //
                         // parton 2 = QUARK
                         //
                         if(NLOdebug) std::cout<<"TEST: P2 = QUARK"<<std::endl;
-                        if(NLOdebug) std::cout<<"\tt.x1: "<<t.x1
-                            <<"\tt.x2: "<<t.x2
-                            <<"\tt.x1p: "<<t.x1p
-                            <<"\tt.x2p: "<<t.x2p<<std::endl;
-                        
                         
                         
                         myevent->SetX1( t.x1 );
@@ -1375,15 +1367,15 @@ int main(int argc, char** argv) {
                         myevent->SetXSection( 0 ); //hack for not filling ref histos
                         currentSubProc = mygrid[histoIndex]->GetDecideSubProcess( (t.id1==21? 0:t.id1), (t.id2==21? 0:t.id2) );
                         npairs = mygrid[histoIndex]->GetNSubProcessPairs( currentSubProc );
-                        
-                        wgt = ( w[5] * wgt2_fac ) / npairs;
+
+                        wgt = ( w[5] * wgt_fac ) / npairs;//<--weight determined
                         myevent->SetWeight( wgt );
-                        
+
                         mygrid[histoIndex]->fill( myevent );
                         for( int igrid=0 ; igrid<NGrid ; igrid++ ) htest3[histoIndex][igrid]->Fill( obs, fa*fbq*w[5] );
-                        
 
-                        
+
+
                         myevent->SetX1( t.x1 );
                         myevent->SetX2( t.x2 / t.x2p );
                         myevent->SetID( 0, (t.id1==21? 0:t.id1) );
@@ -1391,15 +1383,15 @@ int main(int argc, char** argv) {
                         myevent->SetXSection( 0 ); //hack for not filling ref histos
                         currentSubProc = mygrid[histoIndex]->GetDecideSubProcess( (t.id1==21? 0:t.id1), (t.id2==21? 0:t.id2) );
                         npairs = mygrid[histoIndex]->GetNSubProcessPairs( currentSubProc );
-                        
-                        wgt = ( w[6] * ( 1.0 / t.x2p ) * wgt2_fac ) / npairs;
+
+                        wgt = ( w[6] * ( 1.0 / t.x2p ) * wgt_fac ) / npairs;//<--weight determined
                         myevent->SetWeight( wgt );
-                        
+
                         mygrid[histoIndex]->fill( myevent );
                         for( int igrid=0 ; igrid<NGrid ; igrid++ ) htest3[histoIndex][igrid]->Fill( obs, fa*fbqx*w[6] );
-                        
-                        
-                        
+
+
+
                         myevent->SetX1( t.x1 );
                         myevent->SetX2( t.x2 );
                         myevent->SetID( 0, (t.id1==21? 0:t.id1) );
@@ -1407,13 +1399,13 @@ int main(int argc, char** argv) {
                         myevent->SetXSection( 0 ); //hack for not filling ref histos
                         currentSubProc = mygrid[histoIndex]->GetDecideSubProcess( (t.id1==21? 0:t.id1), 0 );
                         npairs = mygrid[histoIndex]->GetNSubProcessPairs( currentSubProc );
-                        
-                        wgt = ( w[7]  * wgt2_fac ) / npairs;
+
+                        wgt = ( w[7]  * wgt_fac ) / npairs;//<--weight determined
                         myevent->SetWeight( wgt );
-                        
+
                         mygrid[histoIndex]->fill( myevent );
                         for( int igrid=0 ; igrid<NGrid ; igrid++ ) htest3[histoIndex][igrid]->Fill( obs, fa*fbg*w[7] );
-                        
+
 
 
                         myevent->SetX1( t.x1 );
@@ -1423,19 +1415,20 @@ int main(int argc, char** argv) {
                         myevent->SetXSection( 0 ); //hack for not filling ref histos
                         currentSubProc = mygrid[histoIndex]->GetDecideSubProcess( (t.id1==21? 0:t.id1), 0 );
                         npairs = mygrid[histoIndex]->GetNSubProcessPairs( currentSubProc );
-                        
-                        wgt = ( w[8] * ( 1.0 / t.x2p ) * wgt2_fac ) / npairs;
+
+                        wgt = ( w[8] * ( 1.0 / t.x2p ) * wgt_fac ) / npairs;//<--weight determined
                         myevent->SetWeight( wgt );
-                        
+
                         mygrid[histoIndex]->fill( myevent );
                         for( int igrid=0 ; igrid<NGrid ; igrid++ ) htest3[histoIndex][igrid]->Fill( obs, fa*fbgx*w[8] );
-                        
+
                     }
                     else {
                         //
                         // parton 2 = GLU
                         //
                         if(NLOdebug) std::cout<<"TEST: P2 = GLU"<<std::endl;
+
                         
                         myevent->SetX1( t.x1 );
                         myevent->SetX2( t.x2 );
@@ -1445,11 +1438,11 @@ int main(int argc, char** argv) {
                             if( iflav != GLUON ) {
                                 currentSubProc = mygrid[histoIndex]->GetDecideSubProcess( (t.id1==21? 0:t.id1), (iflav-6) );
 
-                                if( currentSubProc != -1 )
+                                if( currentSubProc != -1 ) 
                                     nSubCount[currentSubProc]++;
                             }
                         }
-                        
+
                         //filling grids for all subprocs
                         for ( int iflav=1 ; iflav<nWgts-1 ; ++iflav ) {
                             if( iflav != GLUON ) {
@@ -1457,8 +1450,8 @@ int main(int argc, char** argv) {
 
                                 if( currentSubProc != -1 ) {
                                     npairs = mygrid[histoIndex]->GetNSubProcessPairs( currentSubProc );
-                                    wgt = w[5] * wgt2_fac * ( 1.0 / npairs ) *( 1.0 / nSubCount[currentSubProc] );
-                                    
+                                    wgt = w[5] * wgt_fac * ( 1.0 / npairs ) * ( 1.0 / nSubCount[currentSubProc] );//<--weight determined
+
                                     myevent->SetID( 0, (t.id1==21? 0:t.id1) );
                                     myevent->SetID( 1, (iflav-6) );
                                     myevent->SetWeight( wgt );
@@ -1469,7 +1462,7 @@ int main(int argc, char** argv) {
                             }
                         }
                         for( int igrid=0 ; igrid<NGrid ; igrid++ ) htest3[histoIndex][igrid]->Fill( obs, fa*fbq*w[5] );
-                        
+
                         for ( int i=0 ; i<nSubCount.size(); ++i ) nSubCount[i] = 0;//empty for next use
 
 
@@ -1478,7 +1471,7 @@ int main(int argc, char** argv) {
                         myevent->SetX1( t.x1 );
                         myevent->SetX2( t.x2 / t.x2p );
 
-        
+
                         //count the number of subprocs that make up
                         for ( int iflav=1 ; iflav<nWgts-1 ; ++iflav ) {
                             if( iflav != GLUON ) {
@@ -1488,18 +1481,18 @@ int main(int argc, char** argv) {
                                     nSubCount[currentSubProc]++;
                             }
                         }
-                        
+
                         //filling grids for all subprocs
                         for ( int iflav=1 ; iflav<nWgts-1 ; ++iflav ) {
                             if( iflav != GLUON ) {
-                            
+
                                 currentSubProc = mygrid[histoIndex]->GetDecideSubProcess( (t.id1==21? 0:t.id1), (iflav-6) );
                                 if(NLOdebug) std::cout<<"P2-22: flv1: "<<(iflav-6)<<", flv2: "<<(t.id2==21? 0:t.id2)<<", DecideSubProc: "<<currentSubProc<<std::endl;
 
                                 if( currentSubProc != -1 ) {
                                     npairs = mygrid[histoIndex]->GetNSubProcessPairs( currentSubProc );
-                                    wgt = w[6] * wgt2_fac * ( 1.0 / npairs) * ( 1 / t.x2p ) * ( 1.0 / nSubCount[currentSubProc] ) ;
-                                    
+                                    wgt = w[6] * wgt_fac * ( 1.0 / npairs) * ( 1 / t.x2p ) * ( 1.0 / nSubCount[currentSubProc] );//<--weight determined
+
                                     myevent->SetID( 0, (t.id1==21? 0:t.id1) );
                                     myevent->SetID( 1, (iflav-6) );
                                     myevent->SetWeight( wgt );
@@ -1509,75 +1502,69 @@ int main(int argc, char** argv) {
                                 }
                             }
                         }
-                        
+
                         for( int igrid=0 ; igrid<NGrid ; igrid++ ) htest3[histoIndex][igrid]->Fill( obs, fa*fbqx*w[6] );
-                        
+
                         for ( int i=0 ; i<nSubCount.size(); ++i ) nSubCount[i] = 0;//empty for next use
-                        
-                       
-                       
+
+
+
                         //glu component
                         myevent->SetX1( t.x1 );
                         myevent->SetX2( t.x2 );
-                        myevent->SetID( 0, (t.id1==21? 0:t.id1) ); 
+                        myevent->SetID( 0, (t.id1==21? 0:t.id1) );
                         myevent->SetID( 1, 0 ); //glu
                         currentSubProc = mygrid[histoIndex]->GetDecideSubProcess( (t.id1==21? 0:t.id1), 0 );
                         npairs = mygrid[histoIndex]->GetNSubProcessPairs( currentSubProc );
-                        
-                        wgt = w[7] * wgt2_fac * ( 1.0 / npairs) ;
+
+                        wgt = w[7] * wgt_fac * ( 1.0 / npairs);//<--weight determined
                         myevent->SetWeight( wgt );
                         mygrid[histoIndex]->fill( myevent );
-                        
+
                         for( int igrid=0 ; igrid<NGrid ; igrid++ ) htest3[histoIndex][igrid]->Fill( obs, fa*fbg*w[7] );
-                        
-                        
+
+
                         myevent->SetX1( t.x1 );
                         myevent->SetX2( t.x2 / t.x2p );
                         myevent->SetID( 0, (t.id1==21? 0:t.id1) );
                         myevent->SetID( 1, 0 ); //glu
                         currentSubProc = mygrid[histoIndex]->GetDecideSubProcess( (t.id1==21? 0:t.id1), 0 );
                         npairs = mygrid[histoIndex]->GetNSubProcessPairs( currentSubProc );
-                        
-                        wgt = w[8] * wgt2_fac * ( 1.0 / t.x2p ) * ( 1.0 / npairs) ;
+
+                        wgt = w[8] * wgt_fac * ( 1.0 / t.x2p ) * ( 1.0 / npairs);//<--weight determined
                         myevent->SetWeight( wgt );
                         mygrid[histoIndex]->fill( myevent );
-                        
+
                         for( int igrid=0 ; igrid<NGrid ; igrid++ ) htest3[histoIndex][igrid]->Fill( obs, fa*fbgx*w[8] );
                     }
 
                     //PERSONAL REFERENCE FOR PICKING WHAT TO FILL EACH htest at what time (from stefan's code)
-                    
+
                     wgtTest += ( faq*w[1] + faqx*w[2] + fag*w[3] + fagx*w[4] ) * fb;
                     wgtTest += ( fbq*w[5] + fbqx*w[6] + fbg*w[7] + fbgx*w[8] ) * fa;
-                    
-                    if(NLOdebug)std::cout<<"TEST: wgtTest: "<<wgtTest<<", t.weight2: "<<t.weight2<<", wgtTest3: "<<wgtTest3<<std::endl;
-                    
-                    if(NLOdebug)
-                    std::cout<<"TEST: "
-                    <<"faq:"<<faq
-                    <<", fbq:"<<fbq
-                    <<", faqx:"<<faqx
-                    <<", fbqx:"<<fbqx
-                    <<", fag:"<<fag
-                    <<", fbg:"<<fbg
-                    <<", fagx:"<<fagx
-                    <<", fbgx:"<<fbgx<<std::endl;
 
-                    if(NLOdebug) std::cout<<"test: "<<jentry<<std::endl;
+                    //if(NLOdebug) std::cout<<"TEST: wgtTest: "<<wgtTest<<", t.weight2: "<<t.weight2<<std::endl;
+
+                    if(NLOdebug)
+                        std::cout<<"TEST"
+                                 <<": faq:"  <<faq
+                                 <<", fbq:"  <<fbq
+                                 <<", faqx:" <<faqx
+                                 <<", fbqx:" <<fbqx
+                                 <<", fag:"  <<fag
+                                 <<", fbg:"  <<fbg
+                                 <<", fagx:" <<fagx
+                                 <<", fbgx:" <<fbgx<<std::endl;
+
+                    if(NLOdebug) std::cout<<"test: Current event number finishing "<<jentry<<std::endl;
                 }
                 else {
-                    std::cout<<" makegridfromsherpa::main: ERROR: wnz was false?"<<std::endl;
-                    exit(0);
+                    std::cout<<" makegridfromsherpa::main: ERROR: wnz was false? Running over 'R'? "<<std::endl;
+                    exit(0); //TEST temp
                 }
             }
 
 
-
-            // fill the grid with the event for this histogram
-            //
-            //NOTE: this step is now done explicitly above depening on or order is LO or NLO
-            //if(debug) std::cout<<" makegridfromsherpa::main: Filling with t.id1: "<<t.id1<<", t.id2: "<<t.id2<<std::endl;
-            //mygrid[histoIndex]->fill(myevent);
 
 
 
@@ -1586,22 +1573,20 @@ int main(int argc, char** argv) {
             // fill each test histogram
             //
             obs = myevent->GetInvariantMass12(); // to be replaced by GetObservable from steering
-            for (int igrid=0; igrid<mygrid[histoIndex]->GetNGrid(); igrid++)
+            for ( int igrid=0 ; igrid<mygrid[histoIndex]->GetNGrid() ; igrid++ )
             {
                 if (mygrid[histoIndex]->eventcuts(myevent,igrid)==false) continue;
 
-                htest1[histoIndex][igrid]->Fill(obs,t.weight2);
+                htest1[histoIndex][igrid]->Fill( obs, t.weight2 );
                 
-                //htest1[histoIndex][igrid]->Print("all");
-                //htest3[histoIndex][igrid]->Print("all");
-                //exit(0);
-                //htest2[histoIndex][igrid]->Fill(obs,t.weight2);
+                //htest1[histoIndex][igrid]->Fill( obs, wgtCheck ); //testing to make sure wgt is filled correctly
+                
             } //end loop over grid
 
             uncorrEventCount[histoIndex]++; //keep count of event for each type, 0-B, 1-R, 2-RthenB
-            
-            
-            
+
+
+
         } //end loop over events
 
         if (debug)
@@ -1668,7 +1653,6 @@ int main(int argc, char** argv) {
 
             //scale each histograms by one devided by number of events depending on type
             htest1[histoIndex][igrid]->Scale( 1.0 / uncorrEventCount[histoIndex] ); //hR/nR, hB/nB, hBR/nBR, etc
-            //htest2[histoIndex][igrid]->Scale( 1.0 / eventCount[histoIndex] );
             htest3[histoIndex][igrid]->Scale( 1.0 / uncorrEventCount[histoIndex] );
 
             href[histoIndex][igrid]->Scale(   1.0 / uncorrEventCount[histoIndex] ); //hrefR/nR, hrefB/nB,hrefRB/nRB, etc
@@ -1676,7 +1660,6 @@ int main(int argc, char** argv) {
 
             cout<<" makegridfromsherpa::main: htest1 printing..."<<endl;
             htest1[histoIndex][igrid]->Print("all");
-            //htest2[histoIndex][igrid]->Print("all");
             htest3[histoIndex][igrid]->Print("all");
 
 
@@ -1792,7 +1775,7 @@ int main(int argc, char** argv) {
 
 
             //NLO convolute for all
-            convGridHistos[histoIndex][igrid] = (TH1D*)mygrid[histoIndex]->GetGrid(igrid)->convolute( evolvepdf_, alphaspdf_, nLoops );
+            convGridHistos[histoIndex][igrid] = (TH1D*)mygrid[histoIndex]->GetGrid(igrid)->convolute( getPDF, alphaspdf_, nLoops );
             convGridHistos[histoIndex][igrid]->SetName((TString) ("convolute_for" + ntup_names[histoIndex]));
             convGridHistos[histoIndex][igrid]->SetTitle((TString) ("convolute_for" + ntup_names[histoIndex]));
             convGridHistos[histoIndex][igrid]->SetLineColor(kBlue);
@@ -1802,7 +1785,7 @@ int main(int argc, char** argv) {
 
             //LO convolute for all
             cout<<" calling convolute: "<<endl;
-            LOconvGridHistos[histoIndex][igrid] = (TH1D*)mygrid[histoIndex]->GetGrid(igrid)->convolute( evolvepdf_, alphaspdf_, 0 );
+            LOconvGridHistos[histoIndex][igrid] = (TH1D*)mygrid[histoIndex]->GetGrid(igrid)->convolute( getPDF, alphaspdf_, 0 );
             LOconvGridHistos[histoIndex][igrid]->SetName((TString) ("LOconvolute_for" + ntup_names[histoIndex]));
             LOconvGridHistos[histoIndex][igrid]->SetTitle((TString) ("LOconvolute_for" + ntup_names[histoIndex]));
             LOconvGridHistos[histoIndex][igrid]->SetLineColor(kBlue);
@@ -1813,7 +1796,7 @@ int main(int argc, char** argv) {
             for(int isubproc=0; isubproc<mygrid[histoIndex]->GetNSubProcess(igrid);  isubproc++) {
 
                 //NLO convolute for subprocs
-                subProcConvGridHistos[histoIndex][igrid][isubproc] = (TH1D*)mygrid[histoIndex]->GetGrid(igrid)->convolute_subproc(isubproc, evolvepdf_, alphaspdf_, nLoops );
+                subProcConvGridHistos[histoIndex][igrid][isubproc] = (TH1D*)mygrid[histoIndex]->GetGrid(igrid)->convolute_subproc(isubproc, getPDF, alphaspdf_, nLoops );
                 string sub_proc_hist_name="subProc-"+to_string(isubproc)+"-convolute_for"+ntup_names[histoIndex];
                 subProcConvGridHistos[histoIndex][igrid][isubproc]->SetName((TString) (sub_proc_hist_name));
                 subProcConvGridHistos[histoIndex][igrid][isubproc]->SetTitle((TString) (sub_proc_hist_name));
@@ -1822,7 +1805,7 @@ int main(int argc, char** argv) {
 
 
                 //LO convolute for subprocs
-                LOsubProcConvGridHistos[histoIndex][igrid][isubproc] = (TH1D*)mygrid[histoIndex]->GetGrid(igrid)->convolute_subproc(isubproc, evolvepdf_, alphaspdf_, 0 );
+                LOsubProcConvGridHistos[histoIndex][igrid][isubproc] = (TH1D*)mygrid[histoIndex]->GetGrid(igrid)->convolute_subproc(isubproc, getPDF, alphaspdf_, 0 );
                 sub_proc_hist_name="LOsubProc-"+to_string(isubproc)+"-convolute_for"+ntup_names[histoIndex];
                 LOsubProcConvGridHistos[histoIndex][igrid][isubproc]->SetName((TString) (sub_proc_hist_name));
                 LOsubProcConvGridHistos[histoIndex][igrid][isubproc]->SetTitle((TString) (sub_proc_hist_name));
@@ -1915,27 +1898,12 @@ int main(int argc, char** argv) {
                 ratioLO->SetTitle( ratioName.c_str() );
                 ratioLO->SetName(  ratioName.c_str() );
                 ratioLO->Print("all");
+
+                ratioLO->DrawCopy();
+                gPad->Print("ratioLO.pdf");
             }
-            
-       
 
 
-            /*
-                        //output htest2 filled the same as htest1 but scaled to by tot events & a DivideByBinWidth version
-                        htest2[histoIndex][igrid]->Print("all");
-                        htest2[histoIndex][igrid]->Write(); //scaled version
-
-                        string name2 = "hnorm"+ntup_names[histoIndex]+"_LO_totev_Div";
-                        TH1D *htest2norm=(TH1D*)htest2[histoIndex][igrid]->Clone( name2.c_str() );
-                        htest2norm->SetTitle( name2.c_str() );
-                        htest2norm->SetName(  name2.c_str() );
-
-                        mygrid[histoIndex]->DivideByBinWidth(htest2norm); //DivideByBinWidth version
-                        std::cout<<" makegridfromsherpa::main: Printing htest2 normalised..."<<std::endl;
-                        htest2norm->Print("all");
-
-                        //Note: no ratio here for htest2
-            */
 
 
 
@@ -1958,6 +1926,9 @@ int main(int argc, char** argv) {
                 ratioNLO->SetTitle( ratioName.c_str() );
                 ratioNLO->SetName(  ratioName.c_str());
                 ratioNLO->Print("all");
+
+                ratioNLO->DrawCopy();
+                gPad->Print("ratioNLO.pdf");
             }
 
         }
@@ -2036,7 +2007,7 @@ int main(int argc, char** argv) {
                 fout= new TFile(filename.c_str(),"recreate");
 
                 //problem: only performing convolute to R...
-                ConvHistoRplusB[igrid] = (TH1D*)mygrid[i_R]->GetGrid(igrid)->convolute( evolvepdf_, alphaspdf_, nLoops );
+                ConvHistoRplusB[igrid] = (TH1D*)mygrid[i_R]->GetGrid(igrid)->convolute( getPDF, alphaspdf_, nLoops );
                 ConvHistoRplusB[igrid]->SetName((TString) ("convolute_for_RplusB"));
                 ConvHistoRplusB[igrid]->SetTitle((TString) ("convolute_for_RplusB"));
                 ConvHistoRplusB[igrid]->SetLineColor(kBlue);
