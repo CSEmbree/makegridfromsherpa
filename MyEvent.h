@@ -18,12 +18,12 @@ class MyEvent {
   double sqrts;
   double xsection; // cross section
   double weight;   // weight without PDF
-  int eventid;     // event ID to identify correlated events
+  int    eventid;  // event ID to identify correlated events
   double x1;       // Bjorken x of parton 1
   double x2;       // Bjorken x of parton 2
   double q2;       // factorisation scale
-  int iorder;      // order of alphas
-  int itype;      // order of alphas
+  int    iorder;   // order of alphas
+  int    itype;    // order of alphas
  
   std::vector<fastjet::PseudoJet> event;
   //fastjet::PseudoJet *myjet;
@@ -78,6 +78,8 @@ class MyEvent {
 
   int GetID(int index){return event[index].user_index();};
   int GetLeadingJetID();
+  
+  void SetID(int index, int pid){ event[index].set_user_index(pid); };
 
   bool IsJet(int id){ return abs(id)<10||abs(id)==0;};
   bool IsChargedLepton(int id){ return abs(id)==11||abs(id)==13;};

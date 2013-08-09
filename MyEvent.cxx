@@ -113,7 +113,7 @@ void MyEvent::push_back(fastjet::PseudoJet myjet2)
     //printf("%d pt= %6.2f eta= %6.2f E= %6.2f id= %d \n",i,
     //	   event[i]->pt(), event[i]->rapidity(),event[i]->e(),event[i]->user_index());
 
-    if (abs(event[i].user_index())>10 && !event[i].user_index()==21) continue;
+    if (abs(event[i].user_index())>10 && !event[i].user_index()==0) continue;
     if (ptmax<event[i].pt()){
      ptmax=event[i].pt();
      id=i;
@@ -140,7 +140,7 @@ double MyEvent::GetInvariantMass12(){
  int id1=-1, id2=-1;
  double ptmax1=-999., ptmax2=-999.;
  for (int  i = 0; i < event.size(); i++) {
-  if (abs(event[i].user_index())>10 && !event[i].user_index()==21) continue;
+  if (abs(event[i].user_index())>10 && !event[i].user_index()==0) continue; //changed gluon convention from 21 to 0
   if (event[i].pt()>ptmax2) {ptmax2=ptmax1; ptmax1=event[i].pt(); id2=id1; id1=i;} 
 
   if (debug)

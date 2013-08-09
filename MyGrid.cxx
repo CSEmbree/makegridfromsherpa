@@ -27,11 +27,11 @@ MyGrid::MyGrid(string name, string version)
     // Grid architecture
     nXbins  = 30;
     xLow    = 1.0e-8;
-    xUp = 1.0;
+    xUp     = 1.0;
     xorder  = 5;
     nQ2bins = 2; 
     q2Low   = 30624.; // this should be automated for the moment mtop=175*175
-    q2Up =    30628.; //
+    q2Up    = 30628.; //
     qorder  = 2;      // there seems to be a bug, if only one bins is used
 
     iorder  = 0;
@@ -960,6 +960,9 @@ void  MyGrid::fill(MyEvent *myevent )
                 myevent->PrintSelJets2();
             }
         }
+
+        //checking values are set correctly
+        //myevent->Print(); //TEST
 
         for (int ijets=0; ijets<nseljets; ijets++) {
             if (incljets) obs=myseljets[ijets].pt();
